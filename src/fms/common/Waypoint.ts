@@ -11,9 +11,9 @@ export class Waypoint {
 
     speedConstraint: SpeedConstraint | undefined;
 
-    constructor(identifier: string, coordinates: Location) {
-        this.identifier = identifier;
-        this.coordinates = coordinates;
+    constructor(identifier?: string, coordinates?: Location) {
+        this.identifier = identifier ?? '';
+        this.coordinates = coordinates ?? undefined as any;
     }
 
     static fromTerminalLeg(data: ProcedureLeg): Waypoint {

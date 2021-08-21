@@ -23,6 +23,8 @@ export interface ProcedureLeg extends DatabaseItem {
     speed?: Knots,
     speedDescriptor?: SpeedDescriptor,
     turnDirection: TurnDirection,
+    magneticCourse: DegreesMagnetic,
+    routeDistance: NauticalMiles,
 }
 
 export enum AltitudeDescriptor {
