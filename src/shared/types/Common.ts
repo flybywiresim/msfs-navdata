@@ -22,7 +22,7 @@ export interface DatabaseItem {
 
 export interface Location {
     lat: Latitude,
-    long: Longitude,
+    lon: Longitude,
     alt?: Feet,
 }
 

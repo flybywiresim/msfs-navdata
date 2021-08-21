@@ -56,7 +56,7 @@ export class NavigraphDfd implements Provider {
         return {
             databaseId: NavigraphDfd.airportDatabaseId(airport),
             ident: airport.airportIdentifier,
-            location: { lat: airport.airportRefLatitude, long: airport.airportRefLongitude, alt: airport.elevation },
+            location: { lat: airport.airportRefLatitude, lon: airport.airportRefLongitude, alt: airport.elevation },
             speedLimit: airport.speedLimit || undefined,
             speedLimitAltitude: airport.speedLimitAltitude || undefined,
             transitionAltitude: airport.transitionAltitude || undefined,
@@ -114,7 +114,7 @@ export class NavigraphDfd implements Provider {
                 const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
                 resolve(airports.map((airport) => {
                     const ap = NavigraphDfd.mapAirport(airport);
-                    ap.distance = getDistance(centre, { latitude: ap.location.lat, longitude: ap.location.long }) / 1852;
+                    ap.distance = getDistance(centre, { latitude: ap.location.lat, longitude: ap.location.lon }) / 1852;
                     return ap;
                 }).filter((ap) => (ap.distance ?? 0) <= range).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0)));
             });
