@@ -48,6 +48,9 @@ export type Airport = {
     /** transition altitude in feet */
     transitionAltitude: number;
 
+    /** transition level altitude in feet */
+    transitionLevel: number;
+
     /** speed limit in knots */
     speedLimit: number;
 
