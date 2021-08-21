@@ -21,16 +21,18 @@ app.get('/', (req, res) => {
     });
 });
 
-app.get('/airport/:ident', (req, res) => {
-    provider.getAirportByIdent(req.params.ident).then((airport: Airport) => {
-        res.json(airport);
+app.get('/airports/:idents', (req, res) => {
+    if (!req.params.idents.match(/^[A-Z0-9]{4}(,[A-Z0-9]{4})*$/)) {
+        return res.status(400).send('Invalid idents');
+    }
+    provider.getAirportsByIdents(req.params.idents.split(',')).then((airports: Airport[]) => {
+        res.json(airports);
     });
 });
 
 app.get('/nearby/airports/:ppos/:range?', (req, res) => {
     if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
-        res.status(400);
-        return;
+        return res.status(400).send('Invalid ppos');
     }
     const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
     const range = parseInt(req.params.range ?? '381');

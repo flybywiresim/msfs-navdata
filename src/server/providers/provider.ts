@@ -3,7 +3,7 @@ import { DatabaseIdent } from "../../shared/types/DatabaseIdent";
 
 export abstract class Provider {
     abstract getDatabaseIdent(): Promise<DatabaseIdent>;
-    abstract getAirportByIdent(ident: string): Promise<Airport>;
+    abstract getAirportsByIdents(idents: string[]): Promise<Airport[]>;
     /**
      * Find all the airports within range
      * @param lat 

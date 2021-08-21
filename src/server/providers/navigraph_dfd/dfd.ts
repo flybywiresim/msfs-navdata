@@ -65,15 +65,15 @@ export class NavigraphDfd implements Provider {
         };
     }
 
-    async getAirportByIdent(ident: string): Promise<Airport> {
+    async getAirportsByIdents(idents: string[]): Promise<Airport[]> {
         return new Promise((resolve, reject) => {
-            const sql = "SELECT * FROM tbl_airports WHERE airport_identifier = ?";
-            this.db.get(sql, [ident], (err, row) => {
+            const sql = `SELECT * FROM tbl_airports WHERE airport_identifier IN (${ idents.map(() => "?").join(",") })`;
+            this.db.all(sql, idents, (err, rows) => {
                 if (err) {
                     return reject(err.message);
                 }
-                const airport: NaviAirport = NavigraphDfd.toCamel([row])[0];
-                resolve(NavigraphDfd.mapAirport(airport));
+                const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
+                resolve(airports.map((airport => NavigraphDfd.mapAirport(airport))));
             });
         });
     }
