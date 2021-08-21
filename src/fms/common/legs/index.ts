@@ -1,29 +1,17 @@
-import { Degrees, Feet, Knots, NauticalMiles } from "../types/common";
 import LatLon from 'geodesy/latlon-ellipsoidal-vincenty';
 import { GuidanceParameters } from "../ControlLaws";
 import { Guidable } from "../Guidable";
-
-export enum AltitudeConstraintType {
-    at,
-    atOrAbove,
-    atOrBelow,
-    range,
-}
-
-export enum SpeedConstraintType {
-    at,
-    atOrAbove,
-    atOrBelow,
-}
+import { AltitudeDescriptor, SpeedDescriptor } from "../../../shared/types/ProcedureLeg";
+import { Degrees, Feet, Knots, NauticalMiles } from "../../../shared/types/Common";
 
 export interface AltitudeConstraint {
-    type: AltitudeConstraintType,
+    type: AltitudeDescriptor,
     altitude1: Feet,
     altitude2: Feet | undefined,
 }
 
 export interface SpeedConstraint {
-    type: SpeedConstraintType,
+    type: SpeedDescriptor,
     speed: Knots,
 }
 

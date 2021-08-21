@@ -1,7 +1,7 @@
 /**
  * This enum represents a Control Law selected by the guidance system.
  */
-import {Degrees, NauticalMiles} from "./types/common";
+import {Degrees, NauticalMiles} from "../../shared/types/Common";
 
 export enum ControlLaw {
     /**

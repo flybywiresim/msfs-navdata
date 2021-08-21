@@ -1,7 +1,7 @@
 import LatLon from "geodesy/latlon-ellipsoidal-vincenty";
 import {Degrees, NauticalMiles} from "../types/common";
 import {GuidanceParameters} from "../ControlLaws";
-import { Guidable } from "../guidable";
+import { Guidable } from "../Guidable";
 
 export abstract class Transition implements Guidable {
     abstract isAbeam(ppos: LatLon): boolean;

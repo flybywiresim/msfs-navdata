@@ -1,6 +1,6 @@
 import LatLon from "geodesy/latlon-ellipsoidal-vincenty";
 import { GuidanceParameters } from "./ControlLaws";
-import { Degrees, NauticalMiles } from "./types/common";
+import { Degrees, NauticalMiles } from "../../shared/types/Common";
 
 export interface Guidable {
     getGuidanceParameters(ppos: LatLon, trueTrack: Degrees): GuidanceParameters | null;
