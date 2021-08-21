@@ -1,9 +1,9 @@
-import LatLon from 'geodesy/latlon-ellipsoidal-vincenty';
 import { Waypoint } from '../Waypoint';
-import {AltitudeConstraint, Leg, SpeedConstraint} from "./index";
-import {Degrees, NauticalMiles} from "../../../shared/types/Common";
-import {MathUtils} from "../MathUtils";
-import {ControlLaw} from "../ControlLaws";
+import { AltitudeConstraint, Leg, SpeedConstraint } from "./index";
+import { Degrees, Location, NauticalMiles } from "../../../shared/types/Common";
+import { MathUtils } from "../MathUtils";
+import { ControlLaw } from "../ControlLaws";
+import { getDistance, getGreatCircleBearing } from "geolib";
 
 export class TFLeg implements Leg {
 
@@ -18,8 +18,8 @@ export class TFLeg implements Leg {
     constructor(from: Waypoint, to: Waypoint) {
         this.from = from;
         this.to = to;
-        this.mDistance = from.distanceTo(to);
-        this.mBearing = from.bearingTo(to);
+        this.mDistance = getDistance(from.coordinates, to.coordinates);
+        this.mBearing = getGreatCircleBearing(from.coordinates, to.coordinates);
     }
 
     get identifier(): string {
@@ -57,10 +57,10 @@ export class TFLeg implements Leg {
      * * FROM  * C (PPOS)
      * ```
      *
-     * @param ppos {LatLong} the current position of the aircraft
+     * @param ppos {Locationg} the current position of the aircraft
      */
-    getAircraftToLegBearing(ppos: LatLon): number {
-        const aircraftToTerminationBearing = ppos.initialBearingTo(this.to.coordinates);
+    getAircraftToLegBearing(ppos: Location): number {
+        const aircraftToTerminationBearing = getGreatCircleBearing(ppos, this.to.coordinates);
 
         // Rotate frame of reference to 0deg
         let correctedLegBearing = this.bearing - aircraftToTerminationBearing;
@@ -79,10 +79,10 @@ export class TFLeg implements Leg {
         return aircraftToLegBearing;
     }
 
-    getDistanceToGo(ppos: LatLon): NauticalMiles {
+    getDistanceToGo(ppos: Location): NauticalMiles {
         const aircraftLegBearing = this.getAircraftToLegBearing(ppos);
 
-        const absDtg = ppos.distanceTo(this.to.coordinates);
+        const absDtg = getDistance(ppos, this.to.coordinates);
 
         // @todo should be abeam distance
         if (aircraftLegBearing >= 90 && aircraftLegBearing <= 270) {
@@ -95,16 +95,16 @@ export class TFLeg implements Leg {
 
         return -absDtg;    }
 
-    getGuidanceParameters(ppos: LatLon, trueTrack: Degrees) {
-        const fromLatLongAlt = this.from.coordinates;
+    getGuidanceParameters(ppos: Location, trueTrack: Degrees) {
+        const fromLocationgAlt = this.from.coordinates;
 
         const desiredTrack = this.bearing;
         const trackAngleError = MathUtils.mod(desiredTrack - trueTrack + 180, 360) - 180;
 
         // crosstrack error
-        const bearingAC = fromLatLongAlt.initialBearingTo(ppos);
+        const bearingAC = getGreatCircleBearing(fromLocationgAlt, ppos);
         const bearingAB = desiredTrack;
-        const distanceAC = fromLatLongAlt.distanceTo(ppos);
+        const distanceAC = getDistance(fromLocationgAlt, ppos);
 
         const desiredOffset = 0;
         const actualOffset = (
@@ -127,22 +127,22 @@ export class TFLeg implements Leg {
         return 0;
     }
 
-    getPseudoWaypointLocation(distanceBeforeTerminator: number): LatLon | undefined {
+    getPseudoWaypointLocation(distanceBeforeTerminator: number): Location | undefined {
         return undefined;
     }
 
-    get initialLocation(): LatLon | undefined {
+    get initialLocation(): Location | undefined {
         return this.from.coordinates;
     }
 
-    isAbeam(ppos: LatLon) {
-        const bearingAC = this.from.coordinates.initialBearingTo(ppos);
+    isAbeam(ppos: Location) {
+        const bearingAC = getGreatCircleBearing(this.from.coordinates, ppos);
         const headingAC = Math.abs(MathUtils.diffAngle(this.bearing, bearingAC));
         if (headingAC > 90) {
             // if we're even not abeam of the starting point
             return false;
         }
-        const distanceAC = this.from.coordinates.distanceTo(ppos);
+        const distanceAC = getDistance(this.from.coordinates, ppos);
         const distanceAX = Math.cos(headingAC * MathUtils.DEEGREES_TO_RADIANS) * distanceAC;
         // if we're too far away from the starting point to be still abeam of the ending point
         return distanceAX <= this.distance;
@@ -156,7 +156,7 @@ export class TFLeg implements Leg {
         return this.to.speedConstraint;
     }
 
-    get terminatorLocation(): LatLon | undefined {
+    get terminatorLocation(): Location | undefined {
         return this.to.coordinates;
     }
 }

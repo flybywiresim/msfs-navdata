@@ -1,7 +1,6 @@
-import LatLon from 'geodesy/latlon-ellipsoidal-vincenty';
 import { Waypoint } from '../Waypoint';
-import {Degrees, NauticalMiles} from "../../../shared/types/Common";
-import {AltitudeConstraint, Leg, SpeedConstraint} from '.';
+import { Degrees, Location, NauticalMiles } from "../../../shared/types/Common";
+import { AltitudeConstraint, Leg, SpeedConstraint } from '.';
 
 export class IFLeg implements Leg {
 
@@ -27,11 +26,11 @@ export class IFLeg implements Leg {
         return 0;
     }
 
-    getDistanceToGo(ppos: LatLon): NauticalMiles {
+    getDistanceToGo(ppos: Location): NauticalMiles {
         return 0;
     }
 
-    getGuidanceParameters(ppos: LatLon, trueTrack: Degrees) {
+    getGuidanceParameters(ppos: Location, trueTrack: Degrees) {
         return undefined as any;
     }
 
@@ -39,15 +38,15 @@ export class IFLeg implements Leg {
         return 0;
     }
 
-    getPseudoWaypointLocation(distanceBeforeTerminator: number): LatLon | undefined {
+    getPseudoWaypointLocation(distanceBeforeTerminator: number): Location | undefined {
         return undefined;
     }
 
-    get initialLocation(): LatLon | undefined {
+    get initialLocation(): Location | undefined {
         return this.fix.coordinates;
     }
 
-    isAbeam(ppos: LatLon) {
+    isAbeam(ppos: Location) {
         return false;
     }
 
@@ -60,7 +59,7 @@ export class IFLeg implements Leg {
         return this.fix.speedConstraint;
     }
 
-    get terminatorLocation(): LatLon | undefined {
+    get terminatorLocation(): Location | undefined {
         return this.fix.coordinates;
     }
 }

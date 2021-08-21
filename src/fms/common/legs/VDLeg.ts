@@ -1,7 +1,6 @@
-import LatLon from 'geodesy/latlon-ellipsoidal-vincenty';
-import {Leg} from "./index";
-import {Degrees, NauticalMiles} from "../../../shared/types/Common";
-import {ControlLaw, GuidanceParameters} from "../ControlLaws";
+import { Leg } from "./index";
+import { Degrees, Location, NauticalMiles } from "../../../shared/types/Common";
+import { ControlLaw, GuidanceParameters } from "../ControlLaws";
 
 export class VDLeg implements Leg {
 
@@ -38,7 +37,7 @@ export class VDLeg implements Leg {
         return undefined;
     }
 
-    get initialLocation(): LatLon {
+    get initialLocation(): Location {
         return undefined as any;
     }
 
@@ -50,7 +49,7 @@ export class VDLeg implements Leg {
         return undefined;
     }
 
-    getGuidanceParameters(ppos: LatLon): GuidanceParameters | null {
+    getGuidanceParameters(ppos: Location): GuidanceParameters | null {
         return {
             law: ControlLaw.HEADING,
             heading: this.mHeading,
@@ -61,11 +60,11 @@ export class VDLeg implements Leg {
         return 0;
     }
 
-    getDistanceToGo(ppos: LatLon): NauticalMiles {
+    getDistanceToGo(ppos: Location): NauticalMiles {
         return 1;
     }
 
-    isAbeam(ppos: LatLon): boolean {
+    isAbeam(ppos: Location): boolean {
         return true;
     }
 }

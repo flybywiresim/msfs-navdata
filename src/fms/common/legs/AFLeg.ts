@@ -1,7 +1,6 @@
-import LatLon from 'geodesy/latlon-ellipsoidal-vincenty';
-import {AltitudeConstraint, Leg, SpeedConstraint} from "./index";
+import { AltitudeConstraint, Leg, SpeedConstraint } from "./index";
 import { Waypoint } from "../Waypoint";
-import { Degrees, NauticalMiles } from "../../../shared/types/Common";
+import { Degrees, Location, NauticalMiles } from "../../../shared/types/Common";
 
 export class AFLeg extends Leg {
 
@@ -11,13 +10,13 @@ export class AFLeg extends Leg {
 
     private readonly rho: number;
 
-    private centerCoords: LatLon;
+    private centerCoords: Location;
 
     get identifier(): string {
         return this.to.identifier;
     }
 
-    constructor(fix: Waypoint, theta: number, rho: number, centerCoords: LatLon)
+    constructor(fix: Waypoint, theta: number, rho: number, centerCoords: Location)
     {
         super();
         this.to = fix;
@@ -41,12 +40,12 @@ export class AFLeg extends Leg {
         return 0;
     }
 
-    getDistanceToGo(ppos: LatLon): NauticalMiles
+    getDistanceToGo(ppos: Location): NauticalMiles
     {
         return 0;
     }
 
-    getGuidanceParameters(ppos: LatLon, trueTrack: Degrees)
+    getGuidanceParameters(ppos: Location, trueTrack: Degrees)
     {
         return undefined as any;
     }
@@ -56,17 +55,17 @@ export class AFLeg extends Leg {
         return 0;
     }
 
-    getPseudoWaypointLocation(distanceBeforeTerminator: number): LatLon | undefined
+    getPseudoWaypointLocation(distanceBeforeTerminator: number): Location | undefined
     {
         return undefined;
     }
 
-    get initialLocation(): LatLon | undefined
+    get initialLocation(): Location | undefined
     {
         return undefined;
     }
 
-    isAbeam(ppos: LatLon)
+    isAbeam(ppos: Location)
     {
         return false;
     }
@@ -81,7 +80,7 @@ export class AFLeg extends Leg {
         return undefined;
     }
 
-    get terminatorLocation(): LatLon | undefined
+    get terminatorLocation(): Location | undefined
     {
         return undefined;
     }

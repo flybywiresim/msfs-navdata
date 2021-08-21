@@ -1,4 +1,4 @@
-import LatLon from 'geodesy/latlon-ellipsoidal-vincenty';
+import Location from 'geodesy/Location-ellipsoidal-vincenty';
 import { GuidanceParameters } from "../ControlLaws";
 import { Guidable } from "../Guidable";
 import { AltitudeDescriptor, SpeedDescriptor } from "../../../shared/types/ProcedureLeg";
@@ -26,19 +26,19 @@ export abstract class Leg implements Guidable {
 
     abstract altitudeConstraint: AltitudeConstraint | undefined;
 
-    abstract initialLocation: LatLon | undefined;
+    abstract initialLocation: Location | undefined;
 
-    abstract terminatorLocation: LatLon | undefined;
+    abstract terminatorLocation: Location | undefined;
 
-    abstract getPseudoWaypointLocation(distanceBeforeTerminator: NauticalMiles): LatLon | undefined;
+    abstract getPseudoWaypointLocation(distanceBeforeTerminator: NauticalMiles): Location | undefined;
 
-    abstract getGuidanceParameters(ppos: LatLon, trueTrack: Degrees): GuidanceParameters;
+    abstract getGuidanceParameters(ppos: Location, trueTrack: Degrees): GuidanceParameters;
 
     public getNominalRollAngle(gs: number): Degrees {
         return 0;
     }
 
-    abstract getDistanceToGo(ppos: LatLon): NauticalMiles;
+    abstract getDistanceToGo(ppos: Location): NauticalMiles;
 
-    abstract isAbeam(ppos: LatLon): boolean;
+    abstract isAbeam(ppos: Location): boolean;
 }

@@ -1,6 +1,5 @@
-import {AltitudeConstraint, Leg, SpeedConstraint} from "./index";
-import {Degrees, NauticalMiles} from "../../../shared/types/Common";
-import LatLon from "geodesy/latlon-ellipsoidal-vincenty";
+import { AltitudeConstraint, Leg, SpeedConstraint } from "./index";
+import { Degrees, Location, NauticalMiles } from "../../../shared/types/Common";
 
 export class CDLeg implements Leg {
 
@@ -32,12 +31,12 @@ export class CDLeg implements Leg {
         return this.mDistance;
     }
 
-    getDistanceToGo(ppos: LatLon): NauticalMiles
+    getDistanceToGo(ppos: Location): NauticalMiles
     {
         return 0;
     }
 
-    getGuidanceParameters(ppos: LatLon, trueTrack: Degrees)
+    getGuidanceParameters(ppos: Location, trueTrack: Degrees)
     {
         return undefined as any;
     }
@@ -47,17 +46,17 @@ export class CDLeg implements Leg {
         return 0;
     }
 
-    getPseudoWaypointLocation(distanceBeforeTerminator: number): LatLon | undefined
+    getPseudoWaypointLocation(distanceBeforeTerminator: number): Location | undefined
     {
         return undefined;
     }
 
-    get initialLocation(): LatLon | undefined
+    get initialLocation(): Location | undefined
     {
         return undefined;
     }
 
-    isAbeam(ppos: LatLon)
+    isAbeam(ppos: Location)
     {
         return false;
     }
@@ -72,7 +71,7 @@ export class CDLeg implements Leg {
         return undefined;
     }
 
-    get terminatorLocation(): LatLon | undefined
+    get terminatorLocation(): Location | undefined
     {
         return undefined;
     }

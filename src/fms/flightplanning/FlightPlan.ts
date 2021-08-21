@@ -1,7 +1,7 @@
-import { Airport } from "../../server/providers/navigraph_dfd/types/Airports";
 import { SerializedFlightPlan} from "./serialization/SerializedFlightPlan";
 import { Leg } from "../common/legs";
 import { Transition } from "../common/transitions";
+import { Airport } from "../../shared/types/Airport";
 
 type ProcedureDetails = {
     departureRunwayIdentifier: string;
