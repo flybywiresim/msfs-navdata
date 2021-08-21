@@ -5,7 +5,11 @@ import { DatabaseIdent } from '../shared/types/DatabaseIdent';
 const app = express();
 
 // TODO config file/env
-const navigraph_db_name = 'D:/dev/navdata-server/navigraph-demo/e_dfd_2107.s3db';
+const navigraph_db_name = process.argv[2];
+if (!navigraph_db_name) {
+    console.error('Please provide path to the navigraph DFD sqlite db!');
+    process.exit(1);
+}
 
 app.get('/', (req, res) => {
     const dfd = new NavigraphDfd(navigraph_db_name);

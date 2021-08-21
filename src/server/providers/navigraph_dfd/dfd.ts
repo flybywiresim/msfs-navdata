@@ -28,6 +28,7 @@ export class NavigraphDfd {
                 const result: DatabaseIdent = {
                     provider: 'Navigraph',
                     airacCycle: headers[0].currentAirac,
+                    dateFromTo: headers[0].effectiveFromto,
                 };
                 resolve(result);
             });
