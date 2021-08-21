@@ -56,6 +56,8 @@ export class NavigraphDfd implements Provider {
         return {
             databaseId: NavigraphDfd.airportDatabaseId(airport),
             ident: airport.airportIdentifier,
+            icaoCode: airport.icaoCode,
+            airportName: airport.airportName,
             location: { lat: airport.airportRefLatitude, lon: airport.airportRefLongitude, alt: airport.elevation },
             speedLimit: airport.speedLimit || undefined,
             speedLimitAltitude: airport.speedLimitAltitude || undefined,

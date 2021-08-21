@@ -3,6 +3,8 @@ import { RunwaySurfaceType } from "./Runway";
 
 export interface Airport extends DatabaseItem {
     // airport reference location, and elevation
+    icaoCode: string;
+    airportName: string;
     location: Location;
     speedLimit?: Knots;
     speedLimitAltitude?: Feet;
