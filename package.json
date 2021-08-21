@@ -1,11 +1,11 @@
 {
-  "name": "navdata-ts",
-  "version": "1.0.0",
+  "name": "msfs-flightplanning",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --pretty --transpile-only src/index.ts"
+    "dev": "ts-node-dev --respawn --pretty --transpile-only src/server/index.ts"
   },
   "keywords": [],
   "author": "",

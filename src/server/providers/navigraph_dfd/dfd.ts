@@ -1,8 +1,6 @@
 import sqlite3 from 'sqlite3';
-
 import { Header } from './types/Header';
-
-import { DatabaseIdent } from '../../types/DatabaseIdent';
+import { DatabaseIdent } from '../../../shared/types/DatabaseIdent';
 
 export class NavigraphDfd {
     private db;
@@ -24,7 +22,7 @@ export class NavigraphDfd {
                     reject(err.message);
                 }
                 const headers: Header[] = NavigraphDfd.toCamel(rows);
-                if (headers.length > 0) {
+                if (headers.length > 1) {
                     console.warn('Multiple rows in tbl_header!');
                 }
                 const result: DatabaseIdent = {
