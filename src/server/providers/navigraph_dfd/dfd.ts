@@ -1,4 +1,3 @@
-import sqlite3 from 'sqlite3';
 import { getBoundsOfDistance, getDistance, isPointInPolygon } from 'geolib';
 import { Header } from './types/Header';
 import { DatabaseIdent } from '../../../shared/types/DatabaseIdent';
@@ -6,37 +5,37 @@ import { Airport as NaviAirport } from './types/Airports';
 import { Airport } from '../../../shared/types/Airport';
 import { RunwaySurfaceType } from '../../../shared/types/Runway';
 import { Provider } from '../provider';
+import fs from 'fs';
+import initSqlJs, { BindParams, Database, Statement } from 'sql.js';
 
+const query = (stmt: Statement) => {
+    const rows = [];
+    while(stmt.step())
+        rows.push(stmt.getAsObject())
+    return rows;
+}
 export class NavigraphDfd implements Provider {
-    private db;
+    private db: Database = undefined as any;
 
     constructor(db_path: string) {
-        this.db = new sqlite3.Database(db_path, err => {
-            if (err) {
-                return console.error(err.message);
-            }
-            console.log('Successful connection to the database');
-        });
+        const filebuffer = fs.readFileSync(db_path);
+        initSqlJs().then((SQL) => {
+            this.db = new SQL.Database(filebuffer);
+        })
+
     }
 
     async getDatabaseIdent(): Promise<DatabaseIdent> {
         return new Promise((resolve, reject) => {
-            const sql = "SELECT current_airac FROM tbl_header";
-            this.db.all(sql, [], (err, rows) => {
-                if (err) {
-                    return reject(err.message);
-                }
-                const headers: Header[] = NavigraphDfd.toCamel(rows);
-                if (headers.length > 1) {
-                    console.warn('Multiple rows in tbl_header!');
-                }
-                const result: DatabaseIdent = {
-                    provider: 'Navigraph',
-                    airacCycle: headers[0].currentAirac,
-                    dateFromTo: headers[0].effectiveFromto,
-                };
-                resolve(result);
-            });
+            const sql = "SELECT current_airac, effective_fromto FROM tbl_header";
+            const stmt = this.db.prepare(sql);
+            const headers: Header[] = NavigraphDfd.toCamel(query(stmt));
+            const result: DatabaseIdent = {
+                provider: 'Navigraph',
+                airacCycle: headers[0].currentAirac,
+                dateFromTo: headers[0].effectiveFromto,
+            };
+            resolve(result);
         });
     }
 
@@ -70,13 +69,10 @@ export class NavigraphDfd implements Provider {
     async getAirportsByIdents(idents: string[]): Promise<Airport[]> {
         return new Promise((resolve, reject) => {
             const sql = `SELECT * FROM tbl_airports WHERE airport_identifier IN (${ idents.map(() => "?").join(",") })`;
-            this.db.all(sql, idents, (err, rows) => {
-                if (err) {
-                    return reject(err.message);
-                }
-                const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
-                resolve(airports.map((airport => NavigraphDfd.mapAirport(airport))));
-            });
+            const stmt = this.db.prepare(sql, idents);
+            const rows = query(stmt);
+            const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
+            resolve(airports.map((airport => NavigraphDfd.mapAirport(airport))));
         });
     }
 
@@ -102,24 +98,22 @@ export class NavigraphDfd implements Provider {
 
             if (southWestCorner.longitude > northEastCorner.longitude) {
                 // wrapped around +/- 180
-                sql += " AND (airport_ref_longitude <= ? OR airport_ref_longitude >= ?)";
+                sql += " AND (airport_ref_longitude <= ? OR airport_ref_longitude >= ?";
             } else {
                 sql += " AND airport_ref_longitude <= ? AND airport_ref_longitude >= ?";
             }
 
-            this.db.all(sql, [southWestCorner.latitude, northEastCorner.latitude, northEastCorner.longitude, southWestCorner.longitude], (err, rows) => {
-                if (err) {
-                    return reject(err.message);
-                } else if (rows.length < 1) {
-                    return reject('No airports found');
-                }
-                const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
-                resolve(airports.map((airport) => {
-                    const ap = NavigraphDfd.mapAirport(airport);
-                    ap.distance = getDistance(centre, { latitude: ap.location.lat, longitude: ap.location.lon }) / 1852;
-                    return ap;
-                }).filter((ap) => (ap.distance ?? 0) <= range).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0)));
-            });
+            const rows = query(this.db.prepare(sql, [southWestCorner.latitude, northEastCorner.latitude, northEastCorner.longitude, southWestCorner.longitude]));
+            if (rows.length < 1) {
+                return reject('No airports found');
+            }
+            const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
+            resolve(airports.map((airport) =>
+            {
+                const ap = NavigraphDfd.mapAirport(airport);
+                ap.distance = getDistance(centre, {latitude: ap.location.lat, longitude: ap.location.lon}) / 1852;
+                return ap;
+            }).filter((ap) => (ap.distance ?? 0) <= range).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0)));
         });
     }
 
