@@ -29,13 +29,14 @@ export class NavigraphDfd implements Provider {
 
     async getDatabaseIdent(): Promise<DatabaseIdent> {
         return new Promise((resolve, reject) => {
-            const sql = "SELECT current_airac, effective_fromto FROM tbl_header";
+            const sql = "SELECT current_airac, effective_fromto, previous_fromto FROM tbl_header";
             const stmt = this.db.prepare(sql);
             const headers: Header[] = NavigraphDfd.toCamel(query(stmt));
             const result: DatabaseIdent = {
                 provider: 'Navigraph',
                 airacCycle: headers[0].currentAirac,
                 dateFromTo: headers[0].effectiveFromto,
+                previousFromTo: headers[0].previousFromto,
             };
             resolve(result);
         });
