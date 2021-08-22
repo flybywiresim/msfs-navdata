@@ -1,12 +1,12 @@
 export type IlsMlsGlsCategory =
     /** ILS Localizer Only, no glideslope */
-     0 |
+     '0' |
     /** ILS Localizer/MLS/GLS Category I */
-     1 |
+     '1' |
     /** ILS Localizer/MLS/GLS Category II */
-     2 |
+     '2' |
     /** ILS Localizer/MLS/GLS Category III */
-     3 |
+     '3' |
     /** IGS Facility */
      'I' |
     /** LDA Facility with Glideslope */

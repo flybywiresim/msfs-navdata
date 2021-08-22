@@ -1,12 +1,14 @@
-import { getBoundsOfDistance, getDistance, isPointInPolygon } from 'geolib';
-import { Header } from './types/Header';
-import { DatabaseIdent } from '../../../shared/types/DatabaseIdent';
-import { Airport as NaviAirport } from './types/Airports';
-import { Airport } from '../../../shared/types/Airport';
-import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
-import { Provider } from '../provider';
+import {getBoundsOfDistance, getDistance, isPointInPolygon} from 'geolib';
+import {Header} from './types/Header';
+import {DatabaseIdent} from '../../../shared/types/DatabaseIdent';
+import {Airport as NaviAirport} from './types/Airports';
+import {Airport} from '../../../shared/types/Airport';
+import {Runway, RunwaySurfaceType} from '../../../shared/types/Runway';
+import {Provider} from '../provider';
 import fs from 'fs';
-import initSqlJs, { BindParams, Database, Statement } from 'sql.js';
+import initSqlJs, {Database, Statement} from 'sql.js';
+import {Runway as NaviRunway} from "./types/Runways";
+import {LsCategory} from "../../../shared/types/Common";
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -66,6 +68,55 @@ export class NavigraphDfd implements Provider {
         };
     }
 
+    private static mapRunway(runway: NaviRunway): Runway {
+        let lsCategory = LsCategory.None;
+        switch(runway.llzMlsGlsCategory) {
+            case '0':
+                lsCategory = LsCategory.LocOnly;
+                break;
+            case '1':
+                lsCategory = LsCategory.Category1;
+                break;
+            case '2':
+                lsCategory = LsCategory.Category2;
+                break;
+            case '3':
+                lsCategory = LsCategory.Category3;
+                break;
+            case "I":
+                lsCategory = LsCategory.IgsOnly;
+                break;
+            case "L":
+                lsCategory = LsCategory.LdaGlideslope;
+                break;
+            case "A":
+                lsCategory = LsCategory.LdaOnly;
+                break;
+            case "S":
+                lsCategory = LsCategory.SdfGlideslope;
+                break;
+            case "F":
+                lsCategory = LsCategory.SdfOnly;
+                break;
+        }
+        return {
+            ident: runway.runwayIdentifier,
+            databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
+            airportIdent: runway.airportIdentifier,
+            centreLocation: { lat: runway.runwayLatitude, lon: runway.runwayLongitude },
+            bearing: runway.runwayTrueBearing,
+            magneticBearing: runway.runwayMagneticBearing,
+            gradient: runway.runwayGradient,
+            thresholdLocation: { lat: 0, lon: 0 },
+            thresholdCrossingHeight: runway.thresholdCrossingHeight,
+            length: runway.runwayLength,
+            width: runway.runwayWidth,
+            lsIdent: runway.llzIdentifier,
+            lsCategory,
+            surfaceType: 0,
+        }
+    }
+
     async getAirportsByIdents(idents: string[]): Promise<Airport[]> {
         return new Promise((resolve, reject) => {
             const sql = `SELECT * FROM tbl_airports WHERE airport_identifier IN (${ idents.map(() => "?").join(",") })`;
@@ -80,24 +131,7 @@ export class NavigraphDfd implements Provider {
         const sql = `SELECT * FROM tbl_runways WHERE airport_identifier = $ident`;
         const stmt = this.db.prepare(sql, { $ident: ident });
         const rows = NavigraphDfd.toCamel(query(stmt));
-        return rows.map(runway => {
-            return {
-                ident: runway.runwayIdentifier,
-                databaseId: `R      ${runway.runwayIdentifier}`,
-                airportIdent: runway.airportIdentifier,
-                centreLocation: { lat: runway.runwaylatitude, lon: runway.runwayLongitude },
-                bearing: runway.runwayTrueBearing,
-                magneticBearing: runway.runwayMagneticBearing,
-                gradient: runway.runwayGradient,
-                thresholdLocation: { lat: 0, lon: 0 },
-                thresholdCrossingHeight: runway.thresholdCrossingHeight,
-                length: runway.runwayLength,
-                width: runway.runwayWidth,
-                lsIdent: runway.llzIdentifier,
-                lsCategory: runway.llzMlsGlsCategory,
-                surfaceType: 0,
-            }
-        });
+        return rows.map(runway => NavigraphDfd.mapRunway(runway));
     }
 
     async getNearbyAirports(lat: number, lon: number, range: number): Promise<Airport[]> {
