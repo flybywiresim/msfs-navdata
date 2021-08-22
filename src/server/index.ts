@@ -3,6 +3,7 @@ import { NavigraphDfd } from './providers/navigraph_dfd/dfd';
 import { DatabaseIdent } from '../shared/types/DatabaseIdent';
 import { Provider } from './providers/provider';
 import { Airport } from '../shared/types/Airport';
+import { Runway } from "../shared/types/Runway";
 
 const app = express();
 
@@ -27,6 +28,24 @@ app.get('/airports/:idents', (req, res) => {
     }
     provider.getAirportsByIdents(req.params.idents.split(',')).then((airports: Airport[]) => {
         res.json(airports);
+    });
+});
+
+app.get('/airport/:ident', (req, res) => {
+    if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
+        return res.status(400).send('Invalid ident');
+    }
+    provider.getAirportsByIdents([req.params.ident]).then((airports: Airport[]) => {
+        res.json(airports[0]);
+    });
+});
+
+app.get('/airport/:ident/runways', (req, res) => {
+    if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
+        return res.status(400).send('Invalid ident');
+    }
+    provider.getRunwaysAtAirport(req.params.ident).then((runways: Runway[]) => {
+        res.json(runways);
     });
 });
 

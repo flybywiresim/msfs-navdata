@@ -3,7 +3,7 @@ import { Header } from './types/Header';
 import { DatabaseIdent } from '../../../shared/types/DatabaseIdent';
 import { Airport as NaviAirport } from './types/Airports';
 import { Airport } from '../../../shared/types/Airport';
-import { RunwaySurfaceType } from '../../../shared/types/Runway';
+import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
 import { Provider } from '../provider';
 import fs from 'fs';
 import initSqlJs, { BindParams, Database, Statement } from 'sql.js';
@@ -73,6 +73,30 @@ export class NavigraphDfd implements Provider {
             const rows = query(stmt);
             const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
             resolve(airports.map((airport => NavigraphDfd.mapAirport(airport))));
+        });
+    }
+
+    async getRunwaysAtAirport(ident: string): Promise<Runway[]> {
+        const sql = `SELECT * FROM tbl_runways WHERE airport_identifier = $ident`;
+        const stmt = this.db.prepare(sql, { $ident: ident });
+        const rows = NavigraphDfd.toCamel(query(stmt));
+        return rows.map(runway => {
+            return {
+                ident: runway.runwayIdentifier,
+                databaseId: `R      ${runway.runwayIdentifier}`,
+                airportIdent: runway.airportIdentifier,
+                centreLocation: { lat: runway.runwaylatitude, lon: runway.runwayLongitude },
+                bearing: runway.runwayTrueBearing,
+                magneticBearing: runway.runwayMagneticBearing,
+                gradient: runway.runwayGradient,
+                thresholdLocation: { lat: 0, lon: 0 },
+                thresholdCrossingHeight: runway.thresholdCrossingHeight,
+                length: runway.runwayLength,
+                width: runway.runwayWidth,
+                lsIdent: runway.llzIdentifier,
+                lsCategory: runway.llzMlsGlsCategory,
+                surfaceType: 0,
+            }
         });
     }
 
