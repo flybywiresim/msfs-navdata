@@ -16,7 +16,7 @@ export type IlsMlsGlsCategory =
     /** SDF Facility with Glideslope */
      'S' |
     /** SDF Facility no Glideslope */
-     'F'
+     'F';
 
 export type LocalizerGlideslope = {
     /**  geographical area of the localizer */

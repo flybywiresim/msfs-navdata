@@ -18,16 +18,16 @@ export interface ProcedureLeg extends DatabaseItem {
     rnp?: NauticalMiles,
     transitionAltitude?: Feet,
     altitudeDescriptor: AltitudeDescriptor,
-    altitude1: Feet,
-    altitude2: Feet,
+    altitude1?: Feet,
+    altitude2?: Feet,
     speed?: Knots,
     speedDescriptor?: SpeedDescriptor,
-    turnDirection: TurnDirection,
-    magneticCourse: DegreesMagnetic,
-    routeDistance: NauticalMiles,
+    turnDirection?: TurnDirection,
+    magneticCourse?: DegreesMagnetic,
 }
 
 export enum AltitudeDescriptor {
+    None,
     AtAlt1, // @, At in Alt1
     AtOrAboveAlt1, // +, at or above in Alt1
     AtOrBelowAlt1, // -, at or below in Alt1

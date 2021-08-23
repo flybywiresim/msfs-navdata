@@ -18,6 +18,10 @@ export enum PathVectorType {
     Line,
     Arc,
 }
+
+/**
+ * path vectors are generated for the ND etc.
+ */
 export interface PathVector {
     type: PathVectorType,
     startPoint: Location,

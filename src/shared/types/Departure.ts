@@ -5,4 +5,5 @@ export interface Departure extends DatabaseItem {
     runwayTransitions: ProcedureTransition[],
     commonLegs: ProcedureLeg[],
     enrouteTransitions: ProcedureTransition[],
+    engineOutLegs: ProcedureLeg[],
 }

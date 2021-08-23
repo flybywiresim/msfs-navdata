@@ -2,19 +2,19 @@ import { WaypointDescriptionCode } from './WaypointDescriptionCode';
 
 type SidRouteType =
     /** Engine out SID */
-    | 0
+    | '0'
     /** SID Runway Transition */
-    | 1
+    | '1'
     /** SID Or SID Common Route */
-    | 2
+    | '2'
     /** SID Enroute Transition */
-    | 3
+    | '3'
     /** RNAV SID Runway Transition */
-    | 4
+    | '4'
     /** RNAV SID or SID Common Route */
-    | 5
+    | '5'
     /** RNAV SID Enroute Transition */
-    | 6
+    | '6'
     /** FMS SID Runway Transition */
     | 'F'
     /** FMS SID or SID Common Route */
@@ -27,23 +27,23 @@ type SidRouteType =
     | 'V';
 type StarRouteType =
     /** STAR Enroute Transition */
-    | 1
+    | '1'
     /** STAR or STAR Common Route */
-    | 2
+    | '2'
     /** STAR Runway Transition */
-    | 3
+    | '3'
     /** RNAV STAR Enroute Transition */
-    | 4
+    | '4'
     /** RNAV STAR or STAR Common Route */
-    | 5
+    | '5'
     /** RNAV STAR Runway Transition */
-    | 6
+    | '6'
     /** Profile Descent Enroute Transition */
-    | 7
+    | '7'
     /** Profile Descent Common Route */
-    | 8
+    | '8'
     /** Profile Descent Runway Transition */
-    | 9
+    | '9'
     /** FMS STAR Enroute Transition */
     | 'F'
     /** FMS STAR or STAR Common Route */
@@ -222,7 +222,7 @@ export type TerminalProcedure = {
     /** contain segment distances/along track distances/excursion distances/DME distances */
     routeDistanceHoldingDistanceTime: number;
     /** indicates, if the value in the "Route Distance/Holding" column references to a time value, or distance value */
-    distanceTime: number;
+    distanceTime: 'T' | 'D';
     /** designate whether a waypoint should be crossed */
     altitudeDescription: AltitudeDescription;
     /** contain altitudes in feet or flight level */
