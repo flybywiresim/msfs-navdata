@@ -6,6 +6,7 @@ import { Airport } from '../shared/types/Airport';
 import { Runway } from "../shared/types/Runway";
 import cors from 'cors';
 import { Waypoint } from "../shared/types/Waypoint";
+import { NdbNavaid } from "../shared/types/NdbNavaid";
 
 const app = express();
 
@@ -59,6 +60,15 @@ app.get('/airport/:ident/waypoints', (req, res) => {
     }
     provider.getWaypointsAtAirport(req.params.ident).then((waypoints: Waypoint[]) => {
         res.json(waypoints);
+    });
+});
+
+app.get('/airport/:ident/ndbs', (req, res) => {
+    if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
+        return res.status(400).send('Invalid ident');
+    }
+    provider.getNDBsAtAirport(req.params.ident).then((ndbs: NdbNavaid[]) => {
+        res.json(ndbs);
     });
 });
 

@@ -7,10 +7,13 @@ import {Runway, RunwaySurfaceType} from '../../../shared/types/Runway';
 import {Provider} from '../provider';
 import fs from 'fs';
 import initSqlJs, {Database, Statement} from 'sql.js';
-import { Runway as NaviRunway } from "./types/Runways";
-import { LsCategory } from "../../../shared/types/Common";
-import { Waypoint } from "../../../shared/types/Waypoint";
-import { TerminalWaypoint } from "./types/TerminalWaypoints";
+import {Runway as NaviRunway} from "./types/Runways";
+import {LsCategory} from "../../../shared/types/Common";
+import {Waypoint} from "../../../shared/types/Waypoint";
+import {TerminalWaypoint} from "./types/TerminalWaypoints";
+import {NdbClass, NdbNavaid} from "../../../shared/types/NdbNavaid";
+import {TerminalNDBNavaid} from "./types/NDBNavaids";
+import {VhfNavaidType} from "../../../shared/types/VhfNavaid";
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -42,6 +45,25 @@ export class NavigraphDfd implements Provider {
             };
             resolve(result);
         });
+    }
+
+    private static mapTerminalNdb(ndb: TerminalNDBNavaid): NdbNavaid {
+        return {
+            ident: ndb.ndbIdentifier,
+            databaseId: `N${ndb.icaoCode}${ndb.airportIdentifier}${ndb.ndbIdentifier}`,
+            frequency: ndb.ndbFrequency,
+            stationDeclination: 0,
+            location: { lat: ndb.ndbLatitude, lon: ndb.ndbLongitude },
+            class: NdbClass.Unknown,
+            type: VhfNavaidType.Unknown,
+        }
+    }
+
+    async getNDBsAtAirport(ident: string): Promise<NdbNavaid[]> {
+        const sql = `SELECT * FROM tbl_terminal_ndbnavaids WHERE airport_identifier = $ident`;
+        const stmt = this.db.prepare(sql, { $ident: ident });
+        const rows = NavigraphDfd.toCamel(query(stmt)) as TerminalNDBNavaid[];
+        return rows.map(navaid => NavigraphDfd.mapTerminalNdb(navaid));
     }
 
     private static mapAirport(airport: NaviAirport): Airport {
