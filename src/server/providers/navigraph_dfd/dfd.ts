@@ -361,7 +361,13 @@ export class NavigraphDfd implements Provider {
             ident: NavigraphDfd.mapLegIdent(leg),
             procedureIdent: leg.procedureIdentifier,
             type: NavigraphDfd.mapLegType(leg.pathTermination),
-            waypoint: undefined, // TODO fetch these
+            waypoint: leg.waypointIdentifier ? {
+                ident: leg.waypointIdentifier,
+                location: { lat: leg.waypointLatitude, lon: leg.waypointLongitude },
+                databaseId: `W${leg.icaoCode}${leg.airportIdentifier}${leg.waypointIdentifier}`,
+                name: leg.waypointIdentifier,
+                type: '',
+            } : undefined, // TODO fetch these
             recommendedNavaid: undefined, // TODO fetch these
             rho: leg.rho,
             theta: leg.theta,
