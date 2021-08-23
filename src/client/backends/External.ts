@@ -51,7 +51,7 @@ export class ExternalBackend extends DatabaseBackend {
         return await this.fetchApi(`airways/${idents.join()}`);
     }
 
-    public async getAirwaysByFixes(ident: string): Promise<Airway[]> {
+    public async getAirwaysByFix(ident: string): Promise<Airway[]> {
         return await this.fetchApi(`fix/${ident}/airways`);
     }
 }
