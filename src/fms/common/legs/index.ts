@@ -58,7 +58,7 @@ export abstract class Leg implements Guidable {
 
     abstract getGuidanceParameters(ppos: Location, trueTrack: Degrees): GuidanceParameters;
 
-    public getNominalRollAngle(gs: number): Degrees {
+    public getNominalRollAngle?(gs: number): Degrees {
         return 0;
     }
 
@@ -66,5 +66,7 @@ export abstract class Leg implements Guidable {
 
     abstract isAbeam(ppos: Location): boolean;
 
-    abstract getPredictedPath(): PathVector[];
+    getPredictedPath?(): PathVector[] {
+        return [];
+    }
 }

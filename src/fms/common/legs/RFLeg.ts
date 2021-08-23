@@ -89,7 +89,7 @@ export class RFLeg implements Leg {
                 type: PathVectorType.Arc,
                 startPoint: this.from.coordinates,
                 centrePoint: this.centre.coordinates,
-                sweepAngle: (this.clockwise ? -1 : 1) * this.angle;
+                sweepAngle: (this.clockwise ? -1 : 1) * this.angle,
             },
         ];
     }
