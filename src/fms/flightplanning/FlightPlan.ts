@@ -4,8 +4,8 @@ import { Transition } from "../common/transitions";
 import { Airport } from "../../shared/types/Airport";
 import { IFLeg } from "../common/legs/IFLeg";
 import { Waypoint } from "../common/Waypoint";
-import {DataManager} from "./DataManager";
-import {FlightPlanUtils} from "./FlightPlanUtils";
+import { FlightPlanUtils } from "./FlightPlanUtils";
+import {Database} from "../../client/Database";
 
 type ProcedureDetails = {
     departureRunwayIdentifier: string;
@@ -47,8 +47,11 @@ export class FlightPlan {
 
     public missedSegment: Segment = { legs: [], transitions: [] };
 
-    constructor(origin?: Airport) {
+    private database: Database;
+
+    constructor(database: Database, origin?: Airport) {
         this.originAirport = origin;
+        this.database = database;
     }
 
     public async buildDeparture() {
@@ -56,15 +59,15 @@ export class FlightPlan {
             return;
 
         const legs: Leg[] = [];
-        const departureDetails = await DataManager.getDeparture(this.procedureDetails.departureIdentifier, this.originAirport.ident);
-
+        const departureDetails = (await this.database.getDepartures(this.originAirport.ident)).find(departure => departure.ident === this.procedureDetails.departureIdentifier);
+        if(!departureDetails)
+            return;
         if(this.procedureDetails.departureRunwayIdentifier) {
             const runwayIdentifier = this.procedureDetails.departureRunwayIdentifier
-            const runway = await DataManager.getRunway(runwayIdentifier, this.originAirport.ident);
-
+            const runway = await (await this.database.getRunways(this.originAirport.ident)).find(runway => runway.ident === runwayIdentifier);
             const initialFix = new IFLeg(new Waypoint(
                 `${this.originAirport.ident}${runwayIdentifier.substr(2)}`,
-                { lat: runway.centreLocation.lat, lon: runway.centreLocation.lon }));
+                { lat: runway?.centreLocation.lat ?? 0, lon: runway?.centreLocation.lon ?? 0 }));
             legs.push(initialFix);
 
             const transition = departureDetails.runwayTransitions.find(trans => trans.ident === runwayIdentifier);
@@ -88,7 +91,9 @@ export class FlightPlan {
             return;
 
         const legs: Leg[] = [];
-        const arrivalDetails = await DataManager.getArrival(this.procedureDetails.arrivalIdentifier, this.destinationAirport.ident);
+        const arrivalDetails = (await this.database.getArrivals(this.destinationAirport.ident)).find(arrival => arrival.ident === this.procedureDetails.arrivalIdentifier);
+        if(!arrivalDetails)
+            return;
 
         if(this.procedureDetails.arrivalTransitionIdentifier) {
             const transition = arrivalDetails.enrouteTransitions.find(trans => trans.ident === this.procedureDetails.arrivalTransitionIdentifier);
@@ -116,8 +121,9 @@ export class FlightPlan {
             return;
 
         const legs: Leg[] = [];
-        const approachDetails = await DataManager.getApproach(this.procedureDetails.approachIdentifier, this.destinationAirport.ident);
-
+        const approachDetails = (await this.database.getApproaches(this.destinationAirport.ident)).find(approach => approach.ident === this.procedureDetails.approachIdentifier);
+        if(!approachDetails)
+            return;
         if(this.procedureDetails.approachTransitionIdentifier) {
             const transition = approachDetails.transitions.find(trans => trans.ident === this.procedureDetails.approachTransitionIdentifier);
             if(transition)
@@ -135,7 +141,7 @@ export class FlightPlan {
 
     public copy(): FlightPlan {
         //TODO: Make this a deep copy
-        return Object.assign(new FlightPlan(), this);
+        return Object.assign(new FlightPlan(this.database), this);
     }
 
     public static unSerialize(object: SerializedFlightPlan): FlightPlan {

@@ -1,10 +1,10 @@
 import { FlightPlan } from "./FlightPlan";
-import {DataManager} from "./DataManager";
+import {Database} from "../../client/Database";
 
 declare const SimVar: any;
 
 export class FlightPlanManager {
-    public currentFlightPlan: FlightPlan = new FlightPlan();
+    public currentFlightPlan: FlightPlan;
 
     public alternateFlightPlan: FlightPlan | undefined;
 
@@ -17,6 +17,13 @@ export class FlightPlanManager {
 
     private flightPlanVersion = 0;
 
+    private database: Database;
+
+    constructor(database: Database) {
+        this.database = database;
+        this.currentFlightPlan = new FlightPlan(database);
+    }
+
     public confirmTemporaryFlightPlan() {
         if(!this.temporaryFlightPlan)
             return;
@@ -26,8 +33,10 @@ export class FlightPlanManager {
     }
 
     public async setOrigin(ident: string) {
-        const airport = await DataManager.getAirport(ident);
-        this.currentFlightPlan = new FlightPlan(airport);
+        const airport = await this.database.getAirportByIdent(ident);
+        if(!airport)
+            return;
+        this.currentFlightPlan = new FlightPlan(this.database, airport);
         this.temporaryFlightPlan = undefined;
         this.secondaryFlightPlan = undefined;
         this.alternateFlightPlan = undefined;
@@ -35,9 +44,9 @@ export class FlightPlanManager {
     }
 
     public async setDestination(ident: string) {
-        if(!this.currentFlightPlan)
+        const airport = await this.database.getAirportByIdent(ident);
+        if(!this.currentFlightPlan || !airport)
             return;
-        const airport = await DataManager.getAirport(ident);
         this.currentFlightPlan.destinationAirport = airport;
         this.temporaryFlightPlan = undefined;
         this.secondaryFlightPlan = undefined;
