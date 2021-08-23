@@ -372,7 +372,7 @@ export class NavigraphDfd implements Provider {
                 location: { lat: leg.waypointLatitude, lon: leg.waypointLongitude },
                 databaseId: `W${leg.icaoCode}${leg.airportIdentifier}${leg.waypointIdentifier}`,
                 name: leg.waypointIdentifier,
-                type: '',
+                type: WaypointType.Unknown,
             } : undefined, // TODO fetch these
             recommendedNavaid: undefined, // TODO fetch these
             rho: leg.rho,

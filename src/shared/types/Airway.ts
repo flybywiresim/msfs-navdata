@@ -1,5 +1,5 @@
-import { Waypoint } from "../../fms/common/Waypoint";
 import { DatabaseItem, Feet, NauticalMiles } from "./Common";
+import { Waypoint } from "./Waypoint";
 
 export enum AirwayType {
     Airline,

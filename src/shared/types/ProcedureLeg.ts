@@ -1,13 +1,13 @@
-import { VHFNavaid } from "../../server/providers/navigraph_dfd/types/VHFNavaids";
 import { DatabaseItem, DegreesMagnetic, Feet, Knots, Minutes, NauticalMiles } from "./Common";
 import { NdbNavaid } from "./NdbNavaid";
+import { VhfNavaid } from "./VhfNavaid";
 import { Waypoint } from "./Waypoint";
 
 export interface ProcedureLeg extends DatabaseItem {
     procedureIdent: string,
     type: LegType,
     waypoint?: Waypoint,
-    recommendedNavaid?: VHFNavaid | NdbNavaid | Waypoint, // TODO can be other types?
+    recommendedNavaid?: VhfNavaid | NdbNavaid | Waypoint, // TODO can be other types?
     /**
      * Distance from the recommended navaid, to the waypoint
      */
