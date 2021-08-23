@@ -1,0 +1,21 @@
+{
+  "index": "./index.tsx",
+  "isInteractive": true,
+  "name": "display1",
+  "dimensions": {
+    "mm": {
+      "width": 1920,
+      "height": 1080
+    },
+    "px": {
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "position": {
+    "x": 0,
+    "y": 0,
+    "width": 1920,
+    "height": 1080
+  }
+}

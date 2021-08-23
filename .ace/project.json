@@ -1,0 +1,7 @@
+{
+  "name": "msfs-flightplanning",
+  "createdAt": 1000,
+  "paths": {
+    "panelSrc": "/src/client/instruments/src"
+  }
+}
