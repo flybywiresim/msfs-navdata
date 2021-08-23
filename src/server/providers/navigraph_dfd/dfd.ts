@@ -10,7 +10,7 @@ import fs from 'fs';
 import initSqlJs, {Database, Statement} from 'sql.js';
 import {Runway as NaviRunway} from "./types/Runways";
 import {LsCategory} from "../../../shared/types/Common";
-import {Waypoint} from "../../../shared/types/Waypoint";
+import {Waypoint, WaypointType} from "../../../shared/types/Waypoint";
 import {TerminalWaypoint} from "./types/TerminalWaypoints";
 import {NdbClass, NdbNavaid} from "../../../shared/types/NdbNavaid";
 import {TerminalNDBNavaid} from "./types/NDBNavaids";
@@ -82,7 +82,7 @@ export class NavigraphDfd implements Provider {
                 databaseId: `W    ${waypoint.icaoCode}${waypoint.waypointIdentifier}`,
                 location: { lat: waypoint.waypointLatitude, lon: waypoint.waypointLongitude },
                 name: waypoint.waypointName,
-                type: waypoint.waypointType,
+                type: WaypointType.Unknown,
             };
         });
     }
@@ -176,7 +176,7 @@ export class NavigraphDfd implements Provider {
                 databaseId: `W${waypoint.icaoCode}${waypoint.regionCode}${waypoint.waypointIdentifier}`,
                 location: { lat: waypoint.waypointLatitude, lon: waypoint.waypointLongitude },
                 name: waypoint.waypointName,
-                type: waypoint.waypointType
+                type: WaypointType.Unknown,
             };
         });
     }

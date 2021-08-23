@@ -6,6 +6,9 @@ export interface Runway extends DatabaseItem {
     bearing: DegreesTrue;
     magneticBearing: DegreesMagnetic;
     gradient: Degrees;
+    /**
+     * Location, including altitude (if available), of the threshold
+     */
     thresholdLocation: Location;
     thresholdCrossingHeight: Feet;
     length: Metres;

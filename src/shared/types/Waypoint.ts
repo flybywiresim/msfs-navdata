@@ -1,10 +1,13 @@
 import { DatabaseItem, Location } from "./Common";
-import { TerminalWaypointType } from "../../server/providers/navigraph_dfd/types/TerminalWaypoints";
-import { EnRouteWaypointType } from "../../server/providers/navigraph_dfd/types/EnrouteWaypoints";
+
+export enum WaypointType {
+    // TODO
+    Unknown,
+}
 
 export interface Waypoint extends DatabaseItem {
     location: Location,
     name: string,
-    type: TerminalWaypointType | EnRouteWaypointType,
+    type: WaypointType,
     // TODO more...
 }

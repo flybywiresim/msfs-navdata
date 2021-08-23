@@ -8,5 +8,8 @@ export interface IlsNavaid extends DatabaseItem {
     locBearing: DegreesMagnetic;
     gsLocation: Location;
     gsSlope: Degrees;
+    /**
+     * Beware: this is NOT the same as magnetic variation
+     */
     stationDeclination: Degrees;
 }

@@ -15,8 +15,15 @@ export type Minutes = number;
 export type NauticalMiles = number;
 
 export interface DatabaseItem {
-    // unique ID that can be used to compare objects
+    /**
+     * Globally unique ID
+     * Should _not_ be used for any purpose other than comparing equality
+     * between objects from the nav database (i.e. check if your tuned VOR is the same as a waypoint)
+     */
     databaseId: string,
+    /**
+     * ICAO region code (2 letter)
+     */
     icaoCode: string,
     ident: string,
 }
