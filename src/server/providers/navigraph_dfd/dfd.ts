@@ -719,11 +719,10 @@ export class NavigraphDfd implements Provider {
     }
 
     private static mapAirways(fixes: NaviAirwayFix[]): Airway[] {
-        const airways: Map<string, Airway> = new Map();
-
-        fixes.forEach((fix) => {
-            if (!airways.has(fix.routeIdentifier)) {
-                airways.set(fix.routeIdentifier, {
+        const airways: Airway[] = [];
+        fixes.forEach((fix, index) => {
+            if(!index || fixes[index - 1]?.waypointDescriptionCode[1] === 'E')
+                airways.push({
                     databaseId: NavigraphDfd.mapAirwayIdent(fix),
                     icaoCode: fix.icaoCode,
                     ident: fix.routeIdentifier,
@@ -734,9 +733,7 @@ export class NavigraphDfd implements Provider {
                     minimumAltitudeBackward: fix.minimumAltitude2,
                     maximumAltitude: fix.maximumAltitude,
                 });
-            }
-            const airway = airways.get(fix.routeIdentifier);
-            airway?.fixes.push({
+            airways[airways.length - 1].fixes.push({
                 icaoCode: fix.icaoCode,
                 databaseId: `W${fix.icaoCode}    ${fix.waypointIdentifier}`, // TODO function
                 ident: fix.waypointIdentifier,
@@ -744,8 +741,7 @@ export class NavigraphDfd implements Provider {
                 type: WaypointType.Unknown, // TODO
             });
         });
-
-        return Array.from(airways.values());
+        return airways;
     }
 
     async getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
@@ -802,8 +798,6 @@ export class NavigraphDfd implements Provider {
     }
 
     private static mapAirwayIdent(airway: NaviAirwayFix): string {
-        console.log(`E${airway.icaoCode}    ${airway.routeIdentifier}`);
-        console.log(airway);
         return `E${airway.icaoCode}    ${airway.routeIdentifier}`;
     }
 }

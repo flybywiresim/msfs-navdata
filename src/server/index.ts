@@ -120,7 +120,7 @@ app.get('/airport/:ident/approaches', (req, res) => {
 });
 
 app.get('/airways/:idents', (req, res) => {
-    if (!req.params.idents.match(/^[A-Za-z0-9]{4}(,[A-Za-z0-9]{4})*$/)) {
+    if (!req.params.idents.match(/^[A-Z][0-9]{0,3}(,[A-Z][0-9]{0,3})*$/)) {
         return res.status(400).send('Invalid idents');
     }
     provider.getAirwaysByIdents(req.params.idents.split(',').map((ident) => ident.toUpperCase())).then((airways: Airway[]) => {
