@@ -55,11 +55,12 @@ export class FlightPlan {
     }
 
     public get legs() {
-        const legs: Leg[] = [...this.departureSegment.legs];
+        let legs: Leg[] = [...this.departureSegment.legs];
         this.enRouteSegments.forEach(segment => {
             legs.push(...segment.legs);
         })
         legs.push(...[...this.arrivalSegment.legs, ...this.approachSegment.legs]);
+        legs = legs.filter((leg, index, array) => !(leg instanceof IFLeg && array[index - 1]?.identifier === leg.identifier));
         return legs;
     }
 
