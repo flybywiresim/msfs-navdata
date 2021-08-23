@@ -6,7 +6,8 @@ import {Approach} from "../../shared/types/Approach";
 
 export class DataManager {
     public static async fetchData(route: string): Promise<any> {
-        return await (await fetch(`https://localhost:3000${route}`)).json();
+        return await (await fetch(`http://localhost:3000${route}`)).json();
+    }
     }
 
     public static async getAirport(ident: string): Promise<Airport> {
