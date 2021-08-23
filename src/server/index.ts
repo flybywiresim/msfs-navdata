@@ -4,8 +4,11 @@ import { DatabaseIdent } from '../shared/types/DatabaseIdent';
 import { Provider } from './providers/provider';
 import { Airport } from '../shared/types/Airport';
 import { Runway } from "../shared/types/Runway";
+import cors from 'cors';
 
 const app = express();
+
+app.use(cors());
 
 // TODO config file/env
 const navigraph_db_name = process.argv[2];
