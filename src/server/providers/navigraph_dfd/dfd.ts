@@ -435,7 +435,19 @@ export class NavigraphDfd implements Provider {
                 case '2':
                 case '5':
                 case 'M':
-                    departure?.commonLegs.push(apiLeg);
+                    if(leg.transitionIdentifier) {
+                        transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
+                        if (!transition) {
+                            transition = {
+                                ident: leg.transitionIdentifier,
+                                legs: [],
+                            }
+                            departure?.runwayTransitions.push(transition);
+                        }
+                        transition.legs.push(apiLeg);
+                    }
+                    else
+                        departure?.commonLegs.push(apiLeg);
                     break;
                 case '3':
                 case '6':
@@ -496,7 +508,19 @@ export class NavigraphDfd implements Provider {
                 case '5':
                 case '8':
                 case 'M':
-                    arrival?.commonLegs.push(apiLeg);
+                    if(leg.transitionIdentifier) {
+                        transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
+                        if (!transition) {
+                            transition = {
+                                ident: leg.transitionIdentifier,
+                                legs: [],
+                            }
+                            arrival?.runwayTransitions.push(transition);
+                        }
+                        transition.legs.push(apiLeg);
+                    }
+                    else
+                        arrival?.commonLegs.push(apiLeg);
                     break;
                 case '3':
                 case '6':
