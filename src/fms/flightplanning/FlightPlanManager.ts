@@ -1,6 +1,7 @@
 import { FlightPlan } from "./FlightPlan";
+import {DataManager} from "./DataManager";
 
-declare const NavdataManager: any;
+declare const SimVar: any;
 
 export class FlightPlanManager {
     public currentFlightPlan: FlightPlan = new FlightPlan();
@@ -14,30 +15,33 @@ export class FlightPlanManager {
     public static get FlightPlanStorageKey() { return 'FPM_STORAGE_KEY' };
     public static get FlightPlanVersionKey() { return 'L:FPM_VERSION_KEY' };
 
-    private storageVersion = 0;
+    private flightPlanVersion = 0;
 
     public confirmTemporaryFlightPlan() {
         if(!this.temporaryFlightPlan)
             return;
         this.currentFlightPlan = this.temporaryFlightPlan;
         this.temporaryFlightPlan = undefined;
+        this.saveFlightPlans();
     }
 
     public async setOrigin(ident: string) {
-        const airport = await NavdataManager.getAirport(ident);
+        const airport = await DataManager.getAirport(ident);
         this.currentFlightPlan = new FlightPlan(airport);
         this.temporaryFlightPlan = undefined;
         this.secondaryFlightPlan = undefined;
         this.alternateFlightPlan = undefined;
+        this.saveFlightPlans();
     }
 
     public async setDestination(ident: string) {
         if(!this.currentFlightPlan)
             return;
-        const airport = await NavdataManager.getAirport(ident);
+        const airport = await DataManager.getAirport(ident);
         this.currentFlightPlan.destinationAirport = airport;
         this.temporaryFlightPlan = undefined;
         this.secondaryFlightPlan = undefined;
+        this.saveFlightPlans();
     }
 
     public checkTemporaryExists() {
@@ -101,7 +105,12 @@ export class FlightPlanManager {
         this.saveFlightPlans();
     }
 
-    public saveFlightPlans() {
+    public async loadFlightPlans() {
         //TODO: Add functionality with ViewListeners
+    }
+
+    public async saveFlightPlans() {
+        //TODO: Add functionality with ViewListeners
+        SimVar.SetSimVarValue(FlightPlanManager.FlightPlanVersionKey, 'number', ++this.flightPlanVersion);
     }
 }
