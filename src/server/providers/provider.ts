@@ -10,6 +10,7 @@ export abstract class Provider {
     abstract getRunwaysAtAirport(ident: string): Promise<Runway[]>;
     abstract getWaypointsAtAirport(ident: string): Promise<Waypoint[]>;
     abstract getNDBsAtAirport(ident: string): Promise<NdbNavaid[]>;
+    abstract getWaypointsByIdent(ident: string): Promise<Waypoint[]>;
     /**
      * Find all the airports within range
      * @param lat

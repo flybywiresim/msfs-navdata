@@ -14,6 +14,7 @@ import {TerminalWaypoint} from "./types/TerminalWaypoints";
 import {NdbClass, NdbNavaid} from "../../../shared/types/NdbNavaid";
 import {TerminalNDBNavaid} from "./types/NDBNavaids";
 import {VhfNavaidType} from "../../../shared/types/VhfNavaid";
+import {EnrouteWaypoint} from "./types/EnrouteWaypoints";
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -57,6 +58,21 @@ export class NavigraphDfd implements Provider {
             class: NdbClass.Unknown,
             type: VhfNavaidType.Unknown,
         }
+    }
+
+    async getWaypointsByIdent(ident: string): Promise<Waypoint[]> {
+        const sql = `SELECT * FROM tbl_enroute_waypoints WHERE waypoint_identifier = $ident`;
+        const stmt = this.db.prepare(sql, { $ident: ident });
+        const rows = NavigraphDfd.toCamel(query(stmt)) as EnrouteWaypoint[];
+        return rows.map(waypoint => {
+            return {
+                ident: waypoint.waypointIdentifier,
+                databaseId: `W    ${waypoint.icaoCode}${waypoint.waypointIdentifier}`,
+                location: { lat: waypoint.waypointLatitude, lon: waypoint.waypointLongitude },
+                name: waypoint.waypointName,
+                type: waypoint.waypointType,
+            };
+        });
     }
 
     async getNDBsAtAirport(ident: string): Promise<NdbNavaid[]> {

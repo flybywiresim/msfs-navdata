@@ -72,6 +72,15 @@ app.get('/airport/:ident/ndbs', (req, res) => {
     });
 });
 
+app.get('/enroute/waypoints/:ident', (req, res) => {
+    if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
+        return res.status(400).send('Invalid ident');
+    }
+    provider.getWaypointsByIdent(req.params.ident).then((waypoints: Waypoint[]) => {
+        res.json(waypoints);
+    });
+});
+
 app.get('/nearby/airports/:ppos/:range?', (req, res) => {
     if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
         return res.status(400).send('Invalid ppos');

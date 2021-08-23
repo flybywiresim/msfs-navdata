@@ -58,7 +58,7 @@ type TypeColumn3 = '' |
     /** Multiple */
     'Z';
 
-type EnRouteWaypointType = `${TypeColumn1}${TypeColumn2}${TypeColumn3}`;
+export type EnRouteWaypointType = `${TypeColumn1}${TypeColumn2}${TypeColumn3}`;
 
 type WaypointUsage = `${'' | /** RNAV */ 'R'}
     ${
