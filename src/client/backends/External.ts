@@ -1,4 +1,5 @@
 import { Airport } from "../../shared/types/Airport";
+import { Airway } from "../../shared/types/Airway";
 import { Approach } from "../../shared/types/Approach";
 import { Arrival } from "../../shared/types/Arrival";
 import { Departure } from "../../shared/types/Departure";
@@ -44,5 +45,13 @@ export class ExternalBackend extends DatabaseBackend {
 
     public async getApproaches(airportIdentifier: string): Promise<Approach[]> {
         return await this.fetchApi<Approach>(`airport/${airportIdentifier}/approaches`);
+    }
+
+    public async getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
+        return await this.fetchApi(`airways/${idents.join()}`);
+    }
+
+    public async getAirwaysByFixes(ident: string): Promise<Airway[]> {
+        return await this.fetchApi(`fix/${ident}/airways`);
     }
 }

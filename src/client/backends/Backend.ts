@@ -1,4 +1,5 @@
 import { Airport } from "../../shared/types/Airport";
+import { Airway } from "../../shared/types/Airway";
 import { Approach } from "../../shared/types/Approach";
 import { Arrival } from "../../shared/types/Arrival";
 import { Departure } from "../../shared/types/Departure";
@@ -11,4 +12,6 @@ export abstract class DatabaseBackend {
     abstract getDepartures(airportIdentifier: string): Promise<Departure[]>;
     abstract getArrivals(airportIdentifier: string): Promise<Arrival[]>;
     abstract getApproaches(airportIdentifier: string): Promise<Approach[]>;
+    abstract getAirwaysByIdents(idents: string[]): Promise<Airway[]>;
+    abstract getAirwaysByFix(ident: string): Promise<Airway[]>;
 }

@@ -1,26 +1,28 @@
-import {getBoundsOfDistance, getDistance, isPointInPolygon} from 'geolib';
-import {Header} from './types/Header';
-import {DatabaseIdent} from '../../../shared/types/DatabaseIdent';
-import {Airport as NaviAirport} from './types/Airports';
-import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
-import {Airport} from '../../../shared/types/Airport';
-import {Runway, RunwaySurfaceType} from '../../../shared/types/Runway';
-import {Provider} from '../provider';
 import fs from 'fs';
-import initSqlJs, {Database, Statement} from 'sql.js';
-import {Runway as NaviRunway} from "./types/Runways";
-import {LsCategory} from "../../../shared/types/Common";
-import {Waypoint, WaypointType} from "../../../shared/types/Waypoint";
-import {TerminalWaypoint} from "./types/TerminalWaypoints";
-import {NdbClass, NdbNavaid} from "../../../shared/types/NdbNavaid";
-import {TerminalNDBNavaid} from "./types/NDBNavaids";
-import {VhfNavaidType} from "../../../shared/types/VhfNavaid";
-import {EnrouteWaypoint} from "./types/EnrouteWaypoints";
+import initSqlJs, { Database, Statement } from 'sql.js';
+import { getBoundsOfDistance, getDistance, isPointInPolygon } from 'geolib';
+import { Header } from './types/Header';
+import { DatabaseIdent } from '../../../shared/types/DatabaseIdent';
+import { Airport as NaviAirport } from './types/Airports';
+import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
+import { Airport } from '../../../shared/types/Airport';
+import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
+import { Provider } from '../provider';
+import { Runway as NaviRunway } from "./types/Runways";
+import { LsCategory } from "../../../shared/types/Common";
+import { Waypoint, WaypointType } from "../../../shared/types/Waypoint";
+import { TerminalWaypoint} from "./types/TerminalWaypoints";
+import { NdbClass, NdbNavaid } from "../../../shared/types/NdbNavaid";
+import { TerminalNDBNavaid } from "./types/NDBNavaids";
+import { VhfNavaidType } from "../../../shared/types/VhfNavaid";
+import { EnrouteWaypoint } from "./types/EnrouteWaypoints";
 import { IlsMlsGlsCategory } from "./types/LocalizerGlideslopes";
 import { Departure } from '../../../shared/types/Departure';
 import { AltitudeDescriptor, LegType, ProcedureLeg, SpeedDescriptor, TurnDirection } from '../../../shared/types/ProcedureLeg';
 import { Arrival } from '../../../shared/types/Arrival';
 import { Approach, ApproachType } from '../../../shared/types/Approach';
+import { Airway, AirwayDirection, AirwayLevel } from '../../../shared/types/Airway';
+import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -641,7 +643,7 @@ export class NavigraphDfd implements Provider {
             try {
                 const rows = query(stmt);
                 if (rows.length < 1) {
-                    reject('No departures!');
+                    return reject('No departures!');
                 }
                 const departureLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
                 resolve(NavigraphDfd.mapDepartures(departureLegs, ap[0].icaoCode));
@@ -662,7 +664,7 @@ export class NavigraphDfd implements Provider {
             try {
                 const rows = query(stmt);
                 if (rows.length < 1) {
-                    reject('No arrivals!');
+                    return reject('No arrivals!');
                 }
                 const arrivalLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
                 resolve(NavigraphDfd.mapArrivals(arrivalLegs, ap[0].icaoCode));
@@ -683,7 +685,7 @@ export class NavigraphDfd implements Provider {
             try {
                 const rows = query(stmt);
                 if (rows.length < 1) {
-                    reject('No arrivals!');
+                    return reject('No arrivals!');
                 }
                 const approachLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
                 resolve(NavigraphDfd.mapApproaches(approachLegs, ap[0].icaoCode));
@@ -691,6 +693,82 @@ export class NavigraphDfd implements Provider {
                 stmt.free();
             }
         });
+    }
+
+    private static mapAirwayLevel(level: string): AirwayLevel {
+        switch (level) {
+            case 'H':
+                return AirwayLevel.High;
+            case 'L':
+                return AirwayLevel.Low;
+            default:
+            case 'B':
+                return AirwayLevel.All;
+        }
+    }
+
+    private static mapAirwayDirection(direction: string): AirwayDirection {
+        switch (direction) {
+            case 'F':
+                return AirwayDirection.Forward;
+            case 'B':
+                return AirwayDirection.Backward;
+            default:
+                return AirwayDirection.Either;
+        }
+    }
+
+    private static mapAirways(fixes: NaviAirwayFix[]): Airway[] {
+        const airways: Map<string, Airway> = new Map();
+
+        fixes.forEach((fix) => {
+            if (!airways.has(fix.routeIdentifier)) {
+                airways.set(fix.routeIdentifier, {
+                    databaseId: NavigraphDfd.mapAirwayIdent(fix),
+                    icaoCode: fix.icaoCode,
+                    ident: fix.routeIdentifier,
+                    level: NavigraphDfd.mapAirwayLevel(fix.flightlevel),
+                    fixes: [],
+                    direction: NavigraphDfd.mapAirwayDirection(fix.directionalRestriction),
+                    minimumAltitudeForward: fix.minimumAltitude1,
+                    minimumAltitudeBackward: fix.minimumAltitude2,
+                    maximumAltitude: fix.maximumAltitude,
+                });
+            }
+            const airway = airways.get(fix.routeIdentifier);
+            airway?.fixes.push({
+                icaoCode: fix.icaoCode,
+                databaseId: `W${fix.icaoCode}    ${fix.waypointIdentifier}`, // TODO function
+                ident: fix.waypointIdentifier,
+                location: { lat: fix.waypointLatitude, lon: fix.waypointLongitude },
+                type: WaypointType.Unknown, // TODO
+            });
+        });
+
+        return Array.from(airways.values());
+    }
+
+    async getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
+        return new Promise((resolve, reject) => {
+            const stmt = this.db.prepare(`SELECT * FROM tbl_enroute_airways WHERE route_identifier IN (${ idents.map(() => "?").join(",") }) ORDER BY seqno ASC`, idents);
+            try {
+                const rows = query(stmt);
+                if (rows.length < 1) {
+                    return reject('No airways');
+                }
+                const airways: NaviAirwayFix[] = NavigraphDfd.toCamel(rows);
+                resolve(NavigraphDfd.mapAirways(airways));
+            } finally {
+                stmt.free();
+            }
+        });
+    }
+
+    async getAirwaysByFix(idents: string): Promise<Airway[]> {
+        return new Promise((resolve, reject) => {
+            // TODO
+            reject('SOON');
+        })
     }
 
     public static toCamel(query: any[]) {
@@ -721,5 +799,11 @@ export class NavigraphDfd implements Provider {
 
     private static procedureDatabaseId(procedure: NaviProcedure, icaoCode: string): string {
         return `P${icaoCode}${procedure.airportIdentifier}${procedure.procedureIdentifier}`;
+    }
+
+    private static mapAirwayIdent(airway: NaviAirwayFix): string {
+        console.log(`E${airway.icaoCode}    ${airway.routeIdentifier}`);
+        console.log(airway);
+        return `E${airway.icaoCode}    ${airway.routeIdentifier}`;
     }
 }

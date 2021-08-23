@@ -4,8 +4,9 @@ import { Arrival } from "../../shared/types/Arrival";
 import { DatabaseIdent } from "../../shared/types/DatabaseIdent";
 import { Departure } from "../../shared/types/Departure";
 import { Runway } from "../../shared/types/Runway";
-import {Waypoint} from "../../shared/types/Waypoint";
-import {NdbNavaid} from "../../shared/types/NdbNavaid";
+import { Waypoint } from "../../shared/types/Waypoint";
+import { NdbNavaid } from "../../shared/types/NdbNavaid";
+import { Airway } from "../../shared/types/Airway";
 
 export abstract class Provider {
     abstract getDatabaseIdent(): Promise<DatabaseIdent>;
@@ -25,4 +26,6 @@ export abstract class Provider {
     abstract getDepartures(ident: string): Promise<Departure[]>;
     abstract getArrivals(ident: string): Promise<Arrival[]>;
     abstract getApproaches(ident: string): Promise<Approach[]>;
+    abstract getAirwaysByIdents(idents: string[]): Promise<Airway[]>;
+    abstract getAirwaysByFix(idents: string): Promise<Airway[]>;
 }

@@ -7,7 +7,7 @@ export enum WaypointType {
 
 export interface Waypoint extends DatabaseItem {
     location: Location,
-    name: string,
+    name?: string,
     type: WaypointType,
     // TODO more...
 }

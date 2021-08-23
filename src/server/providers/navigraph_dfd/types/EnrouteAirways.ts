@@ -35,17 +35,17 @@ export type EnRouteAirway = {
     /** Geographical area of the waypoint */
     areaCode: string;
     /** EnRoute route identifier */
-    routeIdentifer: string;
+    routeIdentifier: string;
     /** Sort order of each EnRoute airway, no duplicate sequences per airway are possible */
     seqno: number;
     /** Location indicator of the waypoint */
     icaoCode: string;
     /** Navaid or waypoint identifier */
-    fixIdentifier: string;
+    waypointIdentifier: string;
     /** Navaid or waypoint latitude in degrees decimal floating point (N positive, S negative) */
-    fixLatitude: number;
+    waypointLatitude: number;
     /** Navaid or waypoint longitude in degrees decimal floating point (E positive, W negative) */
-    fixLongitude: number;
+    waypointLongitude: number;
     /** Provides information on the type of fix */
     waypointDescriptionCode: WaypointDescriptionCode;
     /** Indicated the route type */

@@ -7,6 +7,7 @@ import { Runway } from "../shared/types/Runway";
 import cors from 'cors';
 import { Waypoint } from "../shared/types/Waypoint";
 import { NdbNavaid } from "../shared/types/NdbNavaid";
+import { Airway } from '../shared/types/Airway';
 
 const app = express();
 
@@ -116,6 +117,17 @@ app.get('/airport/:ident/approaches', (req, res) => {
     }).catch((err) => {
         res.status(500).send(err);
     })
+});
+
+app.get('/airways/:idents', (req, res) => {
+    if (!req.params.idents.match(/^[A-Za-z0-9]{4}(,[A-Za-z0-9]{4})*$/)) {
+        return res.status(400).send('Invalid idents');
+    }
+    provider.getAirwaysByIdents(req.params.idents.split(',').map((ident) => ident.toUpperCase())).then((airways: Airway[]) => {
+        res.json(airways);
+    }).catch((err) => {
+        res.status(500).send(err);
+    });
 });
 
 app.listen(5000, () => {
