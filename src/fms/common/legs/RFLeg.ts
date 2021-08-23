@@ -1,5 +1,5 @@
 import { Waypoint } from '../Waypoint';
-import { AltitudeConstraint, Leg, SpeedConstraint } from "./index";
+import { AltitudeConstraint, Leg, PathVector, PathVectorType, SpeedConstraint } from "./index";
 import { Degrees, Location, NauticalMiles } from "../../../shared/types/Common";
 
 export class RFLeg implements Leg {
@@ -81,5 +81,16 @@ export class RFLeg implements Leg {
     get terminatorLocation(): Location | undefined
     {
         return this.to.coordinates;
+    }
+
+    public getPredictedPath(): PathVector[] {
+        return [
+                {
+                type: PathVectorType.Arc,
+                startPoint: this.from.coordinates,
+                centrePoint: this.centre.coordinates,
+                sweepAngle: (this.clockwise ? -1 : 1) * this.angle;
+            },
+        ];
     }
 }

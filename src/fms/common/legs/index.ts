@@ -1,8 +1,7 @@
-import Location from 'geodesy/Location-ellipsoidal-vincenty';
 import { GuidanceParameters } from "../ControlLaws";
 import { Guidable } from "../Guidable";
 import { AltitudeDescriptor, SpeedDescriptor } from "../../../shared/types/ProcedureLeg";
-import { Degrees, Feet, Knots, NauticalMiles } from "../../../shared/types/Common";
+import { Degrees, Feet, Knots, Location, NauticalMiles } from "../../../shared/types/Common";
 
 export interface AltitudeConstraint {
     type: AltitudeDescriptor,
@@ -13,6 +12,27 @@ export interface AltitudeConstraint {
 export interface SpeedConstraint {
     type: SpeedDescriptor,
     speed: Knots,
+}
+
+export enum PathVectorType {
+    Line,
+    Arc,
+}
+export interface PathVector {
+    type: PathVectorType,
+    startPoint: Location,
+    /**
+     * end point of line
+     */
+    endPoint?: Location,
+    /**
+     * centre of arc
+     */
+    centrePoint?: Location,
+    /**
+     * conventional right-hand angle i.e. +ve = anti-clockwise, -ve = clockwise
+     */
+    sweepAngle?: Degrees,
 }
 
 export abstract class Leg implements Guidable {
@@ -41,4 +61,6 @@ export abstract class Leg implements Guidable {
     abstract getDistanceToGo(ppos: Location): NauticalMiles;
 
     abstract isAbeam(ppos: Location): boolean;
+
+    abstract getPredictedPath(): PathVector[];
 }

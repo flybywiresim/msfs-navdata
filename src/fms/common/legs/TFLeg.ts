@@ -1,5 +1,5 @@
 import { Waypoint } from '../Waypoint';
-import { AltitudeConstraint, Leg, SpeedConstraint } from "./index";
+import { AltitudeConstraint, Leg, PathVector, PathVectorType, SpeedConstraint } from "./index";
 import { Degrees, Location, NauticalMiles } from "../../../shared/types/Common";
 import { MathUtils } from "../MathUtils";
 import { ControlLaw } from "../ControlLaws";
@@ -158,5 +158,15 @@ export class TFLeg implements Leg {
 
     get terminatorLocation(): Location | undefined {
         return this.to.coordinates;
+    }
+
+    public getPredictedPath(): PathVector[] {
+        return [
+            {
+                type: PathVectorType.Line,
+                startPoint: this.from.coordinates,
+                endPoint: this.to.coordinates,
+            },
+        ];
     }
 }
