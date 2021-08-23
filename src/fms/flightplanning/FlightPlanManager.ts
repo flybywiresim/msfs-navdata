@@ -58,55 +58,55 @@ export class FlightPlanManager {
             this.temporaryFlightPlan = this.currentFlightPlan.copy();
     }
 
-    public setDepartureRunwayIdentifier(ident: string) {
+    public async setDepartureRunwayIdentifier(ident: string) {
         this.checkTemporaryExists();
         // @ts-ignore
         this.temporaryFlightPlan.procedureDetails.departureRunwayIdentifier = ident;
-        this.temporaryFlightPlan?.buildDeparture();
+        await this.temporaryFlightPlan?.buildDeparture();
         this.saveFlightPlans();
     }
 
-    public setDepartureIdentifier(ident: string) {
+    public async setDepartureIdentifier(ident: string) {
         this.checkTemporaryExists();
         // @ts-ignore
         this.temporaryFlightPlan.procedureDetails.departureIdentifier = ident;
-        this.temporaryFlightPlan?.buildDeparture();
+        await this.temporaryFlightPlan?.buildDeparture();
         this.saveFlightPlans();
     }
 
-    public setDepartureTransitionIdentifier(ident: string) {
+    public async setDepartureTransitionIdentifier(ident: string) {
         this.checkTemporaryExists();
         // @ts-ignore
         this.temporaryFlightPlan.procedureDetails.departureTransitionIdentifier = ident;
-        this.temporaryFlightPlan?.buildDeparture();
+        await this.temporaryFlightPlan?.buildDeparture();
         this.saveFlightPlans();
     }
 
-    public setArrivalTransitionIdentifier(ident: string) {
+    public async setArrivalTransitionIdentifier(ident: string) {
         this.checkTemporaryExists();
         // @ts-ignore
         this.temporaryFlightPlan.procedureDetails.arrivalTransitionIdentifier = ident;
-        this.temporaryFlightPlan?.buildArrival();
+        await this.temporaryFlightPlan?.buildArrival();
         this.saveFlightPlans();
     }
 
-    public setArrivalIdentifier(ident: string) {
+    public async setArrivalIdentifier(ident: string) {
         this.checkTemporaryExists();
         // @ts-ignore
         this.temporaryFlightPlan.procedureDetails.arrivalIdentifier = ident;
-        this.temporaryFlightPlan?.buildArrival();
+        await this.temporaryFlightPlan?.buildArrival();
         this.saveFlightPlans();
     }
 
-    public setApproachTransitionIdentifier(ident: string) {
+    public async setApproachTransitionIdentifier(ident: string) {
         this.checkTemporaryExists();
         // @ts-ignore
         this.temporaryFlightPlan.procedureDetails.approachTransitionIdentifier = ident;
-        this.temporaryFlightPlan?.buildApproach();
+        await this.temporaryFlightPlan?.buildApproach();
         this.saveFlightPlans();
     }
 
-    public setApproachIdentifier(ident: string) {
+    public async setApproachIdentifier(ident: string) {
         this.checkTemporaryExists();
         // @ts-ignore
         this.temporaryFlightPlan.procedureDetails.approachIdentifier = ident;

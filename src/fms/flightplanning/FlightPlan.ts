@@ -6,6 +6,9 @@ import { IFLeg } from "../common/legs/IFLeg";
 import { Waypoint } from "../common/Waypoint";
 import { FlightPlanUtils } from "./FlightPlanUtils";
 import {Database} from "../../client/Database";
+import {Departure} from "../../shared/types/Departure";
+import {Arrival} from "../../shared/types/Arrival";
+import {Approach} from "../../shared/types/Approach";
 
 type ProcedureDetails = {
     departureRunwayIdentifier: string;
@@ -37,15 +40,19 @@ export class FlightPlan {
         approachIdentifier: ''
     };
 
-    public departureSegment: Segment = { legs: [], transitions: [] };
+    public departure: Departure | undefined;
+    public arrival: Arrival | undefined;
+    public approach: Approach | undefined;
 
-    public enRouteSegments: Segment[] = [];
+    private departureSegment: Segment = { legs: [], transitions: [] };
 
-    public arrivalSegment: Segment = { legs: [], transitions: [] };
+    private enRouteSegments: Segment[] = [];
 
-    public approachSegment: Segment = { legs: [], transitions: [] };
+    private arrivalSegment: Segment = { legs: [], transitions: [] };
 
-    public missedSegment: Segment = { legs: [], transitions: [] };
+    private approachSegment: Segment = { legs: [], transitions: [] };
+
+    private missedSegment: Segment = { legs: [], transitions: [] };
 
     private database: Database;
 
@@ -69,9 +76,10 @@ export class FlightPlan {
             return;
 
         const legs: Leg[] = [];
-        const departureDetails = (await this.database.getDepartures(this.originAirport.ident)).find(departure => departure.ident === this.procedureDetails.departureIdentifier);
-        if(!departureDetails)
+        this.departure = (await this.database.getDepartures(this.originAirport.ident)).find(departure => departure.ident === this.procedureDetails.departureIdentifier);
+        if(!this.departure)
             return;
+
         if(this.procedureDetails.departureRunwayIdentifier) {
             const runwayIdentifier = this.procedureDetails.departureRunwayIdentifier
             const runway = await (await this.database.getRunways(this.originAirport.ident)).find(runway => runway.ident === runwayIdentifier);
@@ -80,15 +88,15 @@ export class FlightPlan {
                 { lat: runway?.thresholdLocation.lat ?? 0, lon: runway?.thresholdLocation.lon ?? 0 }));
             legs.push(initialFix);
 
-            const transition = departureDetails.runwayTransitions.find(trans => trans.ident === runwayIdentifier);
+            const transition = this.departure.runwayTransitions.find(trans => trans.ident === runwayIdentifier);
             if(transition)
                 legs.push(...FlightPlanUtils.fromProcedureLegs(transition.legs));
         }
 
-        legs.push(...FlightPlanUtils.fromProcedureLegs(departureDetails.commonLegs));
+        legs.push(...FlightPlanUtils.fromProcedureLegs(this.departure.commonLegs));
 
         if(this.procedureDetails.departureTransitionIdentifier) {
-            const transition = departureDetails.enrouteTransitions.find(trans => trans.ident === this.procedureDetails.departureTransitionIdentifier);
+            const transition = this.departure.enrouteTransitions.find(trans => trans.ident === this.procedureDetails.departureTransitionIdentifier);
             if(transition)
                 legs.push(...FlightPlanUtils.fromProcedureLegs(transition.legs))
         }
@@ -101,22 +109,22 @@ export class FlightPlan {
             return;
 
         const legs: Leg[] = [];
-        const arrivalDetails = (await this.database.getArrivals(this.destinationAirport.ident)).find(arrival => arrival.ident === this.procedureDetails.arrivalIdentifier);
-        if(!arrivalDetails)
+        this.arrival = (await this.database.getArrivals(this.destinationAirport.ident)).find(arrival => arrival.ident === this.procedureDetails.arrivalIdentifier);
+        if(!this.arrival)
             return;
 
         if(this.procedureDetails.arrivalTransitionIdentifier) {
-            const transition = arrivalDetails.enrouteTransitions.find(trans => trans.ident === this.procedureDetails.arrivalTransitionIdentifier);
+            const transition = this.arrival.enrouteTransitions.find(trans => trans.ident === this.procedureDetails.arrivalTransitionIdentifier);
             if(transition)
                 legs.push(...FlightPlanUtils.fromProcedureLegs(transition.legs))
         }
 
-        legs.push(...FlightPlanUtils.fromProcedureLegs(arrivalDetails.commonLegs));
+        legs.push(...FlightPlanUtils.fromProcedureLegs(this.arrival.commonLegs));
 
         if(this.procedureDetails.approachIdentifier) {
             const runwayIdentifier = FlightPlanUtils.getRunwayFromApproachIdent(this.procedureDetails.approachIdentifier);
             if(runwayIdentifier) {
-                const transition = arrivalDetails.runwayTransitions.find(trans => trans.ident === runwayIdentifier);
+                const transition = this.arrival.runwayTransitions.find(trans => trans.ident === runwayIdentifier);
                 if (transition)
                     legs.push(...FlightPlanUtils.fromProcedureLegs(transition.legs));
             }
@@ -131,21 +139,21 @@ export class FlightPlan {
             return;
 
         const legs: Leg[] = [];
-        const approachDetails = (await this.database.getApproaches(this.destinationAirport.ident)).find(approach => approach.ident === this.procedureDetails.approachIdentifier);
-        if(!approachDetails)
+        this.approach = (await this.database.getApproaches(this.destinationAirport.ident)).find(approach => approach.ident === this.procedureDetails.approachIdentifier);
+        if(!this.approach)
             return;
         if(this.procedureDetails.approachTransitionIdentifier) {
-            const transition = approachDetails.transitions.find(trans => trans.ident === this.procedureDetails.approachTransitionIdentifier);
+            const transition = this.approach.transitions.find(trans => trans.ident === this.procedureDetails.approachTransitionIdentifier);
             if(transition)
                 legs.push(...FlightPlanUtils.fromProcedureLegs(transition.legs))
         }
 
-        legs.push(...FlightPlanUtils.fromProcedureLegs(approachDetails.legs));
+        legs.push(...FlightPlanUtils.fromProcedureLegs(this.approach.legs));
 
         this.approachSegment.legs = legs;
         this.approachSegment.transitions = FlightPlanUtils.buildTransitionsFromLegs(this.approachSegment.legs);
 
-        this.missedSegment.legs = FlightPlanUtils.fromProcedureLegs(approachDetails.missedLegs);
+        this.missedSegment.legs = FlightPlanUtils.fromProcedureLegs(this.approach.missedLegs);
         this.missedSegment.transitions = FlightPlanUtils.buildTransitionsFromLegs(this.missedSegment.legs);
     }
 

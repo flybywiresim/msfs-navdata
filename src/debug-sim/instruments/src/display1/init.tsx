@@ -36,9 +36,9 @@ export const Init = () => {
     }, [flightPlan.originAirport]);
     useEffect(() => {
         if(flightPlan.originAirport) {
-            database.getDepartures(flightPlan.originAirport.ident).then(r => setDepartureTransitions(r.find(dep => dep.ident === flightPlan.procedureDetails.departureIdentifier)?.enrouteTransitions));
+            setDepartureTransitions(flightPlan.departure?.enrouteTransitions);
         }
-    }, [flightPlan.procedureDetails.departureIdentifier]);
+    }, [flightPlan.departure]);
 
     useEffect(() => {
         if(flightPlan.destinationAirport) {
@@ -49,15 +49,15 @@ export const Init = () => {
 
     useEffect(() => {
         if(flightPlan.destinationAirport) {
-            database.getArrivals(flightPlan.destinationAirport.ident).then(r => setArrivalTransitions(r.find(dep => dep.ident === flightPlan.procedureDetails.arrivalIdentifier)?.enrouteTransitions));
+            setArrivalTransitions(flightPlan.arrival?.enrouteTransitions);
         }
-    }, [flightPlan.procedureDetails.arrivalIdentifier]);
+    }, [flightPlan.arrival]);
 
     useEffect(() => {
         if(flightPlan.destinationAirport) {
-            database.getApproaches(flightPlan.destinationAirport.ident).then(r => setApproachTransitions(r.find(dep => dep.ident === flightPlan.procedureDetails.approachIdentifier)?.transitions));
+            setApproachTransitions(flightPlan.approach?.transitions);
         }
-    }, [flightPlan.procedureDetails.approachIdentifier]);
+    }, [flightPlan.approach]);
 
     return(
         <div style={{ backgroundColor: "white" }}>
