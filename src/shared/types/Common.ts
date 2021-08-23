@@ -17,6 +17,7 @@ export type NauticalMiles = number;
 export interface DatabaseItem {
     // unique ID that can be used to compare objects
     databaseId: string,
+    icaoCode: string,
     ident: string,
 }
 

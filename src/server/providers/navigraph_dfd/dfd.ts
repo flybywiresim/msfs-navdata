@@ -60,6 +60,7 @@ export class NavigraphDfd implements Provider {
 
     private static mapTerminalNdb(ndb: TerminalNDBNavaid): NdbNavaid {
         return {
+            icaoCode: ndb.icaoCode,
             ident: ndb.ndbIdentifier,
             databaseId: `N${ndb.icaoCode}${ndb.airportIdentifier}${ndb.ndbIdentifier}`,
             frequency: ndb.ndbFrequency,
@@ -76,6 +77,7 @@ export class NavigraphDfd implements Provider {
         const rows = NavigraphDfd.toCamel(query(stmt)) as EnrouteWaypoint[];
         return rows.map(waypoint => {
             return {
+                icaoCode: waypoint.icaoCode,
                 ident: waypoint.waypointIdentifier,
                 databaseId: `W    ${waypoint.icaoCode}${waypoint.waypointIdentifier}`,
                 location: { lat: waypoint.waypointLatitude, lon: waypoint.waypointLongitude },
@@ -145,6 +147,7 @@ export class NavigraphDfd implements Provider {
 
     private static mapRunway(runway: NaviRunway): Runway {
         return {
+            icaoCode: runway.icaoCode,
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
             airportIdent: runway.airportIdentifier,
@@ -168,6 +171,7 @@ export class NavigraphDfd implements Provider {
         const rows = NavigraphDfd.toCamel(query(stmt)) as TerminalWaypoint[];
         return rows.map(waypoint => {
             return {
+                icaoCode: waypoint.icaoCode,
                 ident: waypoint.waypointIdentifier,
                 databaseId: `W${waypoint.icaoCode}${waypoint.regionCode}${waypoint.waypointIdentifier}`,
                 location: { lat: waypoint.waypointLatitude, lon: waypoint.waypointLongitude },
@@ -358,10 +362,12 @@ export class NavigraphDfd implements Provider {
     private static mapLeg(leg: NaviProcedure, icaoCode: string): ProcedureLeg {
         return {
             databaseId: NavigraphDfd.procedureDatabaseId(leg, icaoCode) + leg.seqno,
+            icaoCode: icaoCode,
             ident: NavigraphDfd.mapLegIdent(leg),
             procedureIdent: leg.procedureIdentifier,
             type: NavigraphDfd.mapLegType(leg.pathTermination),
             waypoint: leg.waypointIdentifier ? {
+                icaoCode: icaoCode,
                 ident: leg.waypointIdentifier,
                 location: { lat: leg.waypointLatitude, lon: leg.waypointLongitude },
                 databaseId: `W${leg.icaoCode}${leg.airportIdentifier}${leg.waypointIdentifier}`,
@@ -394,6 +400,7 @@ export class NavigraphDfd implements Provider {
         legs.forEach((leg) => {
             if (!departures.has(leg.procedureIdentifier)) {
                 departures.set(leg.procedureIdentifier, {
+                    icaoCode: icaoCode,
                     databaseId: NavigraphDfd.procedureDatabaseId(leg, icaoCode),
                     ident: leg.procedureIdentifier,
                     runwayTransitions: [],
@@ -458,6 +465,7 @@ export class NavigraphDfd implements Provider {
         legs.forEach((leg) => {
             if (!arrivals.has(leg.procedureIdentifier)) {
                 arrivals.set(leg.procedureIdentifier, {
+                    icaoCode: icaoCode,
                     databaseId: NavigraphDfd.procedureDatabaseId(leg, icaoCode),
                     ident: leg.procedureIdentifier,
                     runwayTransitions: [],
@@ -562,6 +570,7 @@ export class NavigraphDfd implements Provider {
         legs.forEach((leg) => {
             if (!approaches.has(leg.procedureIdentifier)) {
                 approaches.set(leg.procedureIdentifier, {
+                    icaoCode: icaoCode,
                     databaseId: NavigraphDfd.procedureDatabaseId(leg, icaoCode),
                     ident: leg.procedureIdentifier,
                     type: ApproachType.Unknown,
