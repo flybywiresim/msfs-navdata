@@ -2,7 +2,6 @@ import { Location, Degrees, DegreesTrue, DegreesMagnetic, Feet, Metres, LsCatego
 
 export interface Runway extends DatabaseItem {
     airportIdent: string;
-    centreLocation: Location;
     bearing: DegreesTrue;
     magneticBearing: DegreesMagnetic;
     gradient: Degrees;

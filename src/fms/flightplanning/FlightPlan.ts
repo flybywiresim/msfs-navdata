@@ -77,7 +77,7 @@ export class FlightPlan {
             const runway = await (await this.database.getRunways(this.originAirport.ident)).find(runway => runway.ident === runwayIdentifier);
             const initialFix = new IFLeg(new Waypoint(
                 `${this.originAirport.ident}${runwayIdentifier.substr(2)}`,
-                { lat: runway?.centreLocation.lat ?? 0, lon: runway?.centreLocation.lon ?? 0 }));
+                { lat: runway?.thresholdLocation.lat ?? 0, lon: runway?.thresholdLocation.lon ?? 0 }));
             legs.push(initialFix);
 
             const transition = departureDetails.runwayTransitions.find(trans => trans.ident === runwayIdentifier);
