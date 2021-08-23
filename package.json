@@ -5,8 +5,8 @@
   "main": "src/server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --pretty --transpile-only src/server/index.ts",
-    "dev:client": "rollup -wc src/client/instruments/rollup.config.js",
+    "dev:server": "ts-node-dev --respawn --pretty --transpile-only src/server/index.ts",
+    "dev:sim": "rollup -wc src/debug-sim/instruments/rollup.config.js",
     "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "keywords": [],
