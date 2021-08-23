@@ -40,7 +40,7 @@ module.exports = [{
         template({
             name: 'display1',
             elementName: 'flightplanning-display1',
-            config: {index:`${__dirname}/display1/index.tsx`, isInteractive: true },
+            config: {index:`${__dirname}/src/display1/index.tsx`, isInteractive: true },
             outputDir: `${__dirname}/../../A380X/html_ui\\Pages\\VCockpit\\Instruments/A380X`,
         })]
 }]

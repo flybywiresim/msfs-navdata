@@ -2,6 +2,6 @@
   "name": "msfs-flightplanning",
   "createdAt": 1000,
   "paths": {
-    "panelSrc": "/src/client/instruments/src"
+    "panelSrc": "/src/debug-sim/instruments/src"
   }
 }
