@@ -1,11 +1,13 @@
 import { Airport } from "../../shared/types/Airport";
 import { DatabaseIdent } from "../../shared/types/DatabaseIdent";
 import { Runway } from "../../shared/types/Runway";
+import {Waypoint} from "../../shared/types/Waypoint";
 
 export abstract class Provider {
     abstract getDatabaseIdent(): Promise<DatabaseIdent>;
     abstract getAirportsByIdents(idents: string[]): Promise<Airport[]>;
     abstract getRunwaysAtAirport(ident: string): Promise<Runway[]>;
+    abstract getWaypointsAtAirport(ident: string): Promise<Waypoint[]>;
     /**
      * Find all the airports within range
      * @param lat

@@ -51,11 +51,11 @@ type Column3 =
      'F' |
     /** Multiple */
      'Z';
-type TerminalWaypointType = `${Column1}${Column2}${Column3}`;
+export type TerminalWaypointType = `${Column1}${Column2}${Column3}`;
 
-export type EnrouteWaypoint = {
+export type TerminalWaypoint = {
     /** Geographical area of the Waypoint */
-    areaSode: string;
+    areaCode: string;
     /** airport identification code for the terminal waypoint */
     regionCode: string;
     /** Location indicator of the Waypoint */

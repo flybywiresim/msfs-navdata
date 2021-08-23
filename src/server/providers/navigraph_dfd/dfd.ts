@@ -7,8 +7,10 @@ import {Runway, RunwaySurfaceType} from '../../../shared/types/Runway';
 import {Provider} from '../provider';
 import fs from 'fs';
 import initSqlJs, {Database, Statement} from 'sql.js';
-import {Runway as NaviRunway} from "./types/Runways";
-import {LsCategory} from "../../../shared/types/Common";
+import { Runway as NaviRunway } from "./types/Runways";
+import { LsCategory } from "../../../shared/types/Common";
+import { Waypoint } from "../../../shared/types/Waypoint";
+import { TerminalWaypoint } from "./types/TerminalWaypoints";
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -116,6 +118,21 @@ export class NavigraphDfd implements Provider {
             lsCategory,
             surfaceType: 0,
         }
+    }
+
+    async getWaypointsAtAirport(ident: string): Promise<Waypoint[]> {
+        const sql = `SELECT * FROM tbl_terminal_waypoints WHERE region_code = $ident`;
+        const stmt = this.db.prepare(sql, { $ident: ident });
+        const rows = NavigraphDfd.toCamel(query(stmt)) as TerminalWaypoint[];
+        return rows.map(waypoint => {
+            return {
+                ident: waypoint.waypointIdentifier,
+                databaseId: `W${waypoint.icaoCode}${waypoint.regionCode}${waypoint.waypointIdentifier}`,
+                location: { lat: waypoint.waypointLatitude, lon: waypoint.waypointLongitude },
+                name: waypoint.waypointName,
+                type: waypoint.waypointType
+            };
+        });
     }
 
     async getAirportsByIdents(idents: string[]): Promise<Airport[]> {

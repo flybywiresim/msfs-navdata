@@ -73,7 +73,7 @@ type WaypointUsage = `${'' | /** RNAV */ 'R'}
     `;
 export type EnrouteWaypoint = {
     /** Geographical area of the Waypoint */
-    areaSode: string;
+    areaCode: string;
     /** Location indicator of the Waypoint */
     icaoCode: string;
     /** Waypoint identifier */
