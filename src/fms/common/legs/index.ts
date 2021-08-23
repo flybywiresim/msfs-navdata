@@ -40,6 +40,8 @@ export interface PathVector {
 }
 
 export abstract class Leg implements Guidable {
+    abstract identifier: string;
+
     abstract isCircularArc: boolean;
 
     abstract bearing: Degrees;

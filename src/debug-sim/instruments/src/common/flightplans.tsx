@@ -26,6 +26,7 @@ export const useFlightPlanVersion = (): number => {
 
     return version;
 };
+
 export const useFlightPlans = (): { activeFlightPlan: FlightPlan, modFlightPlan?: FlightPlan } => {
     const flightPlanManager = useFlightPlanManager();
 
@@ -34,7 +35,6 @@ export const useFlightPlans = (): { activeFlightPlan: FlightPlan, modFlightPlan?
     const [modFlightPlan, setModFlightPlan] = useState<FlightPlan | undefined>(flightPlanManager.temporaryFlightPlan);
 
     useEffect(() => {
-        console.log('updading flight plans');
         flightPlanManager.loadFlightPlans().then(() => {
             setActiveFlightPlan(flightPlanManager.currentFlightPlan);
             setModFlightPlan(flightPlanManager.temporaryFlightPlan);
@@ -43,3 +43,10 @@ export const useFlightPlans = (): { activeFlightPlan: FlightPlan, modFlightPlan?
 
     return { activeFlightPlan, modFlightPlan };
 };
+
+/** Returns either the temporary flight plan or the current flight plan, and true if it is the temporary flight plan */
+export const useCurrentOrTemporaryFlightPlan = (): [FlightPlan, boolean] => {
+    const { activeFlightPlan, modFlightPlan } = useFlightPlans();
+
+    return [modFlightPlan ?? activeFlightPlan, !!modFlightPlan];
+}

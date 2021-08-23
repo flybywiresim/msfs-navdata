@@ -54,6 +54,15 @@ export class FlightPlan {
         this.database = database;
     }
 
+    public get legs() {
+        const legs: Leg[] = [...this.departureSegment.legs];
+        this.enRouteSegments.forEach(segment => {
+            legs.push(...segment.legs);
+        })
+        legs.push(...[...this.arrivalSegment.legs, ...this.approachSegment.legs]);
+        return legs;
+    }
+
     public async buildDeparture() {
         if(!this.originAirport)
             return;
