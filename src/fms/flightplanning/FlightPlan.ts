@@ -151,6 +151,8 @@ export class FlightPlan {
         legs.push(...FlightPlanUtils.fromProcedureLegs(this.approach.legs));
 
         this.approachSegment.legs = legs;
+        //Build Arrival At this point so the legs are present in the approach to connect to, and before transitions so the approach can connect to the arrival
+        this.buildArrival();
         this.approachSegment.transitions = FlightPlanUtils.buildTransitionsFromLegs(this.approachSegment.legs);
 
         this.missedSegment.legs = FlightPlanUtils.fromProcedureLegs(this.approach.missedLegs);
