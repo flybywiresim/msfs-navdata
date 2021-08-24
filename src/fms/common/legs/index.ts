@@ -1,7 +1,7 @@
 import { GuidanceParameters } from "../ControlLaws";
 import { Guidable } from "../Guidable";
 import { AltitudeDescriptor, SpeedDescriptor } from "../../../shared/types/ProcedureLeg";
-import { Degrees, Feet, Knots, Location, NauticalMiles } from "../../../shared/types/Common";
+import { Degrees, Feet, FeetPerMinute, Knots, Location, NauticalMiles } from "../../../shared/types/Common";
 
 export interface AltitudeConstraint {
     type: AltitudeDescriptor,
@@ -42,7 +42,9 @@ export interface PathVector {
 export abstract class Leg implements Guidable {
     abstract identifier: string;
 
-    abstract isCircularArc: boolean;
+    get isCircularArc(): boolean {
+        return false;
+    }
 
     abstract bearing: Degrees;
 
@@ -60,7 +62,7 @@ export abstract class Leg implements Guidable {
 
     abstract getGuidanceParameters(ppos: Location, trueTrack: Degrees): GuidanceParameters;
 
-    public getNominalRollAngle?(gs: number): Degrees {
+    public getNominalRollAngle(gs: number): Degrees {
         return 0;
     }
 
@@ -68,7 +70,7 @@ export abstract class Leg implements Guidable {
 
     abstract isAbeam(ppos: Location): boolean;
 
-    getPredictedPath?(): PathVector[] {
+    getPredictedPath(isActive: boolean, ppos: Location, altitude: Feet, groundSpeed: Knots, verticalSpeed: FeetPerMinute): PathVector[] {
         return [];
     }
 }

@@ -47,7 +47,7 @@ export class VMLeg implements Leg {
         return undefined;
     }
 
-    getGuidanceParameters(ppos: Location): GuidanceParameters | null {
+    getGuidanceParameters(ppos: Location): GuidanceParameters {
         return {
             law: ControlLaw.HEADING,
             heading: this.mHeading,

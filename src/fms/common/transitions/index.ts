@@ -2,6 +2,8 @@ import LatLon from "geodesy/latlon-ellipsoidal-vincenty";
 import {Degrees, NauticalMiles} from "../types/common";
 import {GuidanceParameters} from "../ControlLaws";
 import { Guidable } from "../Guidable";
+import { PathVector } from "../legs";
+import { Feet, FeetPerMinute, Knots } from "../../../shared/types/Common";
 
 export abstract class Transition implements Guidable {
     abstract isAbeam(ppos: LatLon): boolean;
@@ -18,5 +20,12 @@ export abstract class Transition implements Guidable {
 
     abstract getTurningPoints(): [LatLon, LatLon]
 
-    abstract identifier: string;
+    getPredictedPath(isActive: boolean, ppos: Location, altitude: Feet, groundSpeed: Knots, verticalSpeed: FeetPerMinute): PathVector[] {
+        return [];
+    }
+}
+
+// TODO does this even make sense???
+export class Discontinuity {
+
 }

@@ -160,7 +160,7 @@ export class TFLeg implements Leg {
         return this.to.coordinates;
     }
 
-    public getPredictedPath(): PathVector[] {
+    public getPredictedPath(isActive: boolean, ppos: Location, altitude: Feet, groundSpeed: Knots, verticalSpeed: FeetPerMinute): PathVector[] {
         return [
             {
                 type: PathVectorType.Line,
