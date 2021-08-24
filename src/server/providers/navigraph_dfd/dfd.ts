@@ -6,23 +6,19 @@ import { DatabaseIdent } from '../../../shared/types/DatabaseIdent';
 import { Airport as NaviAirport } from './types/Airports';
 import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
 import { Airport } from '../../../shared/types/Airport';
-import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
+import { Runway } from '../../../shared/types/Runway';
 import { Provider } from '../provider';
-import { Runway as NaviRunway } from "./types/Runways";
-import { LsCategory } from "../../../shared/types/Common";
 import { Waypoint, WaypointType } from "../../../shared/types/Waypoint";
 import { TerminalWaypoint} from "./types/TerminalWaypoints";
-import { NdbClass, NdbNavaid } from "../../../shared/types/NdbNavaid";
+import { NdbNavaid } from "../../../shared/types/NdbNavaid";
 import { TerminalNDBNavaid } from "./types/NDBNavaids";
-import { VhfNavaidType } from "../../../shared/types/VhfNavaid";
 import { EnrouteWaypoint } from "./types/EnrouteWaypoints";
-import { IlsMlsGlsCategory } from "./types/LocalizerGlideslopes";
 import { Departure } from '../../../shared/types/Departure';
-import { AltitudeDescriptor, LegType, ProcedureLeg, SpeedDescriptor, TurnDirection } from '../../../shared/types/ProcedureLeg';
 import { Arrival } from '../../../shared/types/Arrival';
-import { Approach, ApproachType } from '../../../shared/types/Approach';
-import { Airway, AirwayDirection, AirwayLevel } from '../../../shared/types/Airway';
+import { Approach } from '../../../shared/types/Approach';
+import { Airway } from '../../../shared/types/Airway';
 import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
+import {DFDMappers} from "./mappers";
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -32,13 +28,13 @@ const query = (stmt: Statement) => {
 }
 export class NavigraphDfd implements Provider {
     private db: Database = undefined as any;
+    private mappers: DFDMappers = new DFDMappers(this);
 
     constructor(db_path: string) {
         const filebuffer = fs.readFileSync(db_path);
         initSqlJs().then((SQL) => {
             this.db = new SQL.Database(filebuffer);
-        })
-
+        });
     }
 
     async getDatabaseIdent(): Promise<DatabaseIdent> {
@@ -60,18 +56,6 @@ export class NavigraphDfd implements Provider {
         });
     }
 
-    private static mapTerminalNdb(ndb: TerminalNDBNavaid): NdbNavaid {
-        return {
-            icaoCode: ndb.icaoCode,
-            ident: ndb.ndbIdentifier,
-            databaseId: `N${ndb.icaoCode}${ndb.airportIdentifier}${ndb.ndbIdentifier}`,
-            frequency: ndb.ndbFrequency,
-            stationDeclination: 0,
-            location: { lat: ndb.ndbLatitude, lon: ndb.ndbLongitude },
-            class: NdbClass.Unknown,
-            type: VhfNavaidType.Unknown,
-        }
-    }
 
     async getWaypointsByIdent(ident: string): Promise<Waypoint[]> {
         const sql = `SELECT * FROM tbl_enroute_waypoints WHERE waypoint_identifier = $ident`;
@@ -93,77 +77,7 @@ export class NavigraphDfd implements Provider {
         const sql = `SELECT * FROM tbl_terminal_ndbnavaids WHERE airport_identifier = $ident`;
         const stmt = this.db.prepare(sql, { $ident: ident });
         const rows = NavigraphDfd.toCamel(query(stmt)) as TerminalNDBNavaid[];
-        return rows.map(navaid => NavigraphDfd.mapTerminalNdb(navaid));
-    }
-
-    private static mapAirport(airport: NaviAirport): Airport {
-        let surfaceCode = RunwaySurfaceType.Unknown;
-        switch (airport.longestRunwaySurfaceCode) {
-            case 'H':
-                surfaceCode = RunwaySurfaceType.Hard;
-                break;
-            case 'S':
-                surfaceCode = RunwaySurfaceType.Soft;
-                break;
-            case 'W':
-                surfaceCode = RunwaySurfaceType.Water;
-                break;
-        }
-        return {
-            databaseId: NavigraphDfd.airportDatabaseId(airport),
-            ident: airport.airportIdentifier,
-            icaoCode: airport.icaoCode,
-            airportName: airport.airportName,
-            location: { lat: airport.airportRefLatitude, lon: airport.airportRefLongitude, alt: airport.elevation },
-            speedLimit: airport.speedLimit || undefined,
-            speedLimitAltitude: airport.speedLimitAltitude || undefined,
-            transitionAltitude: airport.transitionAltitude || undefined,
-            transitionLevel: airport.transitionLevel / 100 || undefined,
-            longestRunwaySurfaceType: surfaceCode,
-        };
-    }
-
-    private static mapLsCategory(naviCategory: IlsMlsGlsCategory): LsCategory {
-        switch(naviCategory) {
-            case '0':
-                return LsCategory.LocOnly;
-            case '1':
-                return LsCategory.Category1;
-            case '2':
-                return LsCategory.Category2;
-            case '3':
-                return LsCategory.Category3;
-            case "I":
-                return LsCategory.IgsOnly;
-            case "L":
-                return LsCategory.LdaGlideslope;
-            case "A":
-                return LsCategory.LdaOnly;
-            case "S":
-                return LsCategory.SdfGlideslope;
-            case "F":
-                return LsCategory.SdfOnly;
-        }
-        return LsCategory.None;
-    }
-
-    private static mapRunway(runway: NaviRunway): Runway {
-        return {
-            icaoCode: runway.icaoCode,
-            ident: runway.runwayIdentifier,
-            databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
-            airportIdent: runway.airportIdentifier,
-            thresholdLocation: { lat: runway.runwayLatitude, lon: runway.runwayLongitude },
-            bearing: runway.runwayTrueBearing,
-            magneticBearing: runway.runwayMagneticBearing,
-            gradient: runway.runwayGradient,
-            thresholdCrossingHeight: runway.thresholdCrossingHeight,
-            length: runway.runwayLength,
-            width: runway.runwayWidth,
-            lsIdent: runway.llzIdentifier,
-            lsCategory: this.mapLsCategory(runway.llzMlsGlsCategory),
-            surfaceType: RunwaySurfaceType.Unknown, // navigraph pls
-        }
+        return rows.map(navaid => this.mappers.mapTerminalNdb(navaid));
     }
 
     async getWaypointsAtAirport(ident: string): Promise<Waypoint[]> {
@@ -189,7 +103,7 @@ export class NavigraphDfd implements Provider {
             try {
                 const rows = query(stmt);
                 const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
-                resolve(airports.map((airport => NavigraphDfd.mapAirport(airport))));
+                resolve(airports.map((airport => this.mappers.mapAirport(airport))));
             } finally {
                 stmt.free();
             }
@@ -201,7 +115,7 @@ export class NavigraphDfd implements Provider {
         const stmt = this.db.prepare(sql, { $ident: ident });
         try {
             const rows = NavigraphDfd.toCamel(query(stmt));
-            return rows.map(runway => NavigraphDfd.mapRunway(runway));
+            return rows.map(runway => this.mappers.mapRunway(runway));
         } finally {
             stmt.free();
         }
@@ -229,7 +143,7 @@ export class NavigraphDfd implements Provider {
 
             if (southWestCorner.longitude > northEastCorner.longitude) {
                 // wrapped around +/- 180
-                // TODO this still isn't quite rihgt... 
+                // TODO this still isn't quite rihgt...
                 // we need two boxes, one either side of the pole
                 sql += " AND (airport_ref_longitude <= ? OR airport_ref_longitude >= ?";
             } else {
@@ -243,444 +157,11 @@ export class NavigraphDfd implements Provider {
             const airports: NaviAirport[] = NavigraphDfd.toCamel(rows);
             resolve(airports.map((airport) =>
             {
-                const ap = NavigraphDfd.mapAirport(airport);
+                const ap = this.mappers.mapAirport(airport);
                 ap.distance = getDistance(centre, {latitude: ap.location.lat, longitude: ap.location.lon}) / 1852;
                 return ap;
             }).filter((ap) => (ap.distance ?? 0) <= range).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0)));
         });
-    }
-
-    private static mapLegType(legType: string): LegType {
-        switch (legType) {
-            case 'IF':
-                return LegType.IF;
-            case 'TF':
-                return LegType.TF;
-            case 'CF':
-                return LegType.CF;
-            case 'DF':
-                return LegType.DF;
-            case 'FA':
-                return LegType.FA;
-            case 'FC':
-                return LegType.FC;
-            case 'FD':
-                return LegType.FD;
-            case 'FM':
-                return LegType.FM;
-            case 'CA':
-                return LegType.CA;
-            case 'CD':
-                return LegType.CD;
-            case 'CI':
-                return LegType.CI;
-            case 'CR':
-                return LegType.CR;
-            case 'RF':
-                return LegType.RF;
-            case 'AF':
-                return LegType.AF;
-            case 'VA':
-                return LegType.VA;
-            case 'VD':
-                return LegType.VD;
-            case 'VI':
-                return LegType.VI;
-            case 'VM':
-                return LegType.VM;
-            case 'VR':
-                return LegType.VR;
-            case 'PI':
-                return LegType.PI;
-            case 'HA':
-                return LegType.HA;
-            case 'HF':
-                return LegType.HF;
-            case 'HM':
-                return LegType.HM;
-        }
-        return LegType.Unknown;
-    }
-
-    private static mapAltitudeDescriptor(desc: string): AltitudeDescriptor {
-        switch (desc) {
-            case '+':
-                return AltitudeDescriptor.AtOrAboveAlt1;
-            case '-':
-                return AltitudeDescriptor.AtOrBelowAlt1;
-            case '@':
-            case '':
-                return AltitudeDescriptor.AtAlt1;
-            case 'B':
-                return AltitudeDescriptor.BetweenAlt1Alt2;
-            case 'C':
-                return AltitudeDescriptor.AtOrAboveAlt2;
-            case 'G':
-                return AltitudeDescriptor.AtAlt1GsMslAlt2;
-            case 'H':
-                return AltitudeDescriptor.AtOrAboveAlt1GsMslAlt2;
-            case 'I':
-                return AltitudeDescriptor.AtAlt1GsIntcptAlt2;
-            case 'J':
-                return AltitudeDescriptor.AtOrAboveAlt1GsIntcptAlt2;
-            case 'V':
-                return AltitudeDescriptor.AtOrAboveAlt1AngleAlt2;
-            case 'X':
-                return AltitudeDescriptor.AtAlt1AngleAlt2;
-            case 'Y':
-                return AltitudeDescriptor.AtOrBelowAlt1AngleAlt2;
-        }
-        return AltitudeDescriptor.None;
-    }
-
-    private static mapSpeedLimitDescriptor(desc: string): SpeedDescriptor {
-        switch (desc) {
-            case '@':
-            case '':
-                return SpeedDescriptor.Mandatory;
-            case '+':
-                return SpeedDescriptor.Minimum;
-            case '-':
-                return SpeedDescriptor.Maximum;
-        }
-        return SpeedDescriptor.Mandatory;
-    }
-
-    private static mapTurnDirection(dir: string): TurnDirection {
-        switch (dir) {
-            case 'L':
-                return TurnDirection.Left;
-            case 'R':
-                return TurnDirection.Right;
-        }
-        return TurnDirection.Unknown;
-    }
-
-    private static mapLegIdent(leg: NaviProcedure): string {
-        return leg.waypointIdentifier ?? leg.seqno.toFixed(0); // TODO proper format
-    }
-
-    private static mapLeg(leg: NaviProcedure, icaoCode: string): ProcedureLeg {
-        return {
-            databaseId: NavigraphDfd.procedureDatabaseId(leg, icaoCode) + leg.seqno,
-            icaoCode: icaoCode,
-            ident: NavigraphDfd.mapLegIdent(leg),
-            procedureIdent: leg.procedureIdentifier,
-            type: NavigraphDfd.mapLegType(leg.pathTermination),
-            waypoint: leg.waypointIdentifier ? {
-                icaoCode: icaoCode,
-                ident: leg.waypointIdentifier,
-                location: { lat: leg.waypointLatitude, lon: leg.waypointLongitude },
-                databaseId: `W${leg.icaoCode}${leg.airportIdentifier}${leg.waypointIdentifier}`,
-                name: leg.waypointIdentifier,
-                type: WaypointType.Unknown,
-            } : undefined, // TODO fetch these
-            recommendedNavaid: undefined, // TODO fetch these
-            rho: leg.rho,
-            theta: leg.theta,
-            arcCentreFix: undefined, // TODO fetch these
-            arcRadius: leg.arcRadius,
-            length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
-            lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
-            rnp: leg.rnp,
-            transitionAltitude: leg.transitionAltitude,
-            altitudeDescriptor: (!leg.altitude1 && !leg.altitude2) ? AltitudeDescriptor.None : this.mapAltitudeDescriptor(leg.altitudeDescription),
-            altitude1: leg.altitude1,
-            altitude2: leg.altitude2,
-            speed: leg.speedLimit,
-            speedDescriptor: leg.speedLimit ? NavigraphDfd.mapSpeedLimitDescriptor(leg.speedLimitDescription) : undefined,
-            turnDirection: NavigraphDfd.mapTurnDirection(leg.turnDirection),
-            magneticCourse: leg.magneticCourse,
-        };
-    }
-
-    private async mapDepartures(legs: NaviProcedure[], icaoCode: string): Promise<Departure[]> {
-        const departures: Map<string, Departure> = new Map();
-
-        // legs are sorted in sequence order by the db... phew
-        for(const leg of legs) {
-            if (!departures.has(leg.procedureIdentifier)) {
-                departures.set(leg.procedureIdentifier, {
-                    icaoCode: icaoCode,
-                    databaseId: NavigraphDfd.procedureDatabaseId(leg, icaoCode),
-                    ident: leg.procedureIdentifier,
-                    runwayTransitions: [],
-                    commonLegs: [],
-                    enrouteTransitions: [],
-                    engineOutLegs: [],
-                });
-            }
-
-            const apiLeg = NavigraphDfd.mapLeg(leg, icaoCode);
-            const departure = departures.get(leg.procedureIdentifier);
-            let transition;
-            switch (leg.routeType) {
-                case '0':
-                    departure?.engineOutLegs.push(apiLeg);
-                    break;
-                case '1':
-                case '4':
-                case 'F':
-                case 'T':
-                    transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
-                    if (!transition) {
-                        transition = {
-                            ident: leg.transitionIdentifier,
-                            legs: [],
-                        }
-                        departure?.runwayTransitions.push(transition);
-                    }
-                    transition.legs.push(apiLeg);
-                    break;
-                case '2':
-                case '5':
-                case 'M':
-                    if(leg.transitionIdentifier === 'ALL') {
-                        const runways = await this.getRunwaysAtAirport(leg.airportIdentifier);
-                        runways.forEach(runway => {
-                            transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
-                            if (!transition) {
-                                transition = {
-                                    ident: runway.ident,
-                                    legs: [],
-                                }
-                                departure?.runwayTransitions.push(transition);
-                            }
-                            transition.legs.push(apiLeg);
-                        });
-                    }
-                    else if(leg.transitionIdentifier) {
-                        transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
-                        if (!transition) {
-                            transition = {
-                                ident: leg.transitionIdentifier,
-                                legs: [],
-                            }
-                            departure?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    }
-                    else
-                        departure?.commonLegs.push(apiLeg);
-                    break;
-                case '3':
-                case '6':
-                case 'S':
-                case 'V':
-                    transition = departure?.enrouteTransitions.find((t) => t.ident === leg.transitionIdentifier);
-                    if (!transition) {
-                        transition = {
-                            ident: leg.transitionIdentifier,
-                            legs: [],
-                        }
-                        departure?.enrouteTransitions.push(transition);
-                    }
-                    transition.legs.push(apiLeg);
-                    break;
-                default:
-                    console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: SID`);
-            }
-        }
-
-        return Array.from(departures.values());
-    }
-
-    private async mapArrivals(legs: NaviProcedure[], icaoCode: string): Promise<Arrival[]> {
-        const arrivals: Map<string, Arrival> = new Map();
-
-        // legs are sorted in sequence order by the db... phew
-        for(const leg of legs) {
-            if (!arrivals.has(leg.procedureIdentifier)) {
-                arrivals.set(leg.procedureIdentifier, {
-                    icaoCode: icaoCode,
-                    databaseId: NavigraphDfd.procedureDatabaseId(leg, icaoCode),
-                    ident: leg.procedureIdentifier,
-                    runwayTransitions: [],
-                    commonLegs: [],
-                    enrouteTransitions: [],
-                });
-            }
-
-            const apiLeg = NavigraphDfd.mapLeg(leg, icaoCode);
-            const arrival = arrivals.get(leg.procedureIdentifier);
-            let transition;
-            switch (leg.routeType) {
-                case '1':
-                case '4':
-                case 'F':
-                    transition = arrival?.enrouteTransitions.find((t) => t.ident === leg.transitionIdentifier);
-                    if (!transition) {
-                        transition = {
-                            ident: leg.transitionIdentifier,
-                            legs: [],
-                        }
-                        arrival?.enrouteTransitions.push(transition);
-                    }
-                    transition.legs.push(apiLeg);
-                    break;
-                case '2':
-                case '5':
-                case '8':
-                case 'M':
-                    if(leg.transitionIdentifier === 'ALL') {
-                        const runways = await this.getRunwaysAtAirport(leg.airportIdentifier);
-                        runways.forEach(runway => {
-                            transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
-                            if (!transition) {
-                                transition = {
-                                    ident: runway.ident,
-                                    legs: [],
-                                }
-                                arrival?.runwayTransitions.push(transition);
-                            }
-                            transition.legs.push(apiLeg);
-                        });
-                    }
-                    else if(leg.transitionIdentifier) {
-                        transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
-                        if (!transition) {
-                            transition = {
-                                ident: leg.transitionIdentifier,
-                                legs: [],
-                            }
-                            arrival?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    }
-                    else
-                        arrival?.commonLegs.push(apiLeg);
-                    break;
-                case '3':
-                case '6':
-                case '9':
-                case 'S':
-                    transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
-                    if (!transition) {
-                        transition = {
-                            ident: leg.transitionIdentifier,
-                            legs: [],
-                        }
-                        arrival?.runwayTransitions.push(transition);
-                    }
-                    transition.legs.push(apiLeg);
-                    break;
-                default:
-                    console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: STAR`);
-            }
-        }
-
-        return Array.from(arrivals.values());
-    }
-
-    private static mapApproachType(routeType: string): ApproachType {
-        switch (routeType) {
-            case 'B':
-                return ApproachType.LocBackcourse;
-            case 'D':
-                return ApproachType.VorDme;
-            case 'F':
-                return ApproachType.Fms;
-            case 'G':
-                return ApproachType.Igs;
-            case 'I':
-                return ApproachType.Ils;
-            case 'J':
-                return ApproachType.Gls;
-            case 'L':
-                return ApproachType.Loc;
-            case 'M':
-                return ApproachType.Mls;
-            case 'N':
-                return ApproachType.Ndb;
-            case 'P':
-                return ApproachType.Gps;
-            case 'Q':
-                return ApproachType.NdbDme;
-            case 'R':
-                return ApproachType.Rnav;
-            case 'S':
-                return ApproachType.Vortac;
-            case 'T':
-                return ApproachType.Tacan;
-            case 'U':
-                return ApproachType.Sdf;
-            case 'V':
-                return ApproachType.Vor;
-            case 'W':
-                return ApproachType.MlsTypeA;
-            case 'X':
-                return ApproachType.Lda;
-            case 'Y':
-                return ApproachType.MlsTypeBC;
-        }
-        return ApproachType.Unknown;
-    }
-
-    private static mapApproaches(legs: NaviProcedure[], icaoCode: string): Approach[] {
-        const approaches: Map<string, Approach> = new Map();
-
-        // legs are sorted in sequence order by the db... phew
-        legs.forEach((leg) => {
-            if (!approaches.has(leg.procedureIdentifier)) {
-                approaches.set(leg.procedureIdentifier, {
-                    icaoCode: icaoCode,
-                    databaseId: NavigraphDfd.procedureDatabaseId(leg, icaoCode),
-                    ident: leg.procedureIdentifier,
-                    type: ApproachType.Unknown,
-                    transitions: [],
-                    legs: [],
-                    missedLegs: [],
-                });
-            }
-
-            const apiLeg = NavigraphDfd.mapLeg(leg, icaoCode);
-            const approach = approaches.get(leg.procedureIdentifier);
-            let transition;
-            switch (leg.routeType) {
-                case 'A':
-                    transition = approach?.transitions.find((t) => t.ident === leg.transitionIdentifier);
-                    if (!transition) {
-                        transition = {
-                            ident: leg.transitionIdentifier,
-                            legs: [],
-                        }
-                        approach?.transitions.push(transition);
-                    }
-                    transition.legs.push(apiLeg);
-                    break;
-                case 'B':
-                case 'D':
-                case 'F':
-                case 'G':
-                case 'I':
-                case 'J':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'P':
-                case 'Q':
-                case 'R':
-                case 'S':
-                case 'T':
-                case 'U':
-                case 'V':
-                case 'W':
-                case 'X':
-                case 'Y':
-                    if (approach?.type === ApproachType.Unknown) {
-                        approach.type = NavigraphDfd.mapApproachType(leg.routeType);
-                    }
-                    approach?.legs.push(apiLeg);
-                    break;
-                case 'Z':
-                    approach?.missedLegs.push(apiLeg);
-                    break;
-                default:
-                    console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
-            }
-        });
-
-        return Array.from(approaches.values());
     }
 
     async getDepartures(ident: string): Promise<Departure[]> {
@@ -697,7 +178,7 @@ export class NavigraphDfd implements Provider {
                     return reject('No departures!');
                 }
                 const departureLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
-                resolve(this.mapDepartures(departureLegs, ap[0].icaoCode));
+                resolve(this.mappers.mapDepartures(departureLegs, ap[0].icaoCode));
             } finally {
                 stmt.free();
             }
@@ -718,7 +199,7 @@ export class NavigraphDfd implements Provider {
                     return reject('No arrivals!');
                 }
                 const arrivalLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
-                resolve(this.mapArrivals(arrivalLegs, ap[0].icaoCode));
+                resolve(this.mappers.mapArrivals(arrivalLegs, ap[0].icaoCode));
             } finally {
                 stmt.free();
             }
@@ -739,61 +220,14 @@ export class NavigraphDfd implements Provider {
                     return reject('No arrivals!');
                 }
                 const approachLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
-                resolve(NavigraphDfd.mapApproaches(approachLegs, ap[0].icaoCode));
+                resolve(this.mappers.mapApproaches(approachLegs, ap[0].icaoCode));
             } finally {
                 stmt.free();
             }
         });
     }
 
-    private static mapAirwayLevel(level: string): AirwayLevel {
-        switch (level) {
-            case 'H':
-                return AirwayLevel.High;
-            case 'L':
-                return AirwayLevel.Low;
-            default:
-            case 'B':
-                return AirwayLevel.All;
-        }
-    }
 
-    private static mapAirwayDirection(direction: string): AirwayDirection {
-        switch (direction) {
-            case 'F':
-                return AirwayDirection.Forward;
-            case 'B':
-                return AirwayDirection.Backward;
-            default:
-                return AirwayDirection.Either;
-        }
-    }
-
-    private static mapAirways(fixes: NaviAirwayFix[]): Airway[] {
-        const airways: Airway[] = [];
-        fixes.forEach((fix, index) => {
-            if(!index || fixes[index - 1]?.waypointDescriptionCode[1] === 'E')
-                airways.push({
-                    databaseId: NavigraphDfd.mapAirwayIdent(fix),
-                    icaoCode: fix.icaoCode,
-                    ident: fix.routeIdentifier,
-                    level: NavigraphDfd.mapAirwayLevel(fix.flightlevel),
-                    fixes: [],
-                    direction: NavigraphDfd.mapAirwayDirection(fix.directionalRestriction),
-                    minimumAltitudeForward: fix.minimumAltitude1,
-                    minimumAltitudeBackward: fix.minimumAltitude2,
-                    maximumAltitude: fix.maximumAltitude,
-                });
-            airways[airways.length - 1].fixes.push({
-                icaoCode: fix.icaoCode,
-                databaseId: `W${fix.icaoCode}    ${fix.waypointIdentifier}`, // TODO function
-                ident: fix.waypointIdentifier,
-                location: { lat: fix.waypointLatitude, lon: fix.waypointLongitude },
-                type: WaypointType.Unknown, // TODO
-            });
-        });
-        return airways;
-    }
 
     async getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
         return new Promise((resolve, reject) => {
@@ -804,7 +238,7 @@ export class NavigraphDfd implements Provider {
                     return reject('No airways');
                 }
                 const airways: NaviAirwayFix[] = NavigraphDfd.toCamel(rows);
-                resolve(NavigraphDfd.mapAirways(airways));
+                resolve(this.mappers.mapAirways(airways));
             } finally {
                 stmt.free();
             }
@@ -836,19 +270,5 @@ export class NavigraphDfd implements Provider {
 
     public static capitalizeFirstLetter(text: string): string {
         return text.charAt(0).toUpperCase() + text.substring(1);
-    }
-
-    // The MSFS "icao" code is a pretty clever globally unique ID, so we follow it, and extend it where needed
-    // It is important to ensure that these are truly globally unique
-    private static airportDatabaseId(airport: NaviAirport): string {
-        return `A      ${airport.airportIdentifier}`;
-    }
-
-    private static procedureDatabaseId(procedure: NaviProcedure, icaoCode: string): string {
-        return `P${icaoCode}${procedure.airportIdentifier}${procedure.procedureIdentifier}`;
-    }
-
-    private static mapAirwayIdent(airway: NaviAirwayFix): string {
-        return `E${airway.icaoCode}    ${airway.routeIdentifier}`;
     }
 }
