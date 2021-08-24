@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:server": "ts-node-dev --respawn --pretty --transpile-only src/server/index.ts",
     "dev:sim": "rollup -wc src/debug-sim/instruments/rollup.config.js",
-    "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --config .prettierrc src/**/*.ts --write"
   },
   "keywords": [],
   "author": "",
@@ -42,6 +43,7 @@
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
     "eslint": "^7.32.0",
+    "prettier": "^2.3.2",
     "ts-node": "^10.2.1",
     "ts-node-dev": "^1.1.8",
     "typescript": "^4.3.5"
