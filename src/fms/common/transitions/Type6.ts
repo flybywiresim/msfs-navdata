@@ -9,6 +9,8 @@ import { FMLeg } from "../legs/FMLeg";
 import { TFLeg } from "../legs/TFLeg";
 import { VDLeg } from "../legs/VDLeg";
 import { VILeg } from "../legs/VILeg";
+import {Degrees} from "../../../shared/types/Common";
+import {GuidanceParameters} from "../ControlLaws";
 
 export type Type6PreviousLeg = CDLeg | CFLeg | CILeg | DFLeg | TFLeg | VILeg | VDLeg;
 export type Type6NextLeg = AFLeg | CFLeg | FALeg | FMLeg | TFLeg;
@@ -22,5 +24,33 @@ export class Type6Transition extends Transition {
         nextLeg: Type6NextLeg,
     ) {
         super()
+    }
+
+    getDistanceToGo(ppos: Location) {
+        return undefined;
+    }
+
+    getGuidanceParameters(ppos: Location, trueTrack: Degrees): GuidanceParameters {
+        return undefined as any;
+    }
+
+    getNominalRollAngle(gs: number) {
+        return undefined;
+    }
+
+    getTrackDistanceToTerminationPoint(ppos: Location) {
+        return undefined;
+    }
+
+    getTurningPoints(): [Location,Location] {
+        return [undefined as any, undefined as any];
+    }
+
+    isAbeam(ppos: Location): boolean {
+        return false;
+    }
+
+    get isCircularArc(): boolean {
+        return false;
     }
 }

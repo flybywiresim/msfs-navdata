@@ -3,6 +3,8 @@ import { AltitudeConstraint, Leg, PathVector, PathVectorType, SpeedConstraint } 
 import { Degrees, Feet, FeetPerMinute, Knots, Location, NauticalMiles } from "../../../shared/types/Common";
 import { Type4Transition } from '../transitions/Type4';
 import { ControlLaw, GuidanceParameters } from '../ControlLaws';
+import {computeDestinationPoint, getGreatCircleBearing} from "geolib";
+import {MathUtils} from "../MathUtils";
 
 export class DFLeg implements Leg {
     public from: Type4Transition;
@@ -22,30 +24,30 @@ export class DFLeg implements Leg {
     }
 
     get bearing(): Degrees {
-        return Avionics.Utils.computeGreatCircleHeading(
+        return getGreatCircleBearing(
             this.from.ftp,
             this.to.coordinates,
         );
     }
 
     get distance(): NauticalMiles {
-        return Avionics.Utils.computeGreatCircleDistance(
+        return getGreatCircleBearing(
             this.from.ftp,
             this.to.coordinates,
         );
     }
 
-    getDistanceToGo(ppos: LatLongData): NauticalMiles {
-        const bearingPposTf = Avionics.Utils.computeGreatCircleHeading(ppos, this.to.coordinates);
-        if (Avionics.Utils.diffAngle(bearingPposTf, this.bearing) > 180 {
+    getDistanceToGo(ppos: Location): NauticalMiles {
+        const bearingPposTf = getGreatCircleBearing(ppos, this.to.coordinates);
+        if (MathUtils.diffAngle(bearingPposTf, this.bearing) > 180) {
             return 0;
         }
-        return Avionics.Utils.computeGreatCircleDistance(ppos, this.to.coordinates);
+        return getGreatCircleBearing(ppos, this.to.coordinates);
     }
 
     getGuidanceParameters(ppos: Location, trueTrack: Degrees): GuidanceParameters {
         // track angle error
-        const desiredTrack = Avionics.Utils.computeGreatCircleHeading(ppos, this.to.coordinates);
+        const desiredTrack = getGreatCircleBearing(ppos, this.to.coordinates);
         const trackAngleError = MathUtils.mod(desiredTrack - trueTrack + 180, 360) - 180;
 
         return {
@@ -58,12 +60,9 @@ export class DFLeg implements Leg {
 
     getPseudoWaypointLocation(distanceBeforeTerminator: number): Location | undefined {
         const dist = this.distance - distanceBeforeTerminator;
-        return Avionics.Utils.bearingDistanceToCoordinates(
-            Avionics.Utils.computeGreatCircleHeading(this.from.ftp.coordinates, this.to.coordinates),
-            dist,
-            this.to.coordinates.lat,
-            this.to.coordinates.lon
-        );
+        const p = computeDestinationPoint(this.to.coordinates, dist,
+            getGreatCircleBearing(this.from.ftp, this.to.coordinates));
+        return
     }
 
     get initialLocation(): Location | undefined {

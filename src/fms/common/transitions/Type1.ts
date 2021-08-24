@@ -1,19 +1,20 @@
-import { Degrees, NauticalMiles } from '@typings/types';
-import { MathUtils } from '@shared/MathUtils';
-import { Transition } from '@fmgc/guidance/lnav/transitions';
-import { ControlLaw, GuidanceParameters } from '@fmgc/guidance/ControlLaws';
 import { CFLeg } from '../legs/CFLeg';
 import { DFLeg } from '../legs/DFLeg';
 import { TFLeg } from '../legs/TFLeg';
 import { FALeg } from '../legs/FALeg';
 import { FMLeg } from '../legs/FMLeg';
 import { PILeg } from '../legs/PILeg';
+import {Transition} from "./index";
+import {Degrees, Location, NauticalMiles} from "../../../shared/types/Common";
+import {ControlLaw, GuidanceParameters} from "../ControlLaws";
+import {MathUtils} from "../MathUtils";
+import {computeDestinationPoint, getDistance, getGreatCircleBearing} from "geolib";
 
 const mod = (x: number, n: number) => x - Math.floor(x / n) * n;
 
 export type Type1PreviousLeg = CFLeg | DFLeg | TFLeg;
 export type Type1NextLeg = CFLeg | FALeg | FMLeg | PILeg | TFLeg;
-
+declare const SimVar: any;
 /**
  * A type I transition uses a fixed turn radius between two fix-referenced legs.
  */
@@ -56,7 +57,7 @@ export type Type1NextLeg = CFLeg | FALeg | FMLeg | PILeg | TFLeg;
         const finalBankAngle = Math.max(Math.min(bankAngle, maxBankAngle), minBankAngle);
 
         // Turn radius
-        this.radius = (kts ** 2 / (9.81 * Math.tan(finalBankAngle * Avionics.Utils.DEG2RAD))) / 6080.2;
+        this.radius = (kts ** 2 / (9.81 * Math.tan(finalBankAngle * MathUtils.DEEGREES_TO_RADIANS))) / 6080.2;
 
         // Turn direction
         this.clockwise = courseChange >= 0;
@@ -76,26 +77,19 @@ export type Type1NextLeg = CFLeg | FALeg | FMLeg | PILeg | TFLeg;
      * Returns the center of the turning circle, with radius distance from both
      * legs, i.e. min_distance(previous, center) = min_distance(next, center) = radius.
      */
-    get center(): LatLongAlt {
+    get center(): Location {
         const bisecting = (180 - this.angle) / 2;
-        const distanceCenterToWaypoint = this.radius / Math.sin(bisecting * Avionics.Utils.DEG2RAD);
-
-        const { lat, long } = this.previousLeg.to.infos.coordinates.toLatLong();
+        const distanceCenterToWaypoint = this.radius / Math.sin(bisecting * MathUtils.DEEGREES_TO_RADIANS);
 
         const inboundReciprocal = mod(this.previousLeg.bearing + 180, 360);
-
-        return Avionics.Utils.bearingDistanceToCoordinates(
-            mod(inboundReciprocal + (this.clockwise ? -bisecting : bisecting), 360),
-            distanceCenterToWaypoint,
-            lat,
-            long,
-        );
+        const { latitude: lat, longitude: lon} = computeDestinationPoint(this.previousLeg.to.coordinates, distanceCenterToWaypoint, mod(inboundReciprocal + (this.clockwise ? -bisecting : bisecting), 360));
+        return  { lat, lon};
     }
 
-    isAbeam(ppos: LatLongAlt): boolean {
+    isAbeam(ppos: Location): boolean {
         const [inbound] = this.getTurningPoints();
 
-        const bearingAC = Avionics.Utils.computeGreatCircleHeading(inbound, ppos);
+        const bearingAC = getGreatCircleBearing(inbound, ppos);
         const headingAC = Math.abs(MathUtils.diffAngle(this.previousLeg.bearing, bearingAC));
         return headingAC <= 90;
     }
@@ -105,26 +99,15 @@ export type Type1NextLeg = CFLeg | FALeg | FMLeg | PILeg | TFLeg;
         return circumference / 360 * this.angle;
     }
 
-    getTurningPoints(): [LatLongAlt, LatLongAlt] {
+    getTurningPoints(): [Location, Location] {
         const bisecting = (180 - this.angle) / 2;
-        const distanceTurningPointToWaypoint = this.radius / Math.tan(bisecting * Avionics.Utils.DEG2RAD);
+        const distanceTurningPointToWaypoint = this.radius / Math.tan(bisecting * MathUtils.DEEGREES_TO_RADIANS);
 
-        const { lat, long } = this.previousLeg.to.infos.coordinates.toLatLong();
+        const inbound = computeDestinationPoint(this.previousLeg.to.coordinates, distanceTurningPointToWaypoint, mod(this.previousLeg.bearing + 180, 360));
 
-        const inbound = Avionics.Utils.bearingDistanceToCoordinates(
-            mod(this.previousLeg.bearing + 180, 360),
-            distanceTurningPointToWaypoint,
-            lat,
-            long,
-        );
-        const outbound = Avionics.Utils.bearingDistanceToCoordinates(
-            this.nextLeg.bearing,
-            distanceTurningPointToWaypoint,
-            lat,
-            long,
-        );
+        const outbound = computeDestinationPoint(this.previousLeg.to.coordinates, distanceTurningPointToWaypoint, this.nextLeg.bearing);
 
-        return [inbound, outbound];
+        return [{ lat: inbound.latitude, lon: inbound.longitude }, { lat: outbound.latitude, lon: outbound.longitude }];
     }
 
     /**
@@ -132,35 +115,32 @@ export type Type1NextLeg = CFLeg | FALeg | FMLeg | PILeg | TFLeg;
      *
      * @param _ppos
      */
-    getDistanceToGo(_ppos: LatLongAlt): NauticalMiles {
+    getDistanceToGo(_ppos: Location): NauticalMiles {
         return 0;
     }
 
-    getTrackDistanceToTerminationPoint(ppos: LatLongAlt): NauticalMiles {
+    getTrackDistanceToTerminationPoint(ppos: Location): NauticalMiles {
         // In order to make the angles easier, we rotate the entire frame of reference so that the line from the center
         // towards the intersection point (the bisector line) is at 180°. Thus, the bisector is crossed when the
         // aircraft reaches 180° (rotated) bearing as seen from the center point.
 
-        const brgInverseBisector = Avionics.Utils.computeGreatCircleHeading(this.center, this.previousLeg.to.infos.coordinates);
+        const brgInverseBisector = getGreatCircleBearing(this.center, this.previousLeg.to.coordinates);
 
         const correctiveFactor = 180 - brgInverseBisector;
 
         const minBearing = this.clockwise ? 180 - this.angle / 2 : 180;
         const maxBearing = this.clockwise ? 180 : 180 + this.angle / 2;
-        const rotatedBearing = mod(Avionics.Utils.computeGreatCircleHeading(this.center, ppos) + correctiveFactor, 360);
+        const rotatedBearing = mod(getGreatCircleBearing(this.center, ppos) + correctiveFactor, 360);
         const limitedBearing = Math.min(Math.max(rotatedBearing, minBearing), maxBearing);
         const remainingArcDegs = this.clockwise ? 180 - limitedBearing : limitedBearing - 180;
 
         return (2 * Math.PI * this.radius) / 360 * remainingArcDegs;
     }
 
-    getGuidanceParameters(ppos: LatLongAlt, trueTrack: number): GuidanceParameters | null {
+    getGuidanceParameters(ppos: Location, trueTrack: number): GuidanceParameters | null {
         const { center } = this;
 
-        const bearingPpos = Avionics.Utils.computeGreatCircleHeading(
-            center,
-            ppos,
-        );
+        const bearingPpos = getGreatCircleBearing(center, ppos);
 
         const desiredTrack = mod(
             this.clockwise ? bearingPpos + 90 : bearingPpos - 90,
@@ -168,10 +148,8 @@ export type Type1NextLeg = CFLeg | FALeg | FMLeg | PILeg | TFLeg;
         );
         const trackAngleError = mod(desiredTrack - trueTrack + 180, 360) - 180;
 
-        const distanceFromCenter = Avionics.Utils.computeGreatCircleDistance(
-            center,
-            ppos,
-        );
+        const distanceFromCenter = getDistance(center, ppos);
+
         const crossTrackError = this.clockwise
             ? distanceFromCenter - this.radius
             : this.radius - distanceFromCenter;
@@ -187,7 +165,7 @@ export type Type1NextLeg = CFLeg | FALeg | FMLeg | PILeg | TFLeg;
         };
     }
 
-    getNominalRollAngle(gs): Degrees {
+    getNominalRollAngle(gs: number): Degrees {
         return (this.clockwise ? 1 : -1) * Math.atan((gs ** 2) / (this.radius * 1852 * 9.81)) * (180 / Math.PI);
     }
 
