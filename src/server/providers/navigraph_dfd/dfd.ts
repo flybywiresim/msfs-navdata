@@ -394,11 +394,11 @@ export class NavigraphDfd implements Provider {
         };
     }
 
-    private static mapDepartures(legs: NaviProcedure[], icaoCode: string): Departure[] {
-        let departures: Map<string, Departure> = new Map();
+    private async mapDepartures(legs: NaviProcedure[], icaoCode: string): Promise<Departure[]> {
+        const departures: Map<string, Departure> = new Map();
 
         // legs are sorted in sequence order by the db... phew
-        legs.forEach((leg) => {
+        for(const leg of legs) {
             if (!departures.has(leg.procedureIdentifier)) {
                 departures.set(leg.procedureIdentifier, {
                     icaoCode: icaoCode,
@@ -435,7 +435,21 @@ export class NavigraphDfd implements Provider {
                 case '2':
                 case '5':
                 case 'M':
-                    if(leg.transitionIdentifier) {
+                    if(leg.transitionIdentifier === 'ALL') {
+                        const runways = await this.getRunwaysAtAirport(leg.airportIdentifier);
+                        runways.forEach(runway => {
+                            transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                }
+                                departure?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
+                    }
+                    else if(leg.transitionIdentifier) {
                         transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                         if (!transition) {
                             transition = {
@@ -466,16 +480,16 @@ export class NavigraphDfd implements Provider {
                 default:
                     console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: SID`);
             }
-        });
+        }
 
         return Array.from(departures.values());
     }
 
-    private static mapArrivals(legs: NaviProcedure[], icaoCode: string): Arrival[] {
-        let arrivals: Map<string, Arrival> = new Map();
+    private async mapArrivals(legs: NaviProcedure[], icaoCode: string): Promise<Arrival[]> {
+        const arrivals: Map<string, Arrival> = new Map();
 
         // legs are sorted in sequence order by the db... phew
-        legs.forEach((leg) => {
+        for(const leg of legs) {
             if (!arrivals.has(leg.procedureIdentifier)) {
                 arrivals.set(leg.procedureIdentifier, {
                     icaoCode: icaoCode,
@@ -508,7 +522,21 @@ export class NavigraphDfd implements Provider {
                 case '5':
                 case '8':
                 case 'M':
-                    if(leg.transitionIdentifier) {
+                    if(leg.transitionIdentifier === 'ALL') {
+                        const runways = await this.getRunwaysAtAirport(leg.airportIdentifier);
+                        runways.forEach(runway => {
+                            transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                }
+                                arrival?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
+                    }
+                    else if(leg.transitionIdentifier) {
                         transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                         if (!transition) {
                             transition = {
@@ -539,7 +567,7 @@ export class NavigraphDfd implements Provider {
                 default:
                     console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: STAR`);
             }
-        });
+        }
 
         return Array.from(arrivals.values());
     }
@@ -589,7 +617,7 @@ export class NavigraphDfd implements Provider {
     }
 
     private static mapApproaches(legs: NaviProcedure[], icaoCode: string): Approach[] {
-        let approaches: Map<string, Approach> = new Map();
+        const approaches: Map<string, Approach> = new Map();
 
         // legs are sorted in sequence order by the db... phew
         legs.forEach((leg) => {
@@ -669,7 +697,7 @@ export class NavigraphDfd implements Provider {
                     return reject('No departures!');
                 }
                 const departureLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
-                resolve(NavigraphDfd.mapDepartures(departureLegs, ap[0].icaoCode));
+                resolve(this.mapDepartures(departureLegs, ap[0].icaoCode));
             } finally {
                 stmt.free();
             }
@@ -690,7 +718,7 @@ export class NavigraphDfd implements Provider {
                     return reject('No arrivals!');
                 }
                 const arrivalLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
-                resolve(NavigraphDfd.mapArrivals(arrivalLegs, ap[0].icaoCode));
+                resolve(this.mapArrivals(arrivalLegs, ap[0].icaoCode));
             } finally {
                 stmt.free();
             }

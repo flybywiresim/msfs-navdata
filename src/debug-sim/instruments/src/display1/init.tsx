@@ -30,34 +30,21 @@ export const Init = () => {
 
     useEffect(() => {
         if(flightPlan.originAirport) {
-            database.getRunways(flightPlan.originAirport.ident).then(r => setOriginRunways(r));
-            database.getDepartures(flightPlan.originAirport.ident).then(r => setOriginDepartures(r));
-        }
-    }, [flightPlan.originAirport]);
-    useEffect(() => {
-        if(flightPlan.originAirport) {
+            database.getRunways(flightPlan.originAirport.ident, flightPlan.departure).then(r => setOriginRunways(r));
+            database.getDepartures(flightPlan.originAirport.ident, flightPlan.procedureDetails.departureRunwayIdentifier).then(r => setOriginDepartures(r));
             setDepartureTransitions(flightPlan.departure?.enrouteTransitions);
         }
-    }, [flightPlan.departure]);
-
-    useEffect(() => {
-        if(flightPlan.destinationAirport) {
-            database.getArrivals(flightPlan.destinationAirport.ident).then(r => setArrivals(r));
-            database.getApproaches(flightPlan.destinationAirport.ident).then(r => setApproaches(r));
-        }
-    }, [flightPlan.destinationAirport]);
+    }, [flightPlan.originAirport, flightPlan.departure, flightPlan.procedureDetails.departureRunwayIdentifier]);
 
     useEffect(() => {
         if(flightPlan.destinationAirport) {
             setArrivalTransitions(flightPlan.arrival?.enrouteTransitions);
-        }
-    }, [flightPlan.arrival]);
-
-    useEffect(() => {
-        if(flightPlan.destinationAirport) {
+            database.getArrivals(flightPlan.destinationAirport.ident, flightPlan.approach).then(r => setArrivals(r));
             setApproachTransitions(flightPlan.approach?.transitions);
+            database.getApproaches(flightPlan.destinationAirport.ident, flightPlan.arrival).then(r => setApproaches(r));
         }
-    }, [flightPlan.approach]);
+    }, [flightPlan.destinationAirport, flightPlan.arrival, flightPlan.approach]);
+
 
     return(
         <div style={{ backgroundColor: "white" }}>

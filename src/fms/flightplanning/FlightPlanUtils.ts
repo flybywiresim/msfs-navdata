@@ -86,6 +86,7 @@ export class FlightPlanUtils {
     }
 
     public static getRunwayFromApproachIdent(ident: string): string {
-        return ident.substr(1);
+        const designation = ident.substr(1)
+        return `RW${designation}`;
     }
 }

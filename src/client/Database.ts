@@ -4,6 +4,7 @@ import { Arrival } from "../shared/types/Arrival";
 import { Departure } from "../shared/types/Departure";
 import { Runway } from "../shared/types/Runway";
 import { DatabaseBackend } from "./backends/Backend";
+import { FlightPlanUtils } from "../fms/flightplanning/FlightPlanUtils";
 
 export class Database {
     backend: DatabaseBackend;
@@ -28,19 +29,36 @@ export class Database {
         return await this.backend.getNearbyAirports(lat, lon, range);
     }
 
-    public async getRunways(airportIdentifier: string): Promise<Runway[]> {
-        return await this.backend.getRunways(airportIdentifier);
+    public async getRunways(airportIdentifier: string, procedure?: Departure | Arrival): Promise<Runway[]> {
+        let runways = await this.backend.getRunways(airportIdentifier);
+        if(procedure) {
+            runways = runways.filter(runway => procedure.runwayTransitions.find(trans => trans.ident === runway.ident))
+        }
+        return runways;
     }
 
-    public async getDepartures(airportIdentifier: string): Promise<Departure[]> {
-        return await this.backend.getDepartures(airportIdentifier);
+    public async getDepartures(airportIdentifier: string, runwayIdentifier?: string): Promise<Departure[]> {
+        let departures = await this.backend.getDepartures(airportIdentifier);
+        if(runwayIdentifier) {
+            departures = departures.filter(departure => departure.runwayTransitions.find(trans => trans.ident === runwayIdentifier))
+        }
+        return departures;
     }
 
-    public async getArrivals(airportIdentifier: string): Promise<Arrival[]> {
-        return await this.backend.getArrivals(airportIdentifier);
+    public async getArrivals(airportIdentifier: string, approach?: Approach): Promise<Arrival[]> {
+        let arrivals = await this.backend.getArrivals(airportIdentifier);
+        if(approach) {
+            const runwayIdentifier = FlightPlanUtils.getRunwayFromApproachIdent(approach.ident);
+            arrivals = arrivals.filter(arrival => arrival.runwayTransitions.find(trans => trans.ident === runwayIdentifier))
+        }
+        return arrivals;
     }
 
-    public async getApproaches(airportIdentifier: string): Promise<Approach[]> {
-        return await this.backend.getApproaches(airportIdentifier);
+    public async getApproaches(airportIdentifier: string, arrival?: Arrival): Promise<Approach[]> {
+        let approaches = await this.backend.getApproaches(airportIdentifier);
+        if(arrival) approaches = approaches.filter(approach => arrival.runwayTransitions.find(trans =>
+            trans.ident === FlightPlanUtils.getRunwayFromApproachIdent(approach.ident)
+        ));
+        return approaches;
     }
 }
