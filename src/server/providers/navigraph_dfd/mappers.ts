@@ -579,7 +579,7 @@ export class DFDMappers {
                     ident: fix.routeIdentifier,
                     level: this.mapAirwayLevel(fix.flightlevel),
                     fixes: [],
-                    direction: this.mapAirwayDirection(fix.directionalRestriction),
+                    direction: this.mapAirwayDirection(fix.directionRestriction),
                     minimumAltitudeForward: fix.minimumAltitude1,
                     minimumAltitudeBackward: fix.minimumAltitude2,
                     maximumAltitude: fix.maximumAltitude,

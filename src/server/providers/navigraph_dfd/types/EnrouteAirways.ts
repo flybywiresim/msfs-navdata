@@ -22,7 +22,7 @@ export type FlightLevel =
     'H' |
     /** Low Level Airways */
     'L';
-type DirectionalRestriction  =
+type DirectionRestriction  =
     /** One way in direction route is coded (Forward) */
     'F' |
     /** One way in opposite direction route is coded (backwards) */
@@ -53,7 +53,7 @@ export type EnRouteAirway = {
     /** Defines the airway structure */
     flightlevel: FlightLevel;
     /** Indicates the flyable direction */
-    directionalRestriction: DirectionalRestriction;
+    directionRestriction: DirectionRestriction;
     /** Indicates the cruising table */
     cruiseTableIdentifier: CruiseTableIdentifier;
     /** Contains altitudes in feet */
