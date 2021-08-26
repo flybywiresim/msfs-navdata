@@ -483,6 +483,7 @@ export class DFDMappers {
     public mapApproaches(legs: NaviProcedure[], icaoCode: string): Approach[] {
         const approaches: Map<string, Approach> = new Map();
 
+        let missedApproachStarted = false;
         // legs are sorted in sequence order by the db... phew
         legs.forEach((leg) => {
             if (!approaches.has(leg.procedureIdentifier)) {
@@ -499,48 +500,57 @@ export class DFDMappers {
 
             const apiLeg = this.mapLeg(leg, icaoCode);
             const approach = approaches.get(leg.procedureIdentifier);
-            let transition;
-            switch (leg.routeType) {
-                case 'A':
-                    transition = approach?.transitions.find((t) => t.ident === leg.transitionIdentifier);
-                    if (!transition) {
-                        transition = {
-                            ident: leg.transitionIdentifier,
-                            legs: [],
+
+            if (leg.waypointDescriptionCode?.charAt(2) === 'M') {
+                missedApproachStarted = true;
+            }
+
+            if (missedApproachStarted) {
+                approach?.missedLegs.push(apiLeg);
+            } else {
+                let transition;
+                switch (leg.routeType) {
+                    case 'A':
+                        transition = approach?.transitions.find((t) => t.ident === leg.transitionIdentifier);
+                        if (!transition) {
+                            transition = {
+                                ident: leg.transitionIdentifier,
+                                legs: [],
+                            }
+                            approach?.transitions.push(transition);
                         }
-                        approach?.transitions.push(transition);
-                    }
-                    transition.legs.push(apiLeg);
-                    break;
-                case 'B':
-                case 'D':
-                case 'F':
-                case 'G':
-                case 'I':
-                case 'J':
-                case 'L':
-                case 'M':
-                case 'N':
-                case 'P':
-                case 'Q':
-                case 'R':
-                case 'S':
-                case 'T':
-                case 'U':
-                case 'V':
-                case 'W':
-                case 'X':
-                case 'Y':
-                    if (approach?.type === ApproachType.Unknown) {
-                        approach.type = this.mapApproachType(leg.routeType);
-                    }
-                    approach?.legs.push(apiLeg);
-                    break;
-                case 'Z':
-                    approach?.missedLegs.push(apiLeg);
-                    break;
-                default:
-                    console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
+                        transition.legs.push(apiLeg);
+                        break;
+                    case 'B':
+                    case 'D':
+                    case 'F':
+                    case 'G':
+                    case 'I':
+                    case 'J':
+                    case 'L':
+                    case 'M':
+                    case 'N':
+                    case 'P':
+                    case 'Q':
+                    case 'R':
+                    case 'S':
+                    case 'T':
+                    case 'U':
+                    case 'V':
+                    case 'W':
+                    case 'X':
+                    case 'Y':
+                        if (approach?.type === ApproachType.Unknown) {
+                            approach.type = this.mapApproachType(leg.routeType);
+                        }
+                        approach?.legs.push(apiLeg);
+                        break;
+                    case 'Z':
+                        approach?.missedLegs.push(apiLeg);
+                        break;
+                    default:
+                        console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
+                }
             }
         });
 
