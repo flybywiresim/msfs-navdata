@@ -230,6 +230,7 @@ export class DFDMappers {
             ident: this.mapLegIdent(leg),
             procedureIdent: leg.procedureIdentifier,
             type: this.mapLegType(leg.pathTermination),
+            overfly: leg.waypointDescriptionCode?.charAt(1) === 'Y',
             waypoint: leg.waypointIdentifier ? {
                 icaoCode: icaoCode,
                 ident: leg.waypointIdentifier,

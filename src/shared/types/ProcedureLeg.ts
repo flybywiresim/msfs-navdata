@@ -6,6 +6,7 @@ import { Waypoint } from "./Waypoint";
 export interface ProcedureLeg extends DatabaseItem {
     procedureIdent: string,
     type: LegType,
+    overfly: boolean,
     waypoint?: Waypoint,
     recommendedNavaid?: VhfNavaid | NdbNavaid | Waypoint, // TODO can be other types?
     /**
