@@ -172,7 +172,7 @@ export class DFDMappers {
             case '-':
                 return AltitudeDescriptor.AtOrBelowAlt1;
             case '@':
-            case '':
+            case null:
                 return AltitudeDescriptor.AtAlt1;
             case 'B':
                 return AltitudeDescriptor.BetweenAlt1Alt2;
