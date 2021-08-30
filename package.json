@@ -1,7 +1,10 @@
 {
-  "name": "msfs-flightplanning",
+  "name": "msfs-navdata",
   "version": "0.1.0",
-  "description": "",
+  "description": "Package for reading navdata with Microsoft Flight Simulator, reads and parses default navdata and external navdata from a local api into a common format",
+  "keywords": [],
+  "author": "FlyByWire Simulations, Synaptic Simulations",
+  "license": "GPLv3",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "scripts": {
@@ -11,9 +14,6 @@
     "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --config .prettierrc src/**/*.ts --write"
   },
-  "keywords": [],
-  "author": "FlyByWire Simulations, Synaptic Simulations",
-  "license": "GPLv3",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
