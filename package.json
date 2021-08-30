@@ -7,6 +7,10 @@
   "license": "GPLv3",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --pretty --transpile-only src/server/index.ts",
@@ -21,6 +25,7 @@
     "sql.js": "^1.6.1"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-typescript": "^8.2.5",
     "@types/cors": "^2.8.12",

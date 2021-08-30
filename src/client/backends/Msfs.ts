@@ -91,7 +91,7 @@ export class MsfsBackend extends DatabaseBackend {
     }
 
     public async getAirportsByIdent(idents: string[]): Promise<Airport[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const icaos = idents.map((ident) => `A      ${ident}`);
             const results: DatabaseItem[] = [];
             for (let i = icaos.length - 1; i >= 0; i--) {
