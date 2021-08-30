@@ -55,7 +55,8 @@ export class MsfsBackend extends DatabaseBackend {
             databaseId: msAirport.icao,
             ident: msAirport.icao.substring(7, 11),
             icaoCode: msAirport.icao.substring(0, 2),
-            airportName: gettranslation thing... msAirport.name,
+            // Tracer wrote something weird on the next line, removed it for rollup, not sure what it was for
+            airportName: msAirport.name,
             location: { lat: msAirport.lat, lon: msAirport.lon, alt: elevation },
             longestRunwaySurfaceType: this.mapRunwaySurface(longestRunway[1]),
         };
