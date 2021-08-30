@@ -4,3 +4,4 @@ node_modules
 Thumbs.db
 # ignore the debug-sim rollup output
 src/A380X
+dist
