@@ -286,15 +286,32 @@ export class DFDMappers {
                 case '4':
                 case 'F':
                 case 'T':
-                    transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
-                    if (!transition) {
-                        transition = {
-                            ident: leg.transitionIdentifier,
-                            legs: [],
-                        }
-                        departure?.runwayTransitions.push(transition);
+                    if(leg.transitionIdentifier[4] === 'B') {
+                        const runways = (await this.queries.getRunwaysAtAirport(leg.airportIdentifier))
+                            .filter(runway => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
+                        runways.forEach(runway => {
+                            transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                }
+                                departure?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        })
                     }
-                    transition.legs.push(apiLeg);
+                    else {
+                        transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
+                        if (!transition) {
+                            transition = {
+                                ident: leg.transitionIdentifier,
+                                legs: [],
+                            }
+                            departure?.runwayTransitions.push(transition);
+                        }
+                        transition.legs.push(apiLeg);
+                    }
                     break;
                 case '2':
                 case '5':
@@ -312,6 +329,21 @@ export class DFDMappers {
                             }
                             transition.legs.push(apiLeg);
                         });
+                    }
+                    else if(leg.transitionIdentifier?.[4] === 'B') {
+                        const runways = (await this.queries.getRunwaysAtAirport(leg.airportIdentifier))
+                            .filter(runway => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
+                        runways.forEach(runway => {
+                            transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                }
+                                departure?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        })
                     }
                     else if(leg.transitionIdentifier) {
                         transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
@@ -400,6 +432,21 @@ export class DFDMappers {
                             transition.legs.push(apiLeg);
                         });
                     }
+                    else if(leg.transitionIdentifier?.[4] === 'B') {
+                        const runways = (await this.queries.getRunwaysAtAirport(leg.airportIdentifier))
+                            .filter(runway => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
+                        runways.forEach(runway => {
+                            transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                }
+                                arrival?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        })
+                    }
                     else if(leg.transitionIdentifier) {
                         transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                         if (!transition) {
@@ -418,15 +465,32 @@ export class DFDMappers {
                 case '6':
                 case '9':
                 case 'S':
-                    transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
-                    if (!transition) {
-                        transition = {
-                            ident: leg.transitionIdentifier,
-                            legs: [],
-                        }
-                        arrival?.runwayTransitions.push(transition);
+                    if(leg.transitionIdentifier[4] === 'B') {
+                        const runways = (await this.queries.getRunwaysAtAirport(leg.airportIdentifier))
+                            .filter(runway => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
+                        runways.forEach(runway => {
+                            transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                }
+                                arrival?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        })
                     }
-                    transition.legs.push(apiLeg);
+                    else {
+                        transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
+                        if (!transition) {
+                            transition = {
+                                ident: leg.transitionIdentifier,
+                                legs: [],
+                            }
+                            arrival?.runwayTransitions.push(transition);
+                        }
+                        transition.legs.push(apiLeg);
+                    }
                     break;
                 default:
                     console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: STAR`);
