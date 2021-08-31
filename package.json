@@ -1,6 +1,6 @@
 {
   "name": "msfs-navdata",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha0",
   "description": "Package for reading navdata with Microsoft Flight Simulator, reads and parses default navdata and external navdata from a local api into a common format",
   "keywords": [],
   "author": "FlyByWire Simulations, Synaptic Simulations",
@@ -32,6 +32,7 @@
     "@types/express": "^4.17.13",
     "@types/geolib": "^2.0.23",
     "@types/node": "^16.7.1",
+    "@types/node-fetch": "^2.5.12",
     "@types/sql.js": "^1.4.2",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
@@ -41,5 +42,8 @@
     "ts-node": "^10.2.1",
     "ts-node-dev": "^1.1.8",
     "typescript": "^4.3.5"
+  },
+  "peerDependencies": {
+    "node-fetch": "^3.0.0"
   }
 }
