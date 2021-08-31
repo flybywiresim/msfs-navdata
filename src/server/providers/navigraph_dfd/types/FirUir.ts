@@ -1,5 +1,5 @@
-import { BoundaryVia } from "./ControlledAirspace";
-import { CruiseTableIdentifier } from "./CruisingTable";
+import { BoundaryVia } from './ControlledAirspace';
+import { CruiseTableIdentifier } from './CruisingTable';
 
 type FiruirAdress =
     /** related to an IFR Flight */

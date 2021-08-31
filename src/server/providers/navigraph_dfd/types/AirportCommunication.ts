@@ -1,4 +1,4 @@
-import { CommunicationType, FrequencyUnits } from "./CommonCommunicationTypes";
+import { CommunicationType, FrequencyUnits } from './CommonCommunicationTypes';
 
 export type AirportCommunication = {
     /** geographical area of the facility */

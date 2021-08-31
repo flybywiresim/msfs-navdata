@@ -12,11 +12,11 @@
   ],
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --pretty --transpile-only src/server/index.ts",
     "build": "rollup -c rollup.config.js",
     "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
-    "format": "prettier --config .prettierrc src/**/*.ts --write"
+    "lint-fix": "npm run lint -- --fix",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -25,6 +25,7 @@
     "sql.js": "^1.6.1"
   },
   "devDependencies": {
+    "@flybywiresim/eslint-config": "^0.2.2",
     "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-typescript": "^8.2.5",

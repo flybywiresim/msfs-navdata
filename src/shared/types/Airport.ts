@@ -1,5 +1,5 @@
-import { DatabaseItem, Location, Feet, Knots, FlightLevel, NauticalMiles } from "./Common";
-import { RunwaySurfaceType } from "./Runway";
+import { DatabaseItem, Location, Feet, Knots, FlightLevel, NauticalMiles } from './Common';
+import { RunwaySurfaceType } from './Runway';
 
 export interface Airport extends DatabaseItem {
     // airport reference location, and elevation

@@ -1,5 +1,5 @@
-import { DatabaseItem, Feet, NauticalMiles } from "./Common";
-import { Waypoint } from "./Waypoint";
+import { DatabaseItem, Feet, NauticalMiles } from './Common';
+import { Waypoint } from './Waypoint';
 
 export enum AirwayType {
     Airline,

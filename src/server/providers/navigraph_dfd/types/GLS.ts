@@ -1,4 +1,4 @@
-import { IlsMlsGlsCategory } from "./LocalizerGlideslopes";
+import { IlsMlsGlsCategory } from './LocalizerGlideslopes';
 
 type StationType =
     /** LAAS/GLS ground station */

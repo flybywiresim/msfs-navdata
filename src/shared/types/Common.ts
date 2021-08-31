@@ -1,4 +1,4 @@
-import { ProcedureLeg } from "./ProcedureLeg";
+import { ProcedureLeg } from './ProcedureLeg';
 
 export type Degrees = number;
 export type DegreesMagnetic = Degrees;

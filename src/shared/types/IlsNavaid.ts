@@ -1,4 +1,4 @@
-import { DatabaseItem, Degrees, DegreesMagnetic, KiloHertz, Location, LsCategory } from "./Common";
+import { DatabaseItem, Degrees, DegreesMagnetic, KiloHertz, Location, LsCategory } from './Common';
 
 export interface IlsNavaid extends DatabaseItem {
     frequency: KiloHertz;

@@ -1,4 +1,4 @@
-import { IlsMlsGlsCategory } from "./LocalizerGlideslopes";
+import { IlsMlsGlsCategory } from './LocalizerGlideslopes';
 
 export type Runway = {
     /** geographical area of the runway */

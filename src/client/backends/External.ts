@@ -1,12 +1,12 @@
-import { Airport } from "../../shared/types/Airport";
-import { Airway } from "../../shared/types/Airway";
-import { Approach } from "../../shared/types/Approach";
-import { Arrival } from "../../shared/types/Arrival";
-import { Departure } from "../../shared/types/Departure";
-import { Runway } from "../../shared/types/Runway";
-import { DatabaseBackend } from "./Backend";
 import fetch from 'node-fetch';
-import { IlsNavaid, NdbNavaid, Waypoint } from "../../shared";
+import { Airport } from '../../shared/types/Airport';
+import { Airway } from '../../shared/types/Airway';
+import { Approach } from '../../shared/types/Approach';
+import { Arrival } from '../../shared/types/Arrival';
+import { Departure } from '../../shared/types/Departure';
+import { Runway } from '../../shared/types/Runway';
+import { DatabaseBackend } from './Backend';
+import { IlsNavaid, NdbNavaid, Waypoint } from '../../shared';
 
 export class ExternalBackend extends DatabaseBackend {
     private apiBase: string;
@@ -30,7 +30,7 @@ export class ExternalBackend extends DatabaseBackend {
     }
 
     public getNearbyAirports(lat: number, lon: number, range?: number): Promise<Airport[]> {
-        return this.fetchApi<Airport>(`nearby/airports/${lat},${lon}${range ? '/' + range : ''}`);
+        return this.fetchApi<Airport>(`nearby/airports/${lat},${lon}${range ? `/${range}` : ''}`);
     }
 
     public getRunways(airportIdentifier: string): Promise<Runway[]> {

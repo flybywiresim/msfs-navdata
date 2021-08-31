@@ -1,11 +1,11 @@
-import { Airway, IlsNavaid, NdbNavaid, Waypoint } from "../../shared";
-import { Airport } from "../../shared/types/Airport";
-import { Approach } from "../../shared/types/Approach";
-import { Arrival } from "../../shared/types/Arrival";
-import { DatabaseItem } from "../../shared/types/Common";
-import { Departure } from "../../shared/types/Departure";
-import { Runway, RunwaySurfaceType } from "../../shared/types/Runway";
-import { DatabaseBackend } from "./Backend";
+import { Airway, IlsNavaid, NdbNavaid, Waypoint } from '../../shared';
+import { Airport } from '../../shared/types/Airport';
+import { Approach } from '../../shared/types/Approach';
+import { Arrival } from '../../shared/types/Arrival';
+import { DatabaseItem } from '../../shared/types/Common';
+import { Departure } from '../../shared/types/Departure';
+import { Runway, RunwaySurfaceType } from '../../shared/types/Runway';
+import { DatabaseBackend } from './Backend';
 
 type PendingRequest = {
     resolve: Function,
@@ -16,16 +16,21 @@ type PendingRequest = {
 
 export class MsfsBackend extends DatabaseBackend {
     getIlsAtAirport(ident: string): Promise<IlsNavaid[]> {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
+
     getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
+
     getAirwaysByFix(ident: string): Promise<Airway[]> {
-        throw new Error("Method not implemented.");
+        throw new Error('Method not implemented.');
     }
+
     private listener;
+
     private pendingRequests: PendingRequest[] = [];
+
     private cache: Map<string, DatabaseItem> = {};
 
     constructor() {
@@ -51,7 +56,7 @@ export class MsfsBackend extends DatabaseBackend {
     }
 
     private mapAirport(msAirport): Airport {
-        let elevations: number[] = [];
+        const elevations: number[] = [];
         let longestRunway = [0, undefined];
         msAirport.infos.runways.forEach((runway) => {
             if (runway.length > longestRunway[0]) {
@@ -116,10 +121,10 @@ export class MsfsBackend extends DatabaseBackend {
             }
 
             const index = this.pendingRequests.push({
-                resolve: resolve,
-                reject: reject,
+                resolve,
+                reject,
                 pendingFacilities: icaos,
-                results: results,
+                results,
             }) - 1;
             const result: boolean[] = await Coherent.call('LOAD_AIRPORTS', icaos);
             if (result.length < icaos.length) {

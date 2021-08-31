@@ -1,4 +1,4 @@
-import { DatabaseItem, Degrees, DegreesMagnetic, Location, LsCategory } from "./Common";
+import { DatabaseItem, Degrees, DegreesMagnetic, Location, LsCategory } from './Common';
 
 export interface GlsNavaid extends DatabaseItem {
     channel: number;

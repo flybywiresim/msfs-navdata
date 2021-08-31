@@ -5,7 +5,10 @@ module.exports = {
         '@typescript-eslint',
     ],
     extends: [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
+        "@flybywiresim/eslint-config"
     ],
+    rules: {
+        "no-undef": "off",
+        "import/no-unresolved": "off",
+    }
 };

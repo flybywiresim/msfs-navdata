@@ -1,5 +1,5 @@
-import { BoundaryVia } from "./ControlledAirspace";
-import { FlightLevel } from "./EnrouteAirways";
+import { BoundaryVia } from './ControlledAirspace';
+import { FlightLevel } from './EnrouteAirways';
 
 type RestrictiveAirspaceType =
     /** Alert */

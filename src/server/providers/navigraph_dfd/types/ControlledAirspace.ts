@@ -1,4 +1,4 @@
-import { FlightLevel } from "./EnrouteAirways"
+import { FlightLevel } from './EnrouteAirways';
 
 type AirspaceType =
     /** Class C Airspace (USA) */

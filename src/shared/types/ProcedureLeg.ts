@@ -1,7 +1,7 @@
-import { DatabaseItem, DegreesMagnetic, Feet, Knots, Minutes, NauticalMiles } from "./Common";
-import { NdbNavaid } from "./NdbNavaid";
-import { VhfNavaid } from "./VhfNavaid";
-import { Waypoint } from "./Waypoint";
+import { DatabaseItem, DegreesMagnetic, Feet, Knots, Minutes, NauticalMiles } from './Common';
+import { NdbNavaid } from './NdbNavaid';
+import { VhfNavaid } from './VhfNavaid';
+import { Waypoint } from './Waypoint';
 
 export interface ProcedureLeg extends DatabaseItem {
     procedureIdent: string,

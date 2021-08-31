@@ -1,12 +1,12 @@
 import express from 'express';
+import cors from 'cors';
 import { NavigraphDfd } from './providers/navigraph_dfd/dfd';
 import { DatabaseIdent } from '../shared/types/DatabaseIdent';
 import { Provider } from './providers/provider';
 import { Airport } from '../shared/types/Airport';
-import { Runway } from "../shared/types/Runway";
-import cors from 'cors';
-import { Waypoint } from "../shared/types/Waypoint";
-import { NdbNavaid } from "../shared/types/NdbNavaid";
+import { Runway } from '../shared/types/Runway';
+import { Waypoint } from '../shared/types/Waypoint';
+import { NdbNavaid } from '../shared/types/NdbNavaid';
 import { Airway } from '../shared/types/Airway';
 import { IlsNavaid } from '../shared';
 
@@ -87,7 +87,6 @@ app.get('/airport/:ident/ils', (req, res) => {
     });
 });
 
-
 app.get('/enroute/waypoints/:ident', (req, res) => {
     if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
         return res.status(400).send('Invalid ident');
@@ -105,7 +104,7 @@ app.get('/airport/:ident/departures', (req, res) => {
         res.json(departures);
     }).catch((err) => {
         res.status(500).send(err);
-    })
+    });
 });
 
 app.get('/airport/:ident/arrivals', (req, res) => {
@@ -116,7 +115,7 @@ app.get('/airport/:ident/arrivals', (req, res) => {
         res.json(arrivals);
     }).catch((err) => {
         res.status(500).send(err);
-    })
+    });
 });
 
 app.get('/airport/:ident/approaches', (req, res) => {
@@ -127,7 +126,7 @@ app.get('/airport/:ident/approaches', (req, res) => {
         res.json(approaches);
     }).catch((err) => {
         res.status(500).send(err);
-    })
+    });
 });
 
 app.get('/airways/:idents', (req, res) => {
@@ -143,4 +142,4 @@ app.get('/airways/:idents', (req, res) => {
 
 app.listen(5000, () => {
     console.log('The application is listening on port 5000!');
-})
+});

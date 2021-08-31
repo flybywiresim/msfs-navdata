@@ -1,4 +1,4 @@
-import { DatabaseItem, Location } from "./Common";
+import { DatabaseItem, Location } from './Common';
 
 export enum WaypointType {
     // TODO

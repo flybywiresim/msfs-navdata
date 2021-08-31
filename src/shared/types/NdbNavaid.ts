@@ -1,5 +1,5 @@
-import { DatabaseItem, Degrees, KiloHertz, Location } from "./Common";
-import { VhfNavaidType } from "./VhfNavaid";
+import { DatabaseItem, Degrees, KiloHertz, Location } from './Common';
+import { VhfNavaidType } from './VhfNavaid';
 
 export interface NdbNavaid extends DatabaseItem {
     frequency: KiloHertz;

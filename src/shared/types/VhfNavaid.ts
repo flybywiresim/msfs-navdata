@@ -1,4 +1,4 @@
-import { DatabaseItem, Degrees, Location, MegaHertz } from "./Common";
+import { DatabaseItem, Degrees, Location, MegaHertz } from './Common';
 
 export interface VhfNavaid extends DatabaseItem {
     frequency: MegaHertz;

@@ -1,4 +1,4 @@
-import { Location, Degrees, DegreesTrue, DegreesMagnetic, Feet, Metres, LsCategory, DatabaseItem } from "./Common";
+import { Location, Degrees, DegreesTrue, DegreesMagnetic, Feet, Metres, LsCategory, DatabaseItem } from './Common';
 
 export interface Runway extends DatabaseItem {
     airportIdent: string;

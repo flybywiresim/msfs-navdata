@@ -1,6 +1,5 @@
 import { CruiseTableIdentifier } from './CruisingTable';
-import {WaypointDescriptionCode} from './WaypointDescriptionCode';
-
+import { WaypointDescriptionCode } from './WaypointDescriptionCode';
 
 type RouteType =
     /** Control */
@@ -22,14 +21,13 @@ export type FlightLevel =
     'H' |
     /** Low Level Airways */
     'L';
-type DirectionRestriction  =
+type DirectionRestriction =
     /** One way in direction route is coded (Forward) */
     'F' |
     /** One way in opposite direction route is coded (backwards) */
     'B' |
     /** no restrictions on direction */
     '';
-
 
 export type EnRouteAirway = {
     /** Geographical area of the waypoint */

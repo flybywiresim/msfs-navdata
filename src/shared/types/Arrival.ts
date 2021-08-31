@@ -1,5 +1,5 @@
-import { DatabaseItem, ProcedureTransition } from "./Common";
-import { ProcedureLeg } from "./ProcedureLeg";
+import { DatabaseItem, ProcedureTransition } from './Common';
+import { ProcedureLeg } from './ProcedureLeg';
 
 export interface Arrival extends DatabaseItem {
     enrouteTransitions: ProcedureTransition[],
