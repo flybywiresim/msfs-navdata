@@ -1,4 +1,4 @@
-import {Airway, NdbNavaid, Waypoint} from "../../shared";
+import { Airway, IlsNavaid, NdbNavaid, Waypoint } from "../../shared";
 import { Airport } from "../../shared/types/Airport";
 import { Approach } from "../../shared/types/Approach";
 import { Arrival } from "../../shared/types/Arrival";
@@ -15,6 +15,9 @@ type PendingRequest = {
 };
 
 export class MsfsBackend extends DatabaseBackend {
+    getIlsAtAirport(ident: string): Promise<IlsNavaid[]> {
+        throw new Error("Method not implemented.");
+    }
     getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
         throw new Error("Method not implemented.");
     }

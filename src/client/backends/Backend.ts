@@ -4,7 +4,7 @@ import { Approach } from "../../shared/types/Approach";
 import { Arrival } from "../../shared/types/Arrival";
 import { Departure } from "../../shared/types/Departure";
 import { Runway } from "../../shared/types/Runway";
-import {NdbNavaid, Waypoint} from "../../shared";
+import { IlsNavaid, NdbNavaid, Waypoint } from "../../shared";
 
 export abstract class DatabaseBackend {
     abstract getAirportsByIdent(idents: string[]): Promise<Airport[]>;
@@ -17,4 +17,5 @@ export abstract class DatabaseBackend {
     abstract getNdbsAtAirport(ident: string): Promise<NdbNavaid[]>;
     abstract getAirwaysByIdents(idents: string[]): Promise<Airway[]>;
     abstract getAirwaysByFix(ident: string): Promise<Airway[]>;
+    abstract getIlsAtAirport(ident: string): Promise<IlsNavaid[]>;
 }

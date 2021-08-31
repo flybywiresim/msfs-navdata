@@ -18,7 +18,9 @@ import { Arrival } from '../../../shared/types/Arrival';
 import { Approach } from '../../../shared/types/Approach';
 import { Airway } from '../../../shared/types/Airway';
 import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
-import {DFDMappers} from "./mappers";
+import { DFDMappers } from "./mappers";
+import { LocalizerGlideslope } from './types/LocalizerGlideslopes';
+import { IlsNavaid } from '../../../shared/types/IlsNavaid';
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -78,6 +80,13 @@ export class NavigraphDfd implements Provider {
         const stmt = this.db.prepare(sql, { $ident: ident });
         const rows = NavigraphDfd.toCamel(query(stmt)) as TerminalNDBNavaid[];
         return rows.map(navaid => this.mappers.mapTerminalNdb(navaid));
+    }
+
+    async getIlsAtAirport(ident: string): Promise<IlsNavaid[]> {
+        const sql = `SELECT * FROM tbl_localizers_glideslopes WHERE airport_identifier = $ident`;
+        const stmt = this.db.prepare(sql, { $ident: ident });
+        const rows = NavigraphDfd.toCamel(query(stmt)) as LocalizerGlideslope[];
+        return rows.map(ils => this.mappers.mapIls(ils));
     }
 
     async getWaypointsAtAirport(ident: string): Promise<Waypoint[]> {

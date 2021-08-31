@@ -8,6 +8,7 @@ import cors from 'cors';
 import { Waypoint } from "../shared/types/Waypoint";
 import { NdbNavaid } from "../shared/types/NdbNavaid";
 import { Airway } from '../shared/types/Airway';
+import { IlsNavaid } from '../shared';
 
 const app = express();
 
@@ -76,6 +77,16 @@ app.get('/airport/:ident/ndbs', (req, res) => {
         res.json(ndbs);
     });
 });
+
+app.get('/airport/:ident/ils', (req, res) => {
+    if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
+        return res.status(400).send('Invalid ident');
+    }
+    provider.getIlsAtAirport(req.params.ident).then((ils: IlsNavaid[]) => {
+        res.json(ils);
+    });
+});
+
 
 app.get('/enroute/waypoints/:ident', (req, res) => {
     if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {

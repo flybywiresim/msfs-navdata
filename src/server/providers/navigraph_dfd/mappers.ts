@@ -15,13 +15,14 @@ import {EnRouteAirway as NaviAirwayFix} from "./types/EnrouteAirways";
 import {Airport as NaviAirport} from "./types/Airports";
 import {Airport} from "../../../shared/types/Airport";
 import {Runway, RunwaySurfaceType} from "../../../shared/types/Runway";
-import {IlsMlsGlsCategory} from "./types/LocalizerGlideslopes";
+import {IlsMlsGlsCategory, LocalizerGlideslope} from "./types/LocalizerGlideslopes";
 import {LsCategory} from "../../../shared/types/Common";
 import {Runway as NaviRunway} from "./types/Runways";
 import {TerminalNDBNavaid} from "./types/NDBNavaids";
 import {NdbClass, NdbNavaid} from "../../../shared/types/NdbNavaid";
 import {VhfNavaidType} from "../../../shared/types/VhfNavaid";
 import {NavigraphDfd} from "./dfd";
+import { IlsNavaid } from "../../../shared";
 
 export class DFDMappers {
     private queries: NavigraphDfd;
@@ -40,6 +41,22 @@ export class DFDMappers {
             location: { lat: ndb.ndbLatitude, lon: ndb.ndbLongitude },
             class: NdbClass.Unknown,
             type: VhfNavaidType.Unknown,
+        }
+    }
+
+    public mapIls(ils: LocalizerGlideslope): IlsNavaid {
+        return {
+            icaoCode: ils.icaoCode,
+            ident: ils.llzIdentifier,
+            databaseId: `N${ils.icaoCode}${ils.airportIdentifier}${ils.llzIdentifier}`,
+            frequency: ils.llzFrequency,
+            stationDeclination: 0,
+            locLocation: { lat: ils.llzLatitude, lon: ils.llzLatitude },
+            gsLocation: { lat: ils.gsLatitude, lon: ils.gsLongitude },
+            runwayIdent: ils.runwayIdentifier,
+            locBearing: ils.llzBearing,
+            gsSlope: ils.gsAngle,
+            category: this.mapLsCategory(ils.ilsMlsGlsCategory)
         }
     }
 
@@ -220,6 +237,10 @@ export class DFDMappers {
     }
 
     public mapLegIdent(leg: NaviProcedure): string {
+        return leg.waypointIdentifier ?? leg.seqno.toFixed(0); // TODO proper format
+    }
+
+    public mapLocalizerGlideslope(leg: NaviProcedure): string {
         return leg.waypointIdentifier ?? leg.seqno.toFixed(0); // TODO proper format
     }
 

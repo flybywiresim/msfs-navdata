@@ -7,6 +7,7 @@ import { Runway } from "../../shared/types/Runway";
 import { Waypoint } from "../../shared/types/Waypoint";
 import { NdbNavaid } from "../../shared/types/NdbNavaid";
 import { Airway } from "../../shared/types/Airway";
+import { IlsNavaid } from "../../shared";
 
 export abstract class Provider {
     abstract getDatabaseIdent(): Promise<DatabaseIdent>;
@@ -14,6 +15,7 @@ export abstract class Provider {
     abstract getRunwaysAtAirport(ident: string): Promise<Runway[]>;
     abstract getWaypointsAtAirport(ident: string): Promise<Waypoint[]>;
     abstract getNDBsAtAirport(ident: string): Promise<NdbNavaid[]>;
+    abstract getIlsAtAirport(ident: string): Promise<IlsNavaid[]>;
     abstract getWaypointsByIdent(ident: string): Promise<Waypoint[]>;
     /**
      * Find all the airports within range
