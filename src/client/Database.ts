@@ -47,19 +47,32 @@ export class Database {
     public async getArrivals(airportIdentifier: string, approach?: Approach): Promise<Arrival[]> {
         let arrivals = await this.backend.getArrivals(airportIdentifier);
         if(approach) {
-            //TODO: Properly determine runway based on approach ident properly, this is very unsafe right now
-            const runwayIdentifier = approach.ident.substring(1)
-            arrivals = arrivals.filter(arrival => arrival.runwayTransitions.find(trans => trans.ident === runwayIdentifier))
+            const runwayIdentifier = Database.approachToRunway(approach.ident)
+            arrivals = arrivals.filter(arrival => arrival.runwayTransitions.find(trans => runwayIdentifier === null || trans.ident === runwayIdentifier))
         }
         return arrivals;
     }
 
     public async getApproaches(airportIdentifier: string, arrival?: Arrival): Promise<Approach[]> {
         let approaches = await this.backend.getApproaches(airportIdentifier);
-        if(arrival) approaches = approaches.filter(approach => arrival.runwayTransitions.find(trans =>
-            //TODO: SAME HERE
-            trans.ident === approach.ident.substring(1)
+        if(arrival) approaches = approaches.filter(approach => arrival.runwayTransitions.find(trans => {
+                return Database.approachToRunway(approach.ident) === null || trans.ident === Database.approachToRunway(approach.ident)
+            }
         ));
         return approaches;
+    }
+
+    /** Returns the identifier of the runway attached to the approach, null if it is not specific to any runway */
+    public static approachToRunway(ident: string): string | null {
+        if(!ident.match(/\d+/g))
+            return null;
+        switch(ident[3]) {
+            case 'L':
+            case 'C':
+            case 'R':
+                return (`RW${ident.substr(1, 3)}`);
+            default:
+                return (`RW${ident.substr(1, 2)}`);
+        }
     }
 }
