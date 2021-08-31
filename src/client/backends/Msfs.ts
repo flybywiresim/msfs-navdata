@@ -1,3 +1,4 @@
+import {Airway, NdbNavaid, Waypoint} from "../../shared";
 import { Airport } from "../../shared/types/Airport";
 import { Approach } from "../../shared/types/Approach";
 import { Arrival } from "../../shared/types/Arrival";
@@ -14,6 +15,12 @@ type PendingRequest = {
 };
 
 export class MsfsBackend extends DatabaseBackend {
+    getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
+        throw new Error("Method not implemented.");
+    }
+    getAirwaysByFix(ident: string): Promise<Airway[]> {
+        throw new Error("Method not implemented.");
+    }
     private listener;
     private pendingRequests: PendingRequest[] = [];
     private cache: Map<string, DatabaseItem> = {};
@@ -137,5 +144,13 @@ export class MsfsBackend extends DatabaseBackend {
 
     public async getApproaches(airportIdentifier: string): Promise<Approach[]> {
         throw new Error('computer says no');
+    }
+
+    getNdbsAtAirport(ident: string): Promise<NdbNavaid[]> {
+        return Promise.resolve([]);
+    }
+
+    getWaypointsAtAirport(ident: string): Promise<Waypoint[]> {
+        return Promise.resolve([]);
     }
 }

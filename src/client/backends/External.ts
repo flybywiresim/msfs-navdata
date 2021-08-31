@@ -5,13 +5,15 @@ import { Arrival } from "../../shared/types/Arrival";
 import { Departure } from "../../shared/types/Departure";
 import { Runway } from "../../shared/types/Runway";
 import { DatabaseBackend } from "./Backend";
+import fetch from 'node-fetch';
+import {NdbNavaid, Waypoint} from "../../shared";
 
 export class ExternalBackend extends DatabaseBackend {
     private apiBase: string;
 
     /**
-     * 
-     * @param apiBase base URL for the 
+     *
+     * @param apiBase base URL for the
      */
     constructor(apiBase: string) {
         super();
@@ -48,10 +50,18 @@ export class ExternalBackend extends DatabaseBackend {
     }
 
     public async getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
-        return await this.fetchApi(`airways/${idents.join()}`);
+        return await this.fetchApi(`airways/${idents.join(',')}`);
     }
 
     public async getAirwaysByFix(ident: string): Promise<Airway[]> {
         return await this.fetchApi(`fix/${ident}/airways`);
+    }
+
+    getNdbsAtAirport(ident: string): Promise<NdbNavaid[]> {
+        return this.fetchApi(`airport/${ident}/ndbs`);
+    }
+
+    getWaypointsAtAirport(ident: string): Promise<Waypoint[]> {
+        return this.fetchApi(`airport/${ident}/waypoints`);
     }
 }

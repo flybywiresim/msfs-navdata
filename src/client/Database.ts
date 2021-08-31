@@ -4,6 +4,7 @@ import { Arrival } from "../shared/types/Arrival";
 import { Departure } from "../shared/types/Departure";
 import { Runway } from "../shared/types/Runway";
 import { DatabaseBackend } from "./backends/Backend";
+import {Airway, NdbNavaid, Waypoint} from "../shared";
 
 export class Database {
     backend: DatabaseBackend;
@@ -60,6 +61,18 @@ export class Database {
             }
         ));
         return approaches;
+    }
+
+    public async getTerminalWaypoints(airportIdentifier: string): Promise<Waypoint[]> {
+        return this.backend.getWaypointsAtAirport(airportIdentifier);
+    }
+
+    public async getTerminalNdbs(airportIdentifier: string): Promise<NdbNavaid[]> {
+        return this.backend.getNdbsAtAirport(airportIdentifier);
+    }
+
+    public async getAirways(idents: string[]): Promise<Airway[]> {
+        return this.backend.getAirwaysByIdents(idents);
     }
 
     /** Returns the identifier of the runway attached to the approach, null if it is not specific to any runway */
