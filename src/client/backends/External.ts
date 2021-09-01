@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { Airport } from '../../shared/types/Airport';
 import { Airway } from '../../shared/types/Airway';
 import { Approach } from '../../shared/types/Approach';
