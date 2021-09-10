@@ -1,6 +1,6 @@
 {
   "name": "msfs-navdata",
-  "version": "0.1.0-alpha1",
+  "version": "0.1.1-alpha0",
   "description": "Package for reading navdata with Microsoft Flight Simulator, reads and parses default navdata and external navdata from a local api into a common format",
   "keywords": [],
   "author": "FlyByWire Simulations, Synaptic Simulations",

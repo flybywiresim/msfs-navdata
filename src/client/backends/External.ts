@@ -4,7 +4,7 @@ import { Approach } from '../../shared/types/Approach';
 import { Arrival } from '../../shared/types/Arrival';
 import { Departure } from '../../shared/types/Departure';
 import { Runway } from '../../shared/types/Runway';
-import { DatabaseBackend } from './Backend';
+import { DatabaseBackend, WaypointSearchType } from './Backend';
 import { IlsNavaid, NdbNavaid, Waypoint } from '../../shared';
 
 export class ExternalBackend extends DatabaseBackend {
@@ -66,5 +66,20 @@ export class ExternalBackend extends DatabaseBackend {
 
     public getIlsAtAirport(ident: string): Promise<IlsNavaid[]> {
         return this.fetchApi(`airport/${ident}/ils`);
+    }
+
+    public async getWaypointsByIdent(ident: string, searchRange?: WaypointSearchType): Promise<Waypoint[]> {
+        const enroute: Waypoint[] = await this.fetchApi(`enroute/waypoints/${ident.toUpperCase()}`);
+        // const terminal = this.fetchApi(`terminal/waypoints/${ident.toUpperCase()}`); TODO: implement this in api
+        if(!searchRange) {
+            return [...enroute /**, terminal */];
+        }
+        if(searchRange === WaypointSearchType.Enroute) {
+            return enroute;
+        }
+        else {
+            // return terminal;
+            return[];
+        }
     }
 }

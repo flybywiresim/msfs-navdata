@@ -66,6 +66,10 @@ export class Database {
         return this.backend.getWaypointsAtAirport(airportIdentifier);
     }
 
+    public async getWaypoints(ident: string): Promise<Waypoint[]> {
+        return this.backend.getWaypointsByIdent(ident);
+    }
+
     public async getTerminalNdbs(airportIdentifier: string): Promise<NdbNavaid[]> {
         return this.backend.getNdbsAtAirport(airportIdentifier);
     }
