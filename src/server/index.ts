@@ -8,7 +8,7 @@ import { Runway } from '../shared/types/Runway';
 import { Waypoint } from '../shared/types/Waypoint';
 import { NdbNavaid } from '../shared/types/NdbNavaid';
 import { Airway } from '../shared/types/Airway';
-import { IlsNavaid } from '../shared';
+import { IlsNavaid, VhfNavaid } from '../shared';
 
 const app = express();
 
@@ -93,6 +93,15 @@ app.get('/enroute/waypoints/:ident', (req, res) => {
     }
     provider.getWaypointsByIdent(req.params.ident).then((waypoints: Waypoint[]) => {
         res.json(waypoints);
+    });
+});
+
+app.get('/navaids/:ident', (req, res) => {
+    if (!req.params.ident.match(/^[A-Z]{1,3}$/)) {
+        return res.status(400).send('Invalid ident');
+    }
+    provider.getNavaidsByIdent(req.params.ident).then((navaids: VhfNavaid[]) => {
+        res.json(navaids);
     });
 });
 

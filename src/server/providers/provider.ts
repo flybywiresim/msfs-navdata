@@ -7,7 +7,7 @@ import { Runway } from '../../shared/types/Runway';
 import { Waypoint } from '../../shared/types/Waypoint';
 import { NdbNavaid } from '../../shared/types/NdbNavaid';
 import { Airway } from '../../shared/types/Airway';
-import { IlsNavaid } from '../../shared';
+import { IlsNavaid, VhfNavaid } from '../../shared';
 
 export abstract class Provider {
     abstract getDatabaseIdent(): Promise<DatabaseIdent>;
@@ -42,4 +42,6 @@ export abstract class Provider {
     abstract getAirwaysByIdents(idents: string[]): Promise<Airway[]>;
 
     abstract getAirwaysByFix(idents: string): Promise<Airway[]>;
+
+    abstract getNavaidsByIdent(ident: string): Promise<VhfNavaid[]>;
 }

@@ -21,6 +21,7 @@ import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
 import { DFDMappers } from './mappers';
 import { LocalizerGlideslope } from './types/LocalizerGlideslopes';
 import { IlsNavaid } from '../../../shared/types/IlsNavaid';
+import { VhfNavaid } from "../../../shared";
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -251,6 +252,17 @@ export class NavigraphDfd implements Provider {
             // TODO
             reject('SOON');
         });
+    }
+
+    async getNavaidsByIdent(ident: string): Promise<VhfNavaid[]> {
+        const sql = 'SELECT * FROM tbl_vhfnavaids WHERE vor_identifier = $ident';
+        const stmt = this.db.prepare(sql, { $ident: ident });
+        try {
+            const rows = NavigraphDfd.toCamel(query(stmt));
+            return rows.map((navaid) => this.mappers.mapVhfNavaid(navaid));
+        } finally {
+            stmt.free();
+        }
     }
 
     public static toCamel(query: any[]) {

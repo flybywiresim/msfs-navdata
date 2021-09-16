@@ -5,7 +5,7 @@ import { Arrival } from '../../shared/types/Arrival';
 import { Departure } from '../../shared/types/Departure';
 import { Runway } from '../../shared/types/Runway';
 import { DatabaseBackend, WaypointSearchType } from './Backend';
-import { IlsNavaid, NdbNavaid, Waypoint } from '../../shared';
+import { IlsNavaid, NdbNavaid, VhfNavaid, Waypoint } from '../../shared';
 
 export class ExternalBackend extends DatabaseBackend {
     private apiBase: string;
@@ -81,5 +81,9 @@ export class ExternalBackend extends DatabaseBackend {
             // return terminal;
             return[];
         }
+    }
+
+    public async getNavaidsByIdent(ident: string): Promise<VhfNavaid[]> {
+        return this.fetchApi(`navaids/${ident.toUpperCase()}`);
     }
 }

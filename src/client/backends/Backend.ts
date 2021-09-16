@@ -4,7 +4,7 @@ import { Approach } from '../../shared/types/Approach';
 import { Arrival } from '../../shared/types/Arrival';
 import { Departure } from '../../shared/types/Departure';
 import { Runway } from '../../shared/types/Runway';
-import { IlsNavaid, NdbNavaid, Waypoint } from '../../shared';
+import { IlsNavaid, NdbNavaid, VhfNavaid, Waypoint } from '../../shared';
 
 export enum WaypointSearchType {
     Terminal,
@@ -34,4 +34,6 @@ export abstract class DatabaseBackend {
     abstract getIlsAtAirport(ident: string): Promise<IlsNavaid[]>;
 
     abstract getWaypointsByIdent(ident: string, searchRange?: WaypointSearchType): Promise<Waypoint[]>;
+
+    abstract getNavaidsByIdent(ident: string): Promise<VhfNavaid[]>;
 }

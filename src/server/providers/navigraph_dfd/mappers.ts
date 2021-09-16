@@ -5,24 +5,25 @@ import {
     SpeedDescriptor,
     TurnDirection,
 } from '../../../shared/types/ProcedureLeg';
-import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
-import { WaypointType } from '../../../shared/types/Waypoint';
-import { Departure } from '../../../shared/types/Departure';
-import { Arrival } from '../../../shared/types/Arrival';
-import { Approach, ApproachType } from '../../../shared/types/Approach';
-import { Airway, AirwayDirection, AirwayLevel } from '../../../shared/types/Airway';
-import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
-import { Airport as NaviAirport } from './types/Airports';
-import { Airport } from '../../../shared/types/Airport';
-import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
-import { IlsMlsGlsCategory, LocalizerGlideslope } from './types/LocalizerGlideslopes';
-import { LsCategory } from '../../../shared/types/Common';
-import { Runway as NaviRunway } from './types/Runways';
-import { TerminalNDBNavaid } from './types/NDBNavaids';
-import { NdbClass, NdbNavaid } from '../../../shared/types/NdbNavaid';
-import { VhfNavaidType } from '../../../shared/types/VhfNavaid';
-import { NavigraphDfd } from './dfd';
-import { IlsNavaid } from '../../../shared';
+import {TerminalProcedure as NaviProcedure} from './types/TerminalProcedures';
+import {WaypointType} from '../../../shared/types/Waypoint';
+import {Departure} from '../../../shared/types/Departure';
+import {Arrival} from '../../../shared/types/Arrival';
+import {Approach, ApproachType} from '../../../shared/types/Approach';
+import {Airway, AirwayDirection, AirwayLevel} from '../../../shared/types/Airway';
+import {EnRouteAirway as NaviAirwayFix} from './types/EnrouteAirways';
+import {Airport as NaviAirport} from './types/Airports';
+import {Airport} from '../../../shared/types/Airport';
+import {Runway, RunwaySurfaceType} from '../../../shared/types/Runway';
+import {IlsMlsGlsCategory, LocalizerGlideslope} from './types/LocalizerGlideslopes';
+import {LsCategory} from '../../../shared/types/Common';
+import {Runway as NaviRunway} from './types/Runways';
+import {TerminalNDBNavaid} from './types/NDBNavaids';
+import {NdbClass, NdbNavaid} from '../../../shared/types/NdbNavaid';
+import {VhfNavaid, VhfNavaidType, VorClass} from '../../../shared/types/VhfNavaid';
+import {VHFNavaid as DFDNavaid} from "./types/VHFNavaids";
+import {NavigraphDfd} from './dfd';
+import {IlsNavaid} from '../../../shared';
 
 export class DFDMappers {
     private queries: NavigraphDfd;
@@ -682,10 +683,73 @@ export class DFDMappers {
         return airways;
     }
 
+    public mapVhfNavaid(navaid: DFDNavaid): VhfNavaid {
+        return {
+            ident: navaid.vorIdentifier ?? navaid.dmeIdent,
+            frequency: navaid.vorFrequency,
+            figureOfMerit: 0,
+            stationDeclination: navaid.stationDeclination,
+            type: DFDMappers.mapNavaidClass(navaid.navaidClass)[1],
+            class: DFDMappers.mapNavaidClass(navaid.navaidClass)[0],
+            databaseId: DFDMappers.navaidDatabaseId(navaid),
+            icaoCode: navaid.icaoCode,
+            vorLocation: { lat: navaid.vorLatitude, lon: navaid.vorLatitude },
+            dmeLocation: { lat: navaid.dmeLatitude, lon: navaid.dmeLongitude, alt: navaid.dmeElevation },
+        };
+    }
+
+    public static mapNavaidClass(input: string): [VorClass, VhfNavaidType] {
+        let vorClass: VorClass;
+        let type: VhfNavaidType;
+        switch(input[2]) {
+            case 'T':
+                vorClass = VorClass.Terminal;
+                break;
+            case 'L':
+                vorClass = VorClass.LowAlt;
+                break;
+            case 'H':
+                vorClass = VorClass.HighAlt;
+                break;
+            case 'H':
+            default:
+                vorClass = VorClass.Unknown;
+                break;
+        }
+        switch(input[1]) {
+            case 'D':
+                if(input[0] === 'V')
+                    type = VhfNavaidType.VorDme;
+                else
+                    type = VhfNavaidType.Dme;
+                break;
+            case 'T':
+                if(input[0] === 'V')
+                    type = VhfNavaidType.Vortac;
+                else
+                    type = VhfNavaidType.Tacan;
+                break;
+            case 'I':
+                type = VhfNavaidType.IlsDme;
+                break;
+            default:
+                if(input[0] === 'V')
+                    type = VhfNavaidType.Vor;
+                else
+                    type = VhfNavaidType.Unknown;
+        }
+        return [vorClass, type];
+    }
+
     // The MSFS "icao" code is a pretty clever globally unique ID, so we follow it, and extend it where needed
     // It is important to ensure that these are truly globally unique
     public static airportDatabaseId(airport: NaviAirport): string {
         return `A      ${airport.airportIdentifier}`;
+    }
+
+    public static navaidDatabaseId(navaid: DFDNavaid): string {
+        // TODO: This
+        return navaid.vorIdentifier;
     }
 
     public static procedureDatabaseId(procedure: NaviProcedure, icaoCode: string): string {
