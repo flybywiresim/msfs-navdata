@@ -180,7 +180,7 @@ export type TerminalProcedure = {
     /**  Geographical area of the marker */
     areaCode: string;
     /**  Location indicator of the marker */
-    icaoCode: string;
+    waypointIcaoCode: string;
     /** four character ICAO location identifier */
     airportIdentifier: string;
     /** name of the terminal procedure */
