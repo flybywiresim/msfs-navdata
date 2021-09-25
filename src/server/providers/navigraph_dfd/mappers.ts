@@ -257,14 +257,34 @@ export class DFDMappers {
                 icaoCode,
                 ident: leg.waypointIdentifier,
                 location: { lat: leg.waypointLatitude, lon: leg.waypointLongitude },
-                databaseId: `W${leg.icaoCode}${leg.airportIdentifier}${leg.waypointIdentifier}`,
+                databaseId: `W${leg.waypointIcaoCode}${leg.airportIdentifier}${leg.waypointIdentifier}`,
                 name: leg.waypointIdentifier,
                 type: WaypointType.Unknown,
             } : undefined, // TODO fetch these
-            recommendedNavaid: undefined, // TODO fetch these
+            recommendedNavaid: leg.recommandedNavaid && {
+                ident: leg.recommandedNavaid,
+                databaseId: `W${leg.waypointIcaoCode}    ${leg.recommandedNavaid}`,
+                name: '',
+                type: WaypointType.Unknown,
+                icaoCode: leg.waypointIcaoCode,
+                location: {
+                    lat: leg.recommandedNavaidLatitude,
+                    lon: leg.recommandedNavaidLongitude,
+                }
+            }, // TODO fetch these
             rho: leg.rho,
             theta: leg.theta,
-            arcCentreFix: undefined, // TODO fetch these
+            arcCentreFix: leg.centerWaypoint && {
+                ident: leg.centerWaypoint,
+                databaseId: `W${leg.waypointIcaoCode}    ${leg.centerWaypoint}`,
+                name: '',
+                type: WaypointType.Unknown,
+                icaoCode: leg.waypointIcaoCode,
+                location: {
+                    lat: leg.centerWaypointLatitude,
+                    lon: leg.centerWaypointLongitude,
+                }
+            }, // TODO fetch these
             arcRadius: leg.arcRadius,
             length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
             lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
