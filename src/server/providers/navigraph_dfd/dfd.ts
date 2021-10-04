@@ -21,7 +21,7 @@ import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
 import { DFDMappers } from './mappers';
 import { LocalizerGlideslope } from './types/LocalizerGlideslopes';
 import { IlsNavaid } from '../../../shared/types/IlsNavaid';
-import { VhfNavaid } from "../../../shared";
+import { VhfNavaid } from '../../../shared';
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -170,9 +170,9 @@ export class NavigraphDfd implements Provider {
 
     async getDepartures(ident: string): Promise<Departure[]> {
         // niggly that the the procedure legs are about the only thing in the whole db without icao code
-        const ap = await this.getAirportsByIdents([ident]);
+        const airports = await this.getAirportsByIdents([ident]);
         return new Promise((resolve, reject) => {
-            if (ap.length < 1) {
+            if (airports.length < 1) {
                 return reject('Invalid airport');
             }
             const stmt = this.db.prepare('SELECT * FROM tbl_sids WHERE airport_identifier=$ident ORDER BY seqno ASC', { $ident: ident });
@@ -182,7 +182,7 @@ export class NavigraphDfd implements Provider {
                     return reject('No departures!');
                 }
                 const departureLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
-                resolve(this.mappers.mapDepartures(departureLegs, ap[0].icaoCode));
+                resolve(this.mappers.mapDepartures(departureLegs, airports[0]));
             } finally {
                 stmt.free();
             }
@@ -191,9 +191,9 @@ export class NavigraphDfd implements Provider {
 
     async getArrivals(ident: string): Promise<Arrival[]> {
         // niggly that the the procedure legs are about the only thing in the whole db without icao code
-        const ap = await this.getAirportsByIdents([ident]);
+        const airports = await this.getAirportsByIdents([ident]);
         return new Promise((resolve, reject) => {
-            if (ap.length < 1) {
+            if (airports.length < 1) {
                 return reject('Invalid airport');
             }
             const stmt = this.db.prepare('SELECT * FROM tbl_stars WHERE airport_identifier=$ident ORDER BY seqno ASC', { $ident: ident });
@@ -203,7 +203,7 @@ export class NavigraphDfd implements Provider {
                     return reject('No arrivals!');
                 }
                 const arrivalLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
-                resolve(this.mappers.mapArrivals(arrivalLegs, ap[0].icaoCode));
+                resolve(this.mappers.mapArrivals(arrivalLegs, airports[0]));
             } finally {
                 stmt.free();
             }
@@ -212,9 +212,9 @@ export class NavigraphDfd implements Provider {
 
     async getApproaches(ident: string): Promise<Approach[]> {
         // niggly that the the procedure legs are about the only thing in the whole db without icao code
-        const ap = await this.getAirportsByIdents([ident]);
+        const airports = await this.getAirportsByIdents([ident]);
         return new Promise((resolve, reject) => {
-            if (ap.length < 1) {
+            if (airports.length < 1) {
                 return reject('Invalid airport');
             }
             const stmt = this.db.prepare('SELECT * FROM tbl_iaps WHERE airport_identifier=$ident ORDER BY seqno ASC', { $ident: ident });
@@ -224,7 +224,7 @@ export class NavigraphDfd implements Provider {
                     return reject('No arrivals!');
                 }
                 const approachLegs: NaviProcedure[] = NavigraphDfd.toCamel(rows);
-                resolve(this.mappers.mapApproaches(approachLegs, ap[0].icaoCode));
+                resolve(this.mappers.mapApproaches(approachLegs, airports[0]));
             } finally {
                 stmt.free();
             }

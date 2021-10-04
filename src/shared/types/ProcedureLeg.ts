@@ -1,4 +1,4 @@
-import { DatabaseItem, DegreesMagnetic, Feet, Knots, Minutes, NauticalMiles } from './Common';
+import { DatabaseItem, DegreesMagnetic, DegreesTrue, Feet, Knots, Minutes, NauticalMiles } from './Common';
 import { NdbNavaid } from './NdbNavaid';
 import { VhfNavaid } from './VhfNavaid';
 import { Waypoint } from './Waypoint';
@@ -67,7 +67,7 @@ export interface ProcedureLeg extends DatabaseItem {
      */
     speedDescriptor?: SpeedDescriptor,
     turnDirection?: TurnDirection,
-    magneticCourse?: DegreesMagnetic,
+    trueCourse?: DegreesTrue,
 }
 
 export enum AltitudeDescriptor {

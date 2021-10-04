@@ -1,3 +1,6 @@
+/* eslint-disable no-await-in-loop */
+// @ts-ignore
+import MagVar from 'magvar';
 import {
     AltitudeDescriptor,
     LegType,
@@ -5,25 +8,25 @@ import {
     SpeedDescriptor,
     TurnDirection,
 } from '../../../shared/types/ProcedureLeg';
-import {TerminalProcedure as NaviProcedure} from './types/TerminalProcedures';
-import {WaypointType} from '../../../shared/types/Waypoint';
-import {Departure} from '../../../shared/types/Departure';
-import {Arrival} from '../../../shared/types/Arrival';
-import {Approach, ApproachType} from '../../../shared/types/Approach';
-import {Airway, AirwayDirection, AirwayLevel} from '../../../shared/types/Airway';
-import {EnRouteAirway as NaviAirwayFix} from './types/EnrouteAirways';
-import {Airport as NaviAirport} from './types/Airports';
-import {Airport} from '../../../shared/types/Airport';
-import {Runway, RunwaySurfaceType} from '../../../shared/types/Runway';
-import {IlsMlsGlsCategory, LocalizerGlideslope} from './types/LocalizerGlideslopes';
-import {LsCategory} from '../../../shared/types/Common';
-import {Runway as NaviRunway} from './types/Runways';
-import {TerminalNDBNavaid} from './types/NDBNavaids';
-import {NdbClass, NdbNavaid} from '../../../shared/types/NdbNavaid';
-import {VhfNavaid, VhfNavaidType, VorClass} from '../../../shared/types/VhfNavaid';
-import {VHFNavaid as DFDNavaid} from "./types/VHFNavaids";
-import {NavigraphDfd} from './dfd';
-import {IlsNavaid} from '../../../shared';
+import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
+import { WaypointType } from '../../../shared/types/Waypoint';
+import { Departure } from '../../../shared/types/Departure';
+import { Arrival } from '../../../shared/types/Arrival';
+import { Approach, ApproachType } from '../../../shared/types/Approach';
+import { Airway, AirwayDirection, AirwayLevel } from '../../../shared/types/Airway';
+import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
+import { Airport as NaviAirport } from './types/Airports';
+import { Airport } from '../../../shared/types/Airport';
+import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
+import { IlsMlsGlsCategory, LocalizerGlideslope } from './types/LocalizerGlideslopes';
+import { LsCategory } from '../../../shared/types/Common';
+import { Runway as NaviRunway } from './types/Runways';
+import { TerminalNDBNavaid } from './types/NDBNavaids';
+import { NdbClass, NdbNavaid } from '../../../shared/types/NdbNavaid';
+import { VhfNavaid, VhfNavaidType, VorClass } from '../../../shared/types/VhfNavaid';
+import { VHFNavaid as DFDNavaid } from './types/VHFNavaids';
+import { NavigraphDfd } from './dfd';
+import { IlsNavaid } from '../../../shared';
 
 export class DFDMappers {
     private queries: NavigraphDfd;
@@ -73,6 +76,8 @@ export class DFDMappers {
         case 'W':
             surfaceCode = RunwaySurfaceType.Water;
             break;
+        default:
+            surfaceCode = RunwaySurfaceType.Unknown;
         }
         return {
             databaseId: DFDMappers.airportDatabaseId(airport),
@@ -108,8 +113,9 @@ export class DFDMappers {
             return LsCategory.SdfGlideslope;
         case 'F':
             return LsCategory.SdfOnly;
+        default:
+            return LsCategory.None;
         }
-        return LsCategory.None;
     }
 
     public mapRunway(runway: NaviRunway): Runway {
@@ -179,8 +185,9 @@ export class DFDMappers {
             return LegType.HF;
         case 'HM':
             return LegType.HM;
+        default:
+            return LegType.Unknown;
         }
-        return LegType.Unknown;
     }
 
     public mapAltitudeDescriptor(desc: string): AltitudeDescriptor {
@@ -210,21 +217,20 @@ export class DFDMappers {
             return AltitudeDescriptor.AtAlt1AngleAlt2;
         case 'Y':
             return AltitudeDescriptor.AtOrBelowAlt1AngleAlt2;
+        default:
+            return AltitudeDescriptor.None;
         }
-        return AltitudeDescriptor.None;
     }
 
     public mapSpeedLimitDescriptor(desc: string): SpeedDescriptor {
         switch (desc) {
-        case '@':
-        case '':
+        default:
             return SpeedDescriptor.Mandatory;
         case '+':
             return SpeedDescriptor.Minimum;
         case '-':
             return SpeedDescriptor.Maximum;
         }
-        return SpeedDescriptor.Mandatory;
     }
 
     public mapTurnDirection(dir: string): TurnDirection {
@@ -233,8 +239,9 @@ export class DFDMappers {
             return TurnDirection.Left;
         case 'R':
             return TurnDirection.Right;
+        default:
+            return TurnDirection.Unknown;
         }
-        return TurnDirection.Unknown;
     }
 
     public mapLegIdent(leg: NaviProcedure): string {
@@ -245,23 +252,23 @@ export class DFDMappers {
         return leg.waypointIdentifier ?? leg.seqno.toFixed(0); // TODO proper format
     }
 
-    public mapLeg(leg: NaviProcedure, icaoCode: string): ProcedureLeg {
+    public mapLeg(leg: NaviProcedure, airport: Airport): ProcedureLeg {
         return {
-            databaseId: DFDMappers.procedureDatabaseId(leg, icaoCode) + leg.seqno,
-            icaoCode,
+            databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode) + leg.seqno,
+            icaoCode: leg.waypointIcaoCode ?? airport.icaoCode,
             ident: this.mapLegIdent(leg),
             procedureIdent: leg.procedureIdentifier,
             type: this.mapLegType(leg.pathTermination),
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'Y',
             waypoint: leg.waypointIdentifier ? {
-                icaoCode,
+                icaoCode: leg.waypointIcaoCode,
                 ident: leg.waypointIdentifier,
                 location: { lat: leg.waypointLatitude, lon: leg.waypointLongitude },
                 databaseId: `W${leg.waypointIcaoCode}${leg.airportIdentifier}${leg.waypointIdentifier}`,
                 name: leg.waypointIdentifier,
                 type: WaypointType.Unknown,
             } : undefined, // TODO fetch these
-            recommendedNavaid: leg.recommandedNavaid && {
+            recommendedNavaid: leg.recommandedNavaid ? {
                 ident: leg.recommandedNavaid,
                 databaseId: `W${leg.waypointIcaoCode}    ${leg.recommandedNavaid}`,
                 name: '',
@@ -270,11 +277,11 @@ export class DFDMappers {
                 location: {
                     lat: leg.recommandedNavaidLatitude,
                     lon: leg.recommandedNavaidLongitude,
-                }
-            }, // TODO fetch these
+                },
+            } : undefined,
             rho: leg.rho,
             theta: leg.theta,
-            arcCentreFix: leg.centerWaypoint && {
+            arcCentreFix: leg.centerWaypoint ? {
                 ident: leg.centerWaypoint,
                 databaseId: `W${leg.waypointIcaoCode}    ${leg.centerWaypoint}`,
                 name: '',
@@ -283,8 +290,8 @@ export class DFDMappers {
                 location: {
                     lat: leg.centerWaypointLatitude,
                     lon: leg.centerWaypointLongitude,
-                }
-            }, // TODO fetch these
+                },
+            } : undefined,
             arcRadius: leg.arcRadius,
             length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
             lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
@@ -296,19 +303,19 @@ export class DFDMappers {
             speed: leg.speedLimit,
             speedDescriptor: leg.speedLimit ? this.mapSpeedLimitDescriptor(leg.speedLimitDescription) : undefined,
             turnDirection: this.mapTurnDirection(leg.turnDirection),
-            magneticCourse: leg.magneticCourse,
+            trueCourse: leg.magneticCourse && (360 + leg.magneticCourse + MagVar.get(airport.location.lat, airport.location.lon)) % 360,
         };
     }
 
-    public async mapDepartures(legs: NaviProcedure[], icaoCode: string): Promise<Departure[]> {
+    public async mapDepartures(legs: NaviProcedure[], airport: Airport): Promise<Departure[]> {
         const departures: Map<string, Departure> = new Map();
 
         // legs are sorted in sequence order by the db... phew
         for (const leg of legs) {
             if (!departures.has(leg.procedureIdentifier)) {
                 departures.set(leg.procedureIdentifier, {
-                    icaoCode,
-                    databaseId: DFDMappers.procedureDatabaseId(leg, icaoCode),
+                    icaoCode: airport.icaoCode,
+                    databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
                     runwayTransitions: [],
                     commonLegs: [],
@@ -317,7 +324,7 @@ export class DFDMappers {
                 });
             }
 
-            const apiLeg = this.mapLeg(leg, icaoCode);
+            const apiLeg = this.mapLeg(leg, airport);
             const departure = departures.get(leg.procedureIdentifier);
             let transition;
             switch (leg.routeType) {
@@ -418,15 +425,15 @@ export class DFDMappers {
         return Array.from(departures.values());
     }
 
-    public async mapArrivals(legs: NaviProcedure[], icaoCode: string): Promise<Arrival[]> {
+    public async mapArrivals(legs: NaviProcedure[], airport: Airport): Promise<Arrival[]> {
         const arrivals: Map<string, Arrival> = new Map();
 
         // legs are sorted in sequence order by the db... phew
         for (const leg of legs) {
             if (!arrivals.has(leg.procedureIdentifier)) {
                 arrivals.set(leg.procedureIdentifier, {
-                    icaoCode,
-                    databaseId: DFDMappers.procedureDatabaseId(leg, icaoCode),
+                    icaoCode: airport.icaoCode,
+                    databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
                     runwayTransitions: [],
                     commonLegs: [],
@@ -434,7 +441,7 @@ export class DFDMappers {
                 });
             }
 
-            const apiLeg = this.mapLeg(leg, icaoCode);
+            const apiLeg = this.mapLeg(leg, airport);
             const arrival = arrivals.get(leg.procedureIdentifier);
             let transition;
             switch (leg.routeType) {
@@ -572,11 +579,12 @@ export class DFDMappers {
             return ApproachType.Lda;
         case 'Y':
             return ApproachType.MlsTypeBC;
+        default:
+            return ApproachType.Unknown;
         }
-        return ApproachType.Unknown;
     }
 
-    public mapApproaches(legs: NaviProcedure[], icaoCode: string): Approach[] {
+    public mapApproaches(legs: NaviProcedure[], airport: Airport): Approach[] {
         const approaches: Map<string, Approach> = new Map();
 
         let missedApproachStarted = false;
@@ -584,8 +592,8 @@ export class DFDMappers {
         legs.forEach((leg) => {
             if (!approaches.has(leg.procedureIdentifier)) {
                 approaches.set(leg.procedureIdentifier, {
-                    icaoCode,
-                    databaseId: DFDMappers.procedureDatabaseId(leg, icaoCode),
+                    icaoCode: airport.icaoCode,
+                    databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
                     type: ApproachType.Unknown,
                     transitions: [],
@@ -594,7 +602,7 @@ export class DFDMappers {
                 });
             }
 
-            const apiLeg = this.mapLeg(leg, icaoCode);
+            const apiLeg = this.mapLeg(leg, airport);
             const approach = approaches.get(leg.procedureIdentifier);
 
             if (leg.waypointDescriptionCode?.charAt(2) === 'M') {
@@ -721,42 +729,35 @@ export class DFDMappers {
     public static mapNavaidClass(input: string): [VorClass, VhfNavaidType] {
         let vorClass: VorClass;
         let type: VhfNavaidType;
-        switch(input[2]) {
-            case 'T':
-                vorClass = VorClass.Terminal;
-                break;
-            case 'L':
-                vorClass = VorClass.LowAlt;
-                break;
-            case 'H':
-                vorClass = VorClass.HighAlt;
-                break;
-            case 'H':
-            default:
-                vorClass = VorClass.Unknown;
-                break;
+        switch (input[2]) {
+        case 'T':
+            vorClass = VorClass.Terminal;
+            break;
+        case 'L':
+            vorClass = VorClass.LowAlt;
+            break;
+        case 'H':
+            vorClass = VorClass.HighAlt;
+            break;
+        default:
+            vorClass = VorClass.Unknown;
+            break;
         }
-        switch(input[1]) {
-            case 'D':
-                if(input[0] === 'V')
-                    type = VhfNavaidType.VorDme;
-                else
-                    type = VhfNavaidType.Dme;
-                break;
-            case 'T':
-                if(input[0] === 'V')
-                    type = VhfNavaidType.Vortac;
-                else
-                    type = VhfNavaidType.Tacan;
-                break;
-            case 'I':
-                type = VhfNavaidType.IlsDme;
-                break;
-            default:
-                if(input[0] === 'V')
-                    type = VhfNavaidType.Vor;
-                else
-                    type = VhfNavaidType.Unknown;
+        switch (input[1]) {
+        case 'D':
+            if (input[0] === 'V') type = VhfNavaidType.VorDme;
+            else type = VhfNavaidType.Dme;
+            break;
+        case 'T':
+            if (input[0] === 'V') type = VhfNavaidType.Vortac;
+            else type = VhfNavaidType.Tacan;
+            break;
+        case 'I':
+            type = VhfNavaidType.IlsDme;
+            break;
+        default:
+            if (input[0] === 'V') type = VhfNavaidType.Vor;
+            else type = VhfNavaidType.Unknown;
         }
         return [vorClass, type];
     }
