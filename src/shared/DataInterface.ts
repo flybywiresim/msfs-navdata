@@ -4,25 +4,19 @@ import { Arrival } from './types/Arrival';
 import { Approach } from './types/Approach';
 import { DatabaseIdent } from './types/DatabaseIdent';
 import { Waypoint } from './types/Waypoint';
-import { NdbNavaid } from './types/NdbNavaid';
+import { NdbNavaid, NdbClass } from './types/NdbNavaid';
 import { IlsNavaid } from './types/IlsNavaid';
-import { Runway } from './types/Runway';
-import { Airway } from './types/Airway';
-import { VhfNavaid } from './types/VhfNavaid';
+import { Runway, RunwaySurfaceType } from './types/Runway';
+import { Airway, AirwayLevel } from './types/Airway';
+import { VhfNavaid, VhfNavaidType, VorClass } from './types/VhfNavaid';
 import { NauticalMiles, Location } from './types/Common';
 import { AirportCommunication } from './types/Communication';
 import { ControlledAirspace, RestrictiveAirspace } from './types/Airspace';
 
-export enum HeightSearchRange {
-    Both,
-    Low,
-    High,
-}
-
-export enum ZoneSearchRange {
-    Both,
-    Terminal,
-    EnRoute,
+// FIXME move to more appropriate place..
+export enum NavaidArea {
+    Terminal = 1 << 0,
+    EnRoute = 1 << 1,
 }
 
 export interface DataInterface {
@@ -35,24 +29,23 @@ export interface DataInterface {
     getRunways(airportIdentifier: string): Promise<Runway[]>;
 
     getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]>;
-    getNDBsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]>;
+    getNdbsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]>;
     getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]>;
     getCommunicationsAtAirport(airportIdentifier: string): Promise<AirportCommunication[]>
 
-    getWaypoints(idents: string[]): Promise<Waypoint[]>;
-    getNDBs(idents: string[]): Promise<NdbNavaid[]>;
-    getNavaids(idents: string[]): Promise<VhfNavaid[]>;
+    getWaypoints(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]>;
+    getNdbNavaids(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]>;
+    getVhfNavaids(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]>;
 
     getAirways(idents: string[]): Promise<Airway[]>;
     getAirwaysByFix(ident: string, icaoCode: string): Promise<Airway[]>;
 
-    getAirportsInRange(center: Location, range: NauticalMiles): Promise<Airport[]>;
-    getAirwaysInRange(center: Location, range: NauticalMiles, searchRange?: HeightSearchRange): Promise<Airway[]>;
-    getNavaidsInRange(center: Location, range: NauticalMiles, searchRange?: HeightSearchRange): Promise<VhfNavaid[]>;
-    getNDBsInRange(center: Location, range: NauticalMiles, searchRange?: ZoneSearchRange): Promise<NdbNavaid[]>;
-    getWaypointsInRange(center: Location, range: NauticalMiles, searchRange?: ZoneSearchRange): Promise<Waypoint[]>;
+    getNearbyAirports(center: Location, range: NauticalMiles, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]>;
+    getNearbyAirways(center: Location, range: NauticalMiles, levels?: AirwayLevel): Promise<Airway[]>;
+    getNearbyVhfNavaids(centre: Location, range: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]>;
+    getNearbyNdbNavaids(center: Location, range: NauticalMiles, classes?: NdbClass): Promise<NdbNavaid[]>;
+    getNearbyWaypoints(center: Location, range: NauticalMiles): Promise<Waypoint[]>;
 
-    getControlledAirspaceInRange(center: Location, range: NauticalMiles): Promise<ControlledAirspace[]>
-
-    getRestrictiveAirspaceInRange(center: Location, range: NauticalMiles): Promise<RestrictiveAirspace[]>
+    getControlledAirspaceInRange(center: Location, range: NauticalMiles): Promise<ControlledAirspace[]>;
+    getRestrictiveAirspaceInRange(center: Location, range: NauticalMiles): Promise<RestrictiveAirspace[]>;
 }

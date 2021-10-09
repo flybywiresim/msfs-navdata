@@ -1,11 +1,11 @@
-import { Airway, IlsNavaid, NdbNavaid, Waypoint } from '../../shared';
-import { Airport } from '../../shared/types/Airport';
-import { Approach } from '../../shared/types/Approach';
-import { Arrival } from '../../shared/types/Arrival';
-import { DatabaseItem } from '../../shared/types/Common';
-import { Departure } from '../../shared/types/Departure';
-import { Runway, RunwaySurfaceType } from '../../shared/types/Runway';
-import { DataInterface } from '../../shared/DataInterface';
+import { Airway, IlsNavaid, NdbNavaid, Waypoint } from '../../../shared';
+import { Airport } from '../../../shared/types/Airport';
+import { Approach } from '../../../shared/types/Approach';
+import { Arrival } from '../../../shared/types/Arrival';
+import { DatabaseItem } from '../../../shared/types/Common';
+import { Departure } from '../../../shared/types/Departure';
+import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
+import { DataInterface } from '../../../shared/DataInterface';
 
 type PendingRequest = {
     resolve: Function,

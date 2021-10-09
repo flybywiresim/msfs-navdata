@@ -1,6 +1,8 @@
 export type EnrouteNDBNavaid = {
     /** Geographical area of the NDB */
     areaCode: string;
+    /** Airport identifier */
+    airportIdentifier: string;
     /** Location indicator of the NDB */
     icaoCode: string;
     /** NDB identifier */
