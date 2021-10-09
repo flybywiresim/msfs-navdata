@@ -1,4 +1,4 @@
-import { DatabaseItem, Degrees, Location, MegaHertz } from './Common';
+import { DatabaseItem, Degrees, Location, MegaHertz, NauticalMiles } from './Common';
 
 export interface VhfNavaid extends DatabaseItem {
     frequency: MegaHertz;
@@ -7,10 +7,15 @@ export interface VhfNavaid extends DatabaseItem {
      * Beware: this is NOT the same as magnetic variation
      */
     stationDeclination: Degrees;
-    vorLocation?: Location;
+    vorLocation: Location;
     dmeLocation?: Location;
     type: VhfNavaidType;
     class?: VorClass;
+
+    /**
+     * Distance from center of search if queried using a range search
+     */
+    distance?: NauticalMiles;
 }
 
 export enum VhfNavaidType {

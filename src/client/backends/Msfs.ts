@@ -5,7 +5,7 @@ import { Arrival } from '../../shared/types/Arrival';
 import { DatabaseItem } from '../../shared/types/Common';
 import { Departure } from '../../shared/types/Departure';
 import { Runway, RunwaySurfaceType } from '../../shared/types/Runway';
-import { DatabaseBackend } from './Backend';
+import { DataInterface } from '../../shared/DataInterface';
 
 type PendingRequest = {
     resolve: Function,
@@ -14,7 +14,7 @@ type PendingRequest = {
     results: DatabaseItem[],
 };
 
-export class MsfsBackend extends DatabaseBackend {
+export class MsfsBackend implements DataInterface {
     getIlsAtAirport(ident: string): Promise<IlsNavaid[]> {
         throw new Error('Method not implemented.');
     }
@@ -34,7 +34,6 @@ export class MsfsBackend extends DatabaseBackend {
     private cache: Map<string, DatabaseItem> = {};
 
     constructor() {
-        super();
         this.listener = RegisterViewListener('JS_LISTENER_FACILITY');
 
         Coherent.on('SendAirport', this.receiveFacility.bind(this));

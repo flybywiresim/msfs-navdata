@@ -9,7 +9,7 @@ import {
     TurnDirection,
 } from '../../../shared/types/ProcedureLeg';
 import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
-import { WaypointType } from '../../../shared/types/Waypoint';
+import { Waypoint, WaypointType } from '../../../shared/types/Waypoint';
 import { Departure } from '../../../shared/types/Departure';
 import { Arrival } from '../../../shared/types/Arrival';
 import { Approach, ApproachType } from '../../../shared/types/Approach';
@@ -21,18 +21,42 @@ import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
 import { IlsMlsGlsCategory, LocalizerGlideslope } from './types/LocalizerGlideslopes';
 import { LsCategory } from '../../../shared/types/Common';
 import { Runway as NaviRunway } from './types/Runways';
-import { TerminalNDBNavaid } from './types/NDBNavaids';
+import { EnrouteNDBNavaid, TerminalNDBNavaid } from './types/NDBNavaids';
 import { NdbClass, NdbNavaid } from '../../../shared/types/NdbNavaid';
 import { VhfNavaid, VhfNavaidType, VorClass } from '../../../shared/types/VhfNavaid';
 import { VHFNavaid as DFDNavaid } from './types/VHFNavaids';
-import { NavigraphDfd } from './dfd';
+import { NavigraphProvider } from './dfd';
 import { IlsNavaid } from '../../../shared';
+import { TerminalWaypoint } from './types/TerminalWaypoints';
+import { EnrouteWaypoint } from './types/EnrouteWaypoints';
 
 export class DFDMappers {
-    private queries: NavigraphDfd;
+    private queries: NavigraphProvider;
 
-    constructor(queries: NavigraphDfd) {
+    constructor(queries: NavigraphProvider) {
         this.queries = queries;
+    }
+
+    public mapTerminalWaypoint(waypoint: TerminalWaypoint): Waypoint {
+        return {
+            icaoCode: waypoint.icaoCode,
+            ident: waypoint.waypointIdentifier,
+            databaseId: `W${waypoint.icaoCode}${waypoint.regionCode}${waypoint.waypointIdentifier}`,
+            location: { lat: waypoint.waypointLatitude, lon: waypoint.waypointLongitude },
+            name: waypoint.waypointName,
+            type: 0,
+        };
+    }
+
+    public mapEnrouteWaypoint(waypoint: EnrouteWaypoint): Waypoint {
+        return {
+            icaoCode: waypoint.icaoCode,
+            ident: waypoint.waypointIdentifier,
+            databaseId: `W${waypoint.icaoCode}    ${waypoint.waypointIdentifier}`,
+            location: { lat: waypoint.waypointLatitude, lon: waypoint.waypointLongitude },
+            name: waypoint.waypointName,
+            type: 0,
+        };
     }
 
     public mapTerminalNdb(ndb: TerminalNDBNavaid): NdbNavaid {
@@ -40,6 +64,19 @@ export class DFDMappers {
             icaoCode: ndb.icaoCode,
             ident: ndb.ndbIdentifier,
             databaseId: `N${ndb.icaoCode}${ndb.airportIdentifier}${ndb.ndbIdentifier}`,
+            frequency: ndb.ndbFrequency,
+            stationDeclination: 0,
+            location: { lat: ndb.ndbLatitude, lon: ndb.ndbLongitude },
+            class: NdbClass.Unknown,
+            type: VhfNavaidType.Unknown,
+        };
+    }
+
+    public mapEnrouteNdb(ndb: EnrouteNDBNavaid): NdbNavaid {
+        return {
+            icaoCode: ndb.icaoCode,
+            ident: ndb.ndbIdentifier,
+            databaseId: `N${ndb.icaoCode}    ${ndb.ndbIdentifier}`,
             frequency: ndb.ndbFrequency,
             stationDeclination: 0,
             location: { lat: ndb.ndbLatitude, lon: ndb.ndbLongitude },
@@ -336,7 +373,7 @@ export class DFDMappers {
             case 'F':
             case 'T':
                 if (leg.transitionIdentifier[4] === 'B') {
-                    const runways = (await this.queries.getRunwaysAtAirport(leg.airportIdentifier))
+                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
                         .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
                     runways.forEach((runway) => {
                         transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
@@ -365,7 +402,7 @@ export class DFDMappers {
             case '5':
             case 'M':
                 if (leg.transitionIdentifier === 'ALL') {
-                    const runways = await this.queries.getRunwaysAtAirport(leg.airportIdentifier);
+                    const runways = await this.queries.getRunways(leg.airportIdentifier);
                     runways.forEach((runway) => {
                         transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
                         if (!transition) {
@@ -378,7 +415,7 @@ export class DFDMappers {
                         transition.legs.push(apiLeg);
                     });
                 } else if (leg.transitionIdentifier?.[4] === 'B') {
-                    const runways = (await this.queries.getRunwaysAtAirport(leg.airportIdentifier))
+                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
                         .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
                     runways.forEach((runway) => {
                         transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
@@ -463,7 +500,7 @@ export class DFDMappers {
             case '8':
             case 'M':
                 if (leg.transitionIdentifier === 'ALL') {
-                    const runways = await this.queries.getRunwaysAtAirport(leg.airportIdentifier);
+                    const runways = await this.queries.getRunways(leg.airportIdentifier);
                     runways.forEach((runway) => {
                         transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
                         if (!transition) {
@@ -476,7 +513,7 @@ export class DFDMappers {
                         transition.legs.push(apiLeg);
                     });
                 } else if (leg.transitionIdentifier?.[4] === 'B') {
-                    const runways = (await this.queries.getRunwaysAtAirport(leg.airportIdentifier))
+                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
                         .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
                     runways.forEach((runway) => {
                         transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
@@ -506,7 +543,7 @@ export class DFDMappers {
             case '9':
             case 'S':
                 if (leg.transitionIdentifier[4] === 'B') {
-                    const runways = (await this.queries.getRunwaysAtAirport(leg.airportIdentifier))
+                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
                         .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
                     runways.forEach((runway) => {
                         transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
@@ -721,7 +758,7 @@ export class DFDMappers {
             class: DFDMappers.mapNavaidClass(navaid.navaidClass)[0],
             databaseId: DFDMappers.navaidDatabaseId(navaid),
             icaoCode: navaid.icaoCode,
-            vorLocation: { lat: navaid.vorLatitude, lon: navaid.vorLatitude },
+            vorLocation: { lat: navaid.vorLatitude, lon: navaid.vorLongitude },
             dmeLocation: { lat: navaid.dmeLatitude, lon: navaid.dmeLongitude, alt: navaid.dmeElevation },
         };
     }

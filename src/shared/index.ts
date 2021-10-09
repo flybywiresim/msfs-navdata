@@ -12,3 +12,4 @@ export * from './types/ProcedureLeg';
 export * from './types/Runway';
 export * from './types/VhfNavaid';
 export * from './types/Waypoint';
+export * from './DataInterface';

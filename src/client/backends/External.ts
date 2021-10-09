@@ -1,89 +1,95 @@
-import { Airport } from '../../shared/types/Airport';
-import { Airway } from '../../shared/types/Airway';
-import { Approach } from '../../shared/types/Approach';
-import { Arrival } from '../../shared/types/Arrival';
-import { Departure } from '../../shared/types/Departure';
-import { Runway } from '../../shared/types/Runway';
-import { DatabaseBackend, WaypointSearchType } from './Backend';
-import { IlsNavaid, NdbNavaid, VhfNavaid, Waypoint } from '../../shared';
+import { Airport, Airway, Approach, Arrival, Departure, Runway, DatabaseIdent, IlsNavaid, Location, NauticalMiles, NdbNavaid, VhfNavaid, Waypoint } from '../../shared';
+import { DataInterface, HeightSearchRange, ZoneSearchRange } from '../../shared/DataInterface';
 
-export class ExternalBackend extends DatabaseBackend {
-    private apiBase: string;
+export class ExternalBackend implements DataInterface {
+    private readonly apiBase: string;
 
     /**
      *
      * @param apiBase base URL for the
      */
     constructor(apiBase: string) {
-        super();
         this.apiBase = apiBase;
     }
 
-    private async fetchApi<T>(path: string): Promise<T[]> {
+    async fetchApi(path: string): Promise<any> {
         const resp = fetch(`${this.apiBase}/${path}`);
         return (await resp).json();
     }
 
-    public getAirportsByIdent(idents: string[]): Promise<Airport[]> {
+    getAirports(idents: string[]): Promise<Airport[]> {
         return this.fetchApi(`airports/${idents.join()}`);
     }
 
-    public getNearbyAirports(lat: number, lon: number, range?: number): Promise<Airport[]> {
-        return this.fetchApi<Airport>(`nearby/airports/${lat},${lon}${range ? `/${range}` : ''}`);
+    getAirportsInRange(center: Location, range: NauticalMiles): Promise<Airport[]> {
+        return this.fetchApi(`nearby/airports/${center.lat},${center.lon}/${range}`);
     }
 
-    public getRunways(airportIdentifier: string): Promise<Runway[]> {
-        return this.fetchApi<Runway>(`airport/${airportIdentifier}/runways`);
+    getRunways(airportIdentifier: string): Promise<Runway[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/runways`);
     }
 
-    public getDepartures(airportIdentifier: string): Promise<Departure[]> {
-        return this.fetchApi<Departure>(`airport/${airportIdentifier}/departures`);
+    getDepartures(airportIdentifier: string): Promise<Departure[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/departures`);
     }
 
-    public getArrivals(airportIdentifier: string): Promise<Arrival[]> {
-        return this.fetchApi<Arrival>(`airport/${airportIdentifier}/arrivals`);
+    getArrivals(airportIdentifier: string): Promise<Arrival[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/arrivals`);
     }
 
-    public getApproaches(airportIdentifier: string): Promise<Approach[]> {
-        return this.fetchApi<Approach>(`airport/${airportIdentifier}/approaches`);
+    getApproaches(airportIdentifier: string): Promise<Approach[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/approaches`);
     }
 
-    public getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
-        return this.fetchApi(`airways/${idents.join(',')}`);
+    getAirways(idents: string[]): Promise<Airway[]> {
+        return this.fetchApi(`airways/${idents.join()}`);
     }
 
-    public getAirwaysByFix(ident: string): Promise<Airway[]> {
+    getAirwaysByFix(ident: string): Promise<Airway[]> {
         return this.fetchApi(`fix/${ident}/airways`);
     }
 
-    public getNdbsAtAirport(ident: string): Promise<NdbNavaid[]> {
-        return this.fetchApi(`airport/${ident}/ndbs`);
+    getNDBsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/ndbs`);
     }
 
-    public getWaypointsAtAirport(ident: string): Promise<Waypoint[]> {
-        return this.fetchApi(`airport/${ident}/waypoints`);
+    getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/waypoints`);
     }
 
-    public getIlsAtAirport(ident: string): Promise<IlsNavaid[]> {
-        return this.fetchApi(`airport/${ident}/ils`);
+    getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/ils`);
     }
 
-    public async getWaypointsByIdent(ident: string, searchRange?: WaypointSearchType): Promise<Waypoint[]> {
-        const enroute: Waypoint[] = await this.fetchApi(`enroute/waypoints/${ident.toUpperCase()}`);
-        // const terminal = this.fetchApi(`terminal/waypoints/${ident.toUpperCase()}`); TODO: implement this in api
-        if(!searchRange) {
-            return [...enroute /**, terminal */];
-        }
-        if(searchRange === WaypointSearchType.Enroute) {
-            return enroute;
-        }
-        else {
-            // return terminal;
-            return[];
-        }
+    getWaypoints(idents: string[]): Promise<Waypoint[]> {
+        return this.fetchApi(`waypoints/${idents.join()}`);
     }
 
-    public async getNavaidsByIdent(ident: string): Promise<VhfNavaid[]> {
-        return this.fetchApi(`navaids/${ident.toUpperCase()}`);
+    getNavaids(idents: string[]): Promise<VhfNavaid[]> {
+        return this.fetchApi(`navaids/${idents.join()}`);
+    }
+
+    getAirwaysInRange(center: Location, range: NauticalMiles, searchRange?: HeightSearchRange): Promise<Airway[]> {
+        return this.fetchApi(`nearby/airways/${center.lat},${center.lon}/${range}/${searchRange}`);
+    }
+
+    getDatabaseIdent(): Promise<DatabaseIdent> {
+        return this.fetchApi('');
+    }
+
+    getNDBs(idents: string[]): Promise<NdbNavaid[]> {
+        return this.fetchApi(`ndbs/${idents.join()}`);
+    }
+
+    getNDBsInRange(center: Location, range: NauticalMiles, searchRange?: ZoneSearchRange): Promise<NdbNavaid[]> {
+        return this.fetchApi(`nearby/ndbs/${center.lat},${center.lon}/${range}/${searchRange}`);
+    }
+
+    getNavaidsInRange(center: Location, range: NauticalMiles, searchRange?: HeightSearchRange): Promise<VhfNavaid[]> {
+        return this.fetchApi(`nearby/navaids/${center.lat},${center.lon}/${range}/${searchRange}`);
+    }
+
+    getWaypointsInRange(center: Location, range: NauticalMiles, searchRange?: ZoneSearchRange): Promise<Waypoint[]> {
+        return this.fetchApi(`nearby/waypoints/${center.lat},${center.lon}/${range}/${searchRange}`);
     }
 }

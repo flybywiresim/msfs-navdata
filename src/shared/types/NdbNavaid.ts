@@ -1,4 +1,4 @@
-import { DatabaseItem, Degrees, KiloHertz, Location } from './Common';
+import { DatabaseItem, Degrees, KiloHertz, Location, NauticalMiles } from './Common';
 import { VhfNavaidType } from './VhfNavaid';
 
 export interface NdbNavaid extends DatabaseItem {
@@ -10,6 +10,8 @@ export interface NdbNavaid extends DatabaseItem {
     location: Location;
     class: NdbClass;
     type: VhfNavaidType;
+
+    distance?: NauticalMiles;
 }
 
 export enum NdbClass {

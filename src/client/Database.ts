@@ -1,32 +1,31 @@
-import { Airport } from '../shared/types/Airport';
-import { Approach } from '../shared/types/Approach';
-import { Arrival } from '../shared/types/Arrival';
-import { Departure } from '../shared/types/Departure';
-import { Runway } from '../shared/types/Runway';
-import { DatabaseBackend } from './backends/Backend';
-import {Airway, IlsNavaid, NdbNavaid, VhfNavaid, Waypoint} from '../shared';
+import {
+    Airport,
+    Approach,
+    Arrival,
+    Departure,
+    Runway,
+    Airway,
+    IlsNavaid,
+    NdbNavaid,
+    VhfNavaid,
+    Waypoint,
+    Location, DatabaseIdent,
+} from '../shared';
+import { DataInterface, HeightSearchRange, ZoneSearchRange } from '../shared/DataInterface';
 
 export class Database {
-    backend: DatabaseBackend;
+    backend: DataInterface;
 
-    constructor(backend: DatabaseBackend) {
+    constructor(backend: DataInterface) {
         this.backend = backend;
     }
 
-    public async getAirportByIdent(ident: string): Promise<Airport | null> {
-        const airports = await this.backend.getAirportsByIdent([ident]);
-        if (airports.length < 1) {
-            return null;
-        }
-        return airports[0];
+    public getDatabaseIdent(): Promise<DatabaseIdent> {
+        return this.backend.getDatabaseIdent();
     }
 
-    public async getAirportsByIdent(idents: string[]): Promise<Airport[]> {
-        return await this.backend.getAirportsByIdent(idents);
-    }
-
-    public async getNearbyAirports(lat: number, lon: number, range?: number): Promise<Airport[]> {
-        return await this.backend.getNearbyAirports(lat, lon, range);
+    public getAirports(idents: string[]): Promise<Airport[]> {
+        return this.backend.getAirports(idents);
     }
 
     public async getRunways(airportIdentifier: string, procedure?: Departure | Arrival): Promise<Runway[]> {
@@ -57,33 +56,62 @@ export class Database {
     public async getApproaches(airportIdentifier: string, arrival?: Arrival): Promise<Approach[]> {
         let approaches = await this.backend.getApproaches(airportIdentifier);
         if (arrival) {
-            approaches = approaches.filter((approach) => arrival.runwayTransitions.find((trans) => Database.approachToRunway(approach.ident) === null || trans.ident === Database.approachToRunway(approach.ident)));
+            approaches = approaches.filter((approach) => arrival.runwayTransitions
+                .find((trans) => Database.approachToRunway(approach.ident) === null || trans.ident === Database.approachToRunway(approach.ident)));
         }
         return approaches;
     }
 
-    public async getTerminalWaypoints(airportIdentifier: string): Promise<Waypoint[]> {
+    public getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {
+        return this.backend.getIlsAtAirport(airportIdentifier);
+    }
+
+    public getNDBsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]> {
+        return this.backend.getNDBsAtAirport(airportIdentifier);
+    }
+
+    public getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]> {
         return this.backend.getWaypointsAtAirport(airportIdentifier);
     }
 
-    public async getWaypoints(ident: string): Promise<Waypoint[]> {
-        return this.backend.getWaypointsByIdent(ident);
+    public getWaypoints(idents: string[]): Promise<Waypoint[]> {
+        return this.backend.getWaypoints(idents);
     }
 
-    public async getNavaids(ident: string): Promise<VhfNavaid[]> {
-        return this.backend.getNavaidsByIdent(ident);
+    public getNavaids(idents: string[]): Promise<VhfNavaid[]> {
+        return this.backend.getNavaids(idents);
     }
 
-    public async getTerminalNdbs(airportIdentifier: string): Promise<NdbNavaid[]> {
-        return this.backend.getNdbsAtAirport(airportIdentifier);
+    public getNDBs(idents: string[]): Promise<NdbNavaid[]> {
+        return this.backend.getNDBs(idents);
     }
 
     public async getAirways(idents: string[]): Promise<Airway[]> {
-        return this.backend.getAirwaysByIdents(idents);
+        return this.backend.getAirways(idents);
     }
 
-    public async getIlsAtAirport(idents: string): Promise<IlsNavaid[]> {
-        return this.backend.getIlsAtAirport(idents);
+    public async getAirwaysByFix(ident: string): Promise<Airway[]> {
+        return this.backend.getAirwaysByFix(ident);
+    }
+
+    public getNearbyAirports(center: Location, range: number): Promise<Airport[]> {
+        return this.backend.getAirportsInRange(center, range);
+    }
+
+    public getNearbyAirways(center: Location, range: number, searchRange?: HeightSearchRange): Promise<Airway[]> {
+        return this.backend.getAirwaysInRange(center, range, searchRange);
+    }
+
+    public getNearbyNavaids(center: Location, range: number, searchRange?: HeightSearchRange): Promise<VhfNavaid[]> {
+        return this.backend.getNavaidsInRange(center, range, searchRange);
+    }
+
+    public getNearbyNDBs(center: Location, range: number, searchRange?: ZoneSearchRange): Promise<NdbNavaid[]> {
+        return this.backend.getNDBsInRange(center, range, searchRange);
+    }
+
+    public getWaypointsInRange(center: Location, range: number, searchRange?: ZoneSearchRange): Promise<Waypoint[]> {
+        return this.backend.getWaypointsInRange(center, range, searchRange);
     }
 
     /** Returns the identifier of the runway attached to the approach, null if it is not specific to any runway */
