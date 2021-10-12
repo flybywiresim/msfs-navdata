@@ -190,7 +190,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider): Router {
         });
     });
 
-    router.get('/airport/:ident/routerroaches', (req, res) => {
+    router.get('/airport/:ident/approaches', (req, res) => {
         if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
             res.status(400).send('Invalid ident');
         }
