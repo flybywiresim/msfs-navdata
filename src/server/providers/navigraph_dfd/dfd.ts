@@ -140,7 +140,7 @@ export class NavigraphProvider implements DataInterface {
         if (airports.length < 1) {
             return Promise.reject(new Error('Invalid airport'));
         }
-        const stmt = this.database.prepare('SELECT * FROM tbl_sids WHERE airport_identifier=$ident ORDER BY seqno ASC', { $ident: airportIdentifier });
+        const stmt = this.database.prepare('SELECT * FROM tbl_sids WHERE airport_identifier=$ident', { $ident: airportIdentifier });
         try {
             const rows = query(stmt);
             const departureLegs: NaviProcedure[] = NavigraphProvider.toCamel(rows);
@@ -155,7 +155,7 @@ export class NavigraphProvider implements DataInterface {
         if (airports.length < 1) {
             return Promise.reject(new Error('Invalid airport'));
         }
-        const stmt = this.database.prepare('SELECT * FROM tbl_stars WHERE airport_identifier=$ident ORDER BY seqno ASC', { $ident: airportIdentifier });
+        const stmt = this.database.prepare('SELECT * FROM tbl_stars WHERE airport_identifier=$ident', { $ident: airportIdentifier });
         try {
             const rows = query(stmt);
             const arrivalLegs: NaviProcedure[] = NavigraphProvider.toCamel(rows);
@@ -170,7 +170,7 @@ export class NavigraphProvider implements DataInterface {
         if (airports.length < 1) {
             return Promise.reject(new Error('Invalid airport'));
         }
-        const stmt = this.database.prepare('SELECT * FROM tbl_iaps WHERE airport_identifier=$ident ORDER BY seqno ASC', { $ident: airportIdentifier });
+        const stmt = this.database.prepare('SELECT * FROM tbl_iaps WHERE airport_identifier=$ident', { $ident: airportIdentifier });
         try {
             const rows = query(stmt);
             const approachLegs: NaviProcedure[] = NavigraphProvider.toCamel(rows);
@@ -181,7 +181,7 @@ export class NavigraphProvider implements DataInterface {
     }
 
     async getAirways(idents: string[]): Promise<Airway[]> {
-        const stmt = this.database.prepare(`SELECT * FROM tbl_enroute_airways WHERE route_identifier IN (${idents.map(() => '?').join(',')}) ORDER BY seqno ASC`, idents);
+        const stmt = this.database.prepare(`SELECT * FROM tbl_enroute_airways WHERE route_identifier IN (${idents.map(() => '?').join(',')})`, idents);
         try {
             const rows = query(stmt);
             const airways: NaviAirwayFix[] = NavigraphProvider.toCamel(rows);

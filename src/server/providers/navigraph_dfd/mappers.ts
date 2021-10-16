@@ -637,6 +637,7 @@ export class DFDMappers {
                     legs: [],
                     missedLegs: [],
                 });
+                missedApproachStarted = false;
             }
 
             const apiLeg = this.mapLeg(leg, airport);
