@@ -752,6 +752,7 @@ export class DFDMappers {
     public mapVhfNavaid(navaid: DFDNavaid): VhfNavaid {
         return {
             ident: navaid.vorIdentifier ?? navaid.dmeIdent,
+            vorName: navaid.vorName,
             frequency: navaid.vorFrequency,
             figureOfMerit: 0,
             stationDeclination: navaid.stationDeclination,

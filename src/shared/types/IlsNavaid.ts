@@ -6,8 +6,8 @@ export interface IlsNavaid extends DatabaseItem {
     runwayIdent: string;
     locLocation: Location;
     locBearing: DegreesMagnetic;
-    gsLocation: Location;
-    gsSlope: Degrees;
+    gsLocation?: Location;
+    gsSlope?: Degrees;
     /**
      * Beware: this is NOT the same as magnetic variation
      */

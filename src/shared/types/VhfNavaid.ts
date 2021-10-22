@@ -3,6 +3,7 @@ import { DatabaseItem, Degrees, Location, MegaHertz, NauticalMiles } from './Com
 export interface VhfNavaid extends DatabaseItem {
     frequency: MegaHertz;
     figureOfMerit: number;
+    vorName?: string,
     /**
      * Beware: this is NOT the same as magnetic variation
      */
