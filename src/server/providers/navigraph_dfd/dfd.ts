@@ -194,10 +194,10 @@ export class NavigraphProvider implements DataInterface {
         }
     }
 
-    async getAirwaysByFix(ident: string): Promise<Airway[]> {
+    async getAirwaysByFix(ident: string, icaoCode: string): Promise<Airway[]> {
         const stmt = this.database.prepare(
-            'SELECT * FROM tbl_enroute_airways WHERE route_identifier IN (SELECT route_identifier FROM tbl_enroute_airways WHERE waypoint_identifier = $ident)',
-            { $ident: ident },
+            'SELECT * FROM tbl_enroute_airways WHERE route_identifier IN (SELECT route_identifier FROM tbl_enroute_airways WHERE waypoint_identifier = $ident AND icao_code = $icao)',
+            { $ident: ident, $icao: icaoCode },
         );
         try {
             const rows = query(stmt);

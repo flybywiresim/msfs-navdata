@@ -43,7 +43,7 @@ export interface DataInterface {
     getNavaids(idents: string[]): Promise<VhfNavaid[]>;
 
     getAirways(idents: string[]): Promise<Airway[]>;
-    getAirwaysByFix(ident: string): Promise<Airway[]>;
+    getAirwaysByFix(ident: string, icaoCode: string): Promise<Airway[]>;
 
     getAirportsInRange(center: Location, range: NauticalMiles): Promise<Airport[]>;
     getAirwaysInRange(center: Location, range: NauticalMiles, searchRange?: HeightSearchRange): Promise<Airway[]>;

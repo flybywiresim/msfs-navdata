@@ -1,5 +1,21 @@
-import { Airport, Airway, Approach, Arrival, Departure, Runway, DatabaseIdent, IlsNavaid, Location, NauticalMiles, NdbNavaid, VhfNavaid, Waypoint } from '../../shared';
-import { DataInterface, HeightSearchRange, ZoneSearchRange } from '../../shared/DataInterface';
+import {
+    Airport,
+    Airway,
+    Approach,
+    Arrival,
+    Departure,
+    Runway,
+    DatabaseIdent,
+    IlsNavaid,
+    Location,
+    NauticalMiles,
+    NdbNavaid,
+    VhfNavaid,
+    Waypoint,
+    DataInterface,
+    HeightSearchRange,
+    ZoneSearchRange,
+} from '../../shared';
 import { AirportCommunication } from '../../shared/types/Communication';
 
 export class ExternalBackend implements DataInterface {
@@ -46,8 +62,8 @@ export class ExternalBackend implements DataInterface {
         return this.fetchApi(`airways/${idents.join()}`);
     }
 
-    getAirwaysByFix(ident: string): Promise<Airway[]> {
-        return this.fetchApi(`fix/${ident}/airways`);
+    getAirwaysByFix(ident: string, icaoCode: string): Promise<Airway[]> {
+        return this.fetchApi(`fix/${ident}/${icaoCode}/airways`);
     }
 
     getNDBsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]> {

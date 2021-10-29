@@ -150,11 +150,11 @@ export function msfsNavdataRouter(provider: NavigraphProvider): Router {
         });
     });
 
-    router.get('/fix/:ident/airways', (req, res) => {
+    router.get('/fix/:ident/:icao/airways', (req, res) => {
         if (!req.params.ident.match(/^[A-Za-z0-9]{1,5}/)) {
             res.status(400).send('Invalid idents');
         }
-        provider.getAirwaysByFix(req.params.ident).then((airways: Airway[]) => {
+        provider.getAirwaysByFix(req.params.ident, req.params.icao).then((airways: Airway[]) => {
             res.json(airways);
         });
     });

@@ -9,9 +9,12 @@ import {
     NdbNavaid,
     VhfNavaid,
     Waypoint,
-    Location, DatabaseIdent,
+    Location,
+    DatabaseIdent,
+    DataInterface,
+    HeightSearchRange,
+    ZoneSearchRange,
 } from '../shared';
-import { DataInterface, HeightSearchRange, ZoneSearchRange } from '../shared/DataInterface';
 import { AirportCommunication } from '../shared/types/Communication';
 
 export class Database {
@@ -95,8 +98,8 @@ export class Database {
         return this.backend.getAirways(idents);
     }
 
-    public async getAirwaysByFix(ident: string): Promise<Airway[]> {
-        return this.backend.getAirwaysByFix(ident);
+    public async getAirwaysByFix(fix: Waypoint | NdbNavaid | VhfNavaid): Promise<Airway[]> {
+        return this.backend.getAirwaysByFix(fix.ident, fix.icaoCode);
     }
 
     public getNearbyAirports(center: Location, range: number): Promise<Airport[]> {
