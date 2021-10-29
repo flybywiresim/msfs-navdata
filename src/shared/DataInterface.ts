@@ -10,6 +10,7 @@ import { Runway } from './types/Runway';
 import { Airway } from './types/Airway';
 import { VhfNavaid } from './types/VhfNavaid';
 import { NauticalMiles, Location } from './types/Common';
+import { AirportCommunication } from './types/Communication';
 
 export enum HeightSearchRange {
     Both,
@@ -35,6 +36,7 @@ export interface DataInterface {
     getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]>;
     getNDBsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]>;
     getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]>;
+    getCommunicationsAtAirport(airportIdentifier: string): Promise<AirportCommunication[]>
 
     getWaypoints(idents: string[]): Promise<Waypoint[]>;
     getNDBs(idents: string[]): Promise<NdbNavaid[]>;

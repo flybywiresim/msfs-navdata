@@ -2,33 +2,54 @@
 // @ts-ignore
 import MagVar from 'magvar';
 import {
+    Airport,
+    Airway,
+    AirwayDirection,
+    AirwayLevel,
     AltitudeDescriptor,
+    Approach,
+    ApproachType,
+    Arrival,
+    Departure,
+    IlsNavaid,
     LegType,
+    LsCategory,
+    NdbClass,
+    NdbNavaid,
     ProcedureLeg,
+    Runway,
+    RunwaySurfaceType,
     SpeedDescriptor,
     TurnDirection,
-} from '../../../shared/types/ProcedureLeg';
+    VhfNavaid,
+    VhfNavaidType,
+    VorClass,
+    Waypoint,
+    WaypointType,
+} from '../../../shared';
 import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
-import { Waypoint, WaypointType } from '../../../shared/types/Waypoint';
-import { Departure } from '../../../shared/types/Departure';
-import { Arrival } from '../../../shared/types/Arrival';
-import { Approach, ApproachType } from '../../../shared/types/Approach';
-import { Airway, AirwayDirection, AirwayLevel } from '../../../shared/types/Airway';
 import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
 import { Airport as NaviAirport } from './types/Airports';
-import { Airport } from '../../../shared/types/Airport';
-import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
 import { IlsMlsGlsCategory, LocalizerGlideslope } from './types/LocalizerGlideslopes';
-import { LsCategory } from '../../../shared/types/Common';
 import { Runway as NaviRunway } from './types/Runways';
 import { EnrouteNDBNavaid, TerminalNDBNavaid } from './types/NDBNavaids';
-import { NdbClass, NdbNavaid } from '../../../shared/types/NdbNavaid';
-import { VhfNavaid, VhfNavaidType, VorClass } from '../../../shared/types/VhfNavaid';
 import { VHFNavaid as DFDNavaid } from './types/VHFNavaids';
 import { NavigraphProvider } from './dfd';
-import { IlsNavaid } from '../../../shared';
 import { TerminalWaypoint } from './types/TerminalWaypoints';
 import { EnrouteWaypoint } from './types/EnrouteWaypoints';
+import {
+    AirportCommunication,
+    CommunicationType,
+    EnRouteCommunication,
+    FirUirIndicator,
+    FrequencyUnits,
+} from '../../../shared/types/Communication';
+import { AirportCommunication as DFDAirportCommunication } from './types/AirportCommunication';
+import {
+    CommunicationType as DFDCommunicationType,
+    FrequencyUnits as DFDFrequencyUnits,
+} from './types/CommonCommunicationTypes';
+import { EnrouteCommunication as DFDEnRouteCommunication } from './types/EnrouteCommunication';
 
 export class DFDMappers {
     private queries: NavigraphProvider;
@@ -747,6 +768,153 @@ export class DFDMappers {
             });
         });
         return airways;
+    }
+
+    public mapAirportCommunication(communication: DFDAirportCommunication): AirportCommunication {
+        return ({
+            icaoCode: communication.icaoCode,
+            communicationType: this.mapCommunicationType(communication.communicationType),
+            frequency: communication.communicationFrequency,
+            frequencyUnits: this.mapFrequencyUnits(communication.frequencyUnits),
+            callsign: communication.callsign,
+            location: {
+                lat: communication.latitude,
+                lon: communication.longitude,
+            },
+            airportIdentifier: communication.airportIdentifier,
+        });
+    }
+
+    public mapEnRouteCommunication(communication: DFDEnRouteCommunication): EnRouteCommunication {
+        return ({
+            communicationType: this.mapCommunicationType(communication.communicationType),
+            frequency: communication.communicationFrequency,
+            frequencyUnits: this.mapFrequencyUnits(communication.frequencyUnits),
+            callsign: communication.callsign,
+            location: {
+                lat: communication.latitude,
+                lon: communication.longitude,
+            },
+            firRdoIdent: communication.firRdoIdent,
+            firUirIndicator: this.mapFirUirIndicator(communication.firUirIndicator),
+        });
+    }
+
+    public mapFirUirIndicator(indicator: string): FirUirIndicator {
+        switch (indicator) {
+        default:
+            return FirUirIndicator.Unknown;
+        case 'F':
+            return FirUirIndicator.Fir;
+        case 'U':
+            return FirUirIndicator.Uir;
+        case 'B':
+            return FirUirIndicator.Combined;
+        }
+    }
+
+    public mapFrequencyUnits(units: DFDFrequencyUnits): FrequencyUnits {
+        switch (units) {
+        default:
+            return FrequencyUnits.Unknown;
+        case 'H':
+            return FrequencyUnits.High;
+        case 'V':
+            return FrequencyUnits.VeryHigh;
+        case 'U':
+            return FrequencyUnits.UltraHigh;
+        }
+    }
+
+    public mapCommunicationType(units: DFDCommunicationType): CommunicationType {
+        switch (units) {
+        default:
+            return CommunicationType.Unknown;
+        case 'ACC':
+            return CommunicationType.AreaControlCenter;
+        case 'ACP':
+            return CommunicationType.AirliftCommandPost;
+        case 'AIR':
+            return CommunicationType.AirToAir;
+        case 'APP':
+            return CommunicationType.ApproachControl;
+        case 'ARR':
+            return CommunicationType.ArrivalControl;
+        case 'ASO':
+            return CommunicationType.Asos;
+        case 'ATI':
+            return CommunicationType.Atis;
+        case 'AWI':
+            return CommunicationType.Awib;
+        case 'AWO':
+            return CommunicationType.Awos;
+        case 'AWS':
+            return CommunicationType.Awis;
+        case 'CLD':
+            return CommunicationType.ClearanceDelivery;
+        case 'CPT':
+            return CommunicationType.ClearancePreTaxi;
+        case 'CTA':
+            return CommunicationType.ControlArea;
+        case 'CTL':
+            return CommunicationType.Control;
+        case 'DEP':
+            return CommunicationType.DepartureControl;
+        case 'DIR':
+            return CommunicationType.Director;
+        case 'EFS':
+            return CommunicationType.Efas;
+        case 'EMR':
+            return CommunicationType.Emergency;
+        case 'FSS':
+            return CommunicationType.FlightServiceStation;
+        case 'GCO':
+            return CommunicationType.GroundCommOutlet;
+        case 'GND':
+            return CommunicationType.GroundControl;
+        case 'GET':
+            return CommunicationType.GateControl;
+        case 'HEL':
+            return CommunicationType.HelicopterFrequency;
+        case 'INF':
+            return CommunicationType.Information;
+        case 'MIL':
+            return CommunicationType.MilitaryFrequency;
+        case 'MUL':
+            return CommunicationType.Multicom;
+        case 'OPS':
+            return CommunicationType.Operations;
+        case 'PAL':
+            return CommunicationType.PilotActivatedLighting;
+        case 'RDO':
+            return CommunicationType.Radio;
+        case 'RDR':
+            return CommunicationType.Radar;
+        case 'RFS':
+            return CommunicationType.Rfss;
+        case 'RMP':
+            return CommunicationType.RampTaxiControl;
+        case 'RSA':
+            return CommunicationType.Arsa;
+        case 'TCA':
+            return CommunicationType.Tca;
+        case 'TMA':
+            return CommunicationType.Tma;
+        case 'TML':
+            return CommunicationType.Terminal;
+        case 'TRS':
+            return CommunicationType.Trsa;
+        case 'TWE':
+            return CommunicationType.Tweb;
+        case 'TWR':
+            return CommunicationType.Tower;
+        case 'UAC':
+            return CommunicationType.UpperAreaControl;
+        case 'UNI':
+            return CommunicationType.Unicom;
+        case 'VOL':
+            return CommunicationType.Volmet;
+        }
     }
 
     public mapVhfNavaid(navaid: DFDNavaid): VhfNavaid {

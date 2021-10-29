@@ -12,6 +12,7 @@ import {
     Location, DatabaseIdent,
 } from '../shared';
 import { DataInterface, HeightSearchRange, ZoneSearchRange } from '../shared/DataInterface';
+import { AirportCommunication } from '../shared/types/Communication';
 
 export class Database {
     backend: DataInterface;
@@ -72,6 +73,10 @@ export class Database {
 
     public getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]> {
         return this.backend.getWaypointsAtAirport(airportIdentifier);
+    }
+
+    getCommunicationsAtAirport(airportIdentifier: string): Promise<AirportCommunication[]> {
+        return this.backend.getCommunicationsAtAirport(airportIdentifier);
     }
 
     public getWaypoints(idents: string[]): Promise<Waypoint[]> {

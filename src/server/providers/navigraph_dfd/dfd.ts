@@ -19,6 +19,9 @@ import {
     VorClass,
     Waypoint,
     WaypointType,
+    DataInterface,
+    HeightSearchRange,
+    ZoneSearchRange,
 } from '../../../shared';
 import { Airport as NaviAirport } from './types/Airports';
 import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
@@ -28,8 +31,8 @@ import { EnrouteWaypoint } from './types/EnrouteWaypoints';
 import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
 import { DFDMappers } from './mappers';
 import { LocalizerGlideslope } from './types/LocalizerGlideslopes';
-import { DataInterface, HeightSearchRange, ZoneSearchRange } from '../../../shared/DataInterface';
 import { VHFNavaid } from './types/VHFNavaids';
+import { AirportCommunication } from '../../../shared/types/Communication';
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -360,5 +363,15 @@ export class NavigraphProvider implements DataInterface {
             sql += ` AND ${latColumn} <= ${northEast.latitude} AND ${lonColumn} >= ${southWest.longitude}`;
         }
         return sql;
+    }
+
+    async getCommunicationsAtAirport(airportIdentifier: string): Promise<AirportCommunication[]> {
+        const stmt = this.database.prepare('SELECT * FROM tbl_airport_communication WHERE tbl_airport_communication.airport_identifier = $ident', { $ident: airportIdentifier });
+        try {
+            const rows = NavigraphProvider.toCamel(query(stmt));
+            return rows.map((communication) => this.mappers.mapAirportCommunication(communication));
+        } finally {
+            stmt.free();
+        }
     }
 }
