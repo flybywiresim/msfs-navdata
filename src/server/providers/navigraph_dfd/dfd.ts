@@ -5,22 +5,22 @@ import { Header } from './types/Header';
 import {
     Airport,
     Airway,
-    AirwayLevel,
     Approach,
     Arrival,
     DatabaseIdent,
+    DataInterface,
     Departure,
+    HeightSearchRange,
     IlsNavaid,
+    Level,
     Location,
     NauticalMiles,
-    NdbNavaid,
+    NdbNavaid, RestrictiveAirspace,
     Runway,
     VhfNavaid,
     VorClass,
     Waypoint,
     WaypointType,
-    DataInterface,
-    HeightSearchRange,
     ZoneSearchRange,
 } from '../../../shared';
 import { Airport as NaviAirport } from './types/Airports';
@@ -33,6 +33,9 @@ import { DFDMappers } from './mappers';
 import { LocalizerGlideslope } from './types/LocalizerGlideslopes';
 import { VHFNavaid } from './types/VHFNavaids';
 import { AirportCommunication } from '../../../shared/types/Communication';
+import { ControlledAirspace as DFDControlledAirspace } from './types/ControlledAirspace';
+import { ControlledAirspace } from '../../../shared/types/Airspace';
+import { RestrictiveAirspace as DFDRestrictiveAirspace } from './types/RestrictiveAirspace';
 
 const query = (stmt: Statement) => {
     const rows = [];
@@ -233,9 +236,9 @@ export class NavigraphProvider implements DataInterface {
             case HeightSearchRange.Both:
                 return true;
             case HeightSearchRange.Low:
-                return airway.level === AirwayLevel.All || airway.level === AirwayLevel.Low;
+                return airway.level === Level.All || airway.level === Level.Low;
             case HeightSearchRange.High:
-                return airway.level === AirwayLevel.All || airway.level === AirwayLevel.High;
+                return airway.level === Level.All || airway.level === Level.High;
             }
         });
     }
@@ -314,6 +317,26 @@ export class NavigraphProvider implements DataInterface {
         })].filter((ap) => (ap.distance ?? 0) <= range).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
     }
 
+    async getControlledAirspaceInRange(center: Location, range: NauticalMiles): Promise<ControlledAirspace[]> {
+        const sql1 = NavigraphProvider.rangeQueryString(center, range, 'latitude', 'longitude');
+        const sql2 = NavigraphProvider.rangeQueryString(center, range, 'arc_origin_latitude', 'arc_origin_longitude');
+        const rows = query(this.database.prepare(
+            `SELECT * FROM tbl_controlled_airspace WHERE (airspace_center, multiple_code) IN (SELECT airspace_center, multiple_code FROM tbl_controlled_airspace WHERE ${sql1} OR ${sql2})`,
+        ));
+        const airspaces: DFDControlledAirspace[] = NavigraphProvider.toCamel(rows);
+        return this.mappers.mapControlledAirspaceBoundaries(airspaces);
+    }
+
+    async getRestrictiveAirspaceInRange(center: Location, range: NauticalMiles): Promise<RestrictiveAirspace[]> {
+        const sql1 = NavigraphProvider.rangeQueryString(center, range, 'latitude', 'longitude');
+        const sql2 = NavigraphProvider.rangeQueryString(center, range, 'arc_origin_latitude', 'arc_origin_longitude');
+        const rows = query(this.database.prepare(
+            `SELECT * FROM tbl_restrictive_airspace WHERE (restrictive_airspace_designation, icao_code) IN (SELECT restrictive_airspace_designation, icao_code FROM tbl_restrictive_airspace WHERE ${sql1} OR ${sql2})`,
+        ));
+        const airspaces: DFDRestrictiveAirspace[] = NavigraphProvider.toCamel(rows);
+        return this.mappers.mapRestrictiveAirspaceBoundaries(airspaces);
+    }
+
     public static toCamel(query: any[]) {
         return query.map((obj) => {
             const newObj: any = {};
@@ -355,10 +378,7 @@ export class NavigraphProvider implements DataInterface {
         let sql = `${latColumn} >= ${southWest.latitude} AND ${lonColumn} <= ${northEast.longitude}`;
 
         if (southWest.longitude > northEast.longitude) {
-            // wrapped around +/- 180
-            // TODO this still isn't quite rihgt...
-            // we need two boxes, one either side of the pole
-            sql += ` AND (${latColumn} <= ${northEast.latitude} OR ${lonColumn} >= ${southWest.longitude})`;
+            sql = `${latColumn} >= ${southWest.latitude} AND (${lonColumn} <= ${northEast.longitude} OR ${lonColumn} >= ${southWest.longitude}) AND ${latColumn} <= ${northEast.latitude}`;
         } else {
             sql += ` AND ${latColumn} <= ${northEast.latitude} AND ${lonColumn} >= ${southWest.longitude}`;
         }

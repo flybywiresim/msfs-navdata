@@ -5,7 +5,6 @@ import {
     Airport,
     Airway,
     AirwayDirection,
-    AirwayLevel,
     AltitudeDescriptor,
     Approach,
     ApproachType,
@@ -13,10 +12,12 @@ import {
     Departure,
     IlsNavaid,
     LegType,
+    Level,
     LsCategory,
     NdbClass,
     NdbNavaid,
     ProcedureLeg,
+    RestrictiveAirspaceType,
     Runway,
     RunwaySurfaceType,
     SpeedDescriptor,
@@ -50,6 +51,18 @@ import {
     FrequencyUnits as DFDFrequencyUnits,
 } from './types/CommonCommunicationTypes';
 import { EnrouteCommunication as DFDEnRouteCommunication } from './types/EnrouteCommunication';
+import { AirspaceType, BoundaryVia, ControlledAirspace as DFDControlledAirspace } from './types/ControlledAirspace';
+import {
+    RestrictiveAirspace as DFDRestrictiveAirspace,
+    RestrictiveAirspaceType as DFDRestrictiveAirspaceType,
+} from './types/RestrictiveAirspace';
+import {
+    BoundaryPath,
+    ControlledAirspace,
+    ControlledAirspaceType,
+    PathType,
+    RestrictiveAirspace,
+} from '../../../shared/types/Airspace';
 
 export class DFDMappers {
     private queries: NavigraphProvider;
@@ -720,15 +733,15 @@ export class DFDMappers {
         return Array.from(approaches.values());
     }
 
-    public mapAirwayLevel(level: string): AirwayLevel {
+    public mapAirwayLevel(level: string): Level {
         switch (level) {
         case 'H':
-            return AirwayLevel.High;
+            return Level.High;
         case 'L':
-            return AirwayLevel.Low;
+            return Level.Low;
         default:
         case 'B':
-            return AirwayLevel.All;
+            return Level.All;
         }
     }
 
@@ -798,6 +811,147 @@ export class DFDMappers {
             firRdoIdent: communication.firRdoIdent,
             firUirIndicator: this.mapFirUirIndicator(communication.firUirIndicator),
         });
+    }
+
+    public mapRestrictiveAirspaceBoundaries(boundaries: DFDRestrictiveAirspace[]): RestrictiveAirspace[] {
+        if (boundaries.length === 0) {
+            return [];
+        }
+        const airspaces: RestrictiveAirspace[] = [this.mapRestrictiveAirspace(boundaries[0])];
+
+        boundaries.forEach((boundary, index) => {
+            if (boundaries[index - 1]?.boundaryVia[1] === 'E') {
+                airspaces.push(this.mapRestrictiveAirspace(boundary));
+            }
+            const currentAirspace = airspaces[airspaces.length - 1];
+            currentAirspace.boundaryPaths.push(this.mapAirspaceBoundary(boundary));
+        });
+        return airspaces;
+    }
+
+    public mapRestrictiveAirspace(data: DFDRestrictiveAirspace): RestrictiveAirspace {
+        return {
+            icaoCode: data.icaoCode,
+            designation: data.restrictiveAirspaceDesignation,
+            name: data.restrictiveAirspaceName,
+            type: this.mapRestrictiveAirspaceType(data.restrictiveType),
+            level: this.mapAirwayLevel(data.flightlevel),
+            boundaryPaths: [],
+        };
+    }
+
+    public mapRestrictiveAirspaceType(type: DFDRestrictiveAirspaceType): RestrictiveAirspaceType {
+        switch (type) {
+        case 'A':
+            return RestrictiveAirspaceType.Alert;
+        case 'C':
+            return RestrictiveAirspaceType.Caution;
+        case 'D':
+            return RestrictiveAirspaceType.Danger;
+        case 'M':
+            return RestrictiveAirspaceType.Military;
+        case 'P':
+            return RestrictiveAirspaceType.Prohibited;
+        case 'R':
+            return RestrictiveAirspaceType.Restricted;
+        case 'T':
+            return RestrictiveAirspaceType.Training;
+        case 'W':
+            return RestrictiveAirspaceType.Warning;
+        case 'U':
+        default:
+            return RestrictiveAirspaceType.Unknown;
+        }
+    }
+
+    public mapControlledAirspaceBoundaries(boundaries: DFDControlledAirspace[]): ControlledAirspace[] {
+        if (boundaries.length === 0) {
+            return [];
+        }
+        const airspaces: ControlledAirspace[] = [this.mapControlledAirspace(boundaries[0])];
+
+        boundaries.forEach((boundary, index) => {
+            if (boundaries[index - 1]?.boundaryVia[1] === 'E') {
+                airspaces.push(this.mapControlledAirspace(boundary));
+            }
+            const currentAirspace = airspaces[airspaces.length - 1];
+            currentAirspace.boundaryPaths.push(this.mapAirspaceBoundary(boundary));
+        });
+        return airspaces;
+    }
+
+    public mapAirspaceBoundary(data: DFDControlledAirspace | DFDRestrictiveAirspace): BoundaryPath {
+        return {
+            sequenceNumber: data.seqno,
+            pathType: this.mapAirspacePathType(data.boundaryVia[0] as BoundaryVia),
+            location: data.latitude && data.longitude ? {
+                lat: data.latitude,
+                lon: data.longitude,
+            } : undefined,
+            arc: data.arcOriginLatitude && data.arcOriginLongitude && data.arcDistance ? {
+                origin: {
+                    lat: data.arcOriginLatitude,
+                    lon: data.arcOriginLongitude,
+                },
+                distance: data.arcDistance,
+                bearing: data.arcBearing,
+            } : undefined,
+        };
+    }
+
+    public mapControlledAirspace(data: DFDControlledAirspace): ControlledAirspace {
+        return {
+            icaoCode: data.icaoCode,
+            center: data.airspaceCenter,
+            name: data.controlledAirspaceName,
+            type: this.mapControlledAirspaceType(data.airspaceType),
+            classification: data.airspaceClassification,
+            level: this.mapAirwayLevel(data.flightlevel),
+            boundaryPaths: [],
+        };
+    }
+
+    public mapAirspacePathType(type: BoundaryVia): PathType {
+        switch (type) {
+        default:
+        case 'C':
+            return PathType.Circle;
+        case 'G':
+            return PathType.GreatCircle;
+        case 'H':
+            return PathType.RhumbLine;
+        case 'L':
+            return PathType.CounterClockwiseArc;
+        case 'R':
+            return PathType.ClockwiseArc;
+        }
+    }
+
+    public mapControlledAirspaceType(type: AirspaceType): ControlledAirspaceType {
+        switch (type) {
+        default:
+        case 'A':
+            return ControlledAirspaceType.ClassC;
+        case 'C':
+        case 'K':
+            return ControlledAirspaceType.ControlArea;
+        case 'M':
+            return ControlledAirspaceType.IcaoTerminalControlArea;
+        case 'Q':
+            return ControlledAirspaceType.MilitaryControlZone;
+        case 'R':
+            return ControlledAirspaceType.RadarZone;
+        case 'T':
+            return ControlledAirspaceType.ClassB;
+        case 'W':
+            return ControlledAirspaceType.TerminalControlArea;
+        case 'X':
+            return ControlledAirspaceType.TerminalArea;
+        case 'Y':
+            return ControlledAirspaceType.TerminalRadarServiceArea;
+        case 'Z':
+            return ControlledAirspaceType.ClassD;
+        }
     }
 
     public mapFirUirIndicator(indicator: string): FirUirIndicator {

@@ -13,9 +13,10 @@ import {
     DatabaseIdent,
     DataInterface,
     HeightSearchRange,
-    ZoneSearchRange,
+    ZoneSearchRange, NauticalMiles, RestrictiveAirspace,
 } from '../shared';
 import { AirportCommunication } from '../shared/types/Communication';
+import { ControlledAirspace } from '../shared/types/Airspace';
 
 export class Database {
     backend: DataInterface;
@@ -120,6 +121,14 @@ export class Database {
 
     public getWaypointsInRange(center: Location, range: number, searchRange?: ZoneSearchRange): Promise<Waypoint[]> {
         return this.backend.getWaypointsInRange(center, range, searchRange);
+    }
+
+    public getControlledAirspacesInRange(center: Location, range: NauticalMiles): Promise<ControlledAirspace[]> {
+        return this.backend.getControlledAirspaceInRange(center, range);
+    }
+
+    public getRestrictiveAirspacesInRange(center: Location, range: NauticalMiles): Promise<RestrictiveAirspace[]> {
+        return this.backend.getRestrictiveAirspaceInRange(center, range);
     }
 
     /** Returns the identifier of the runway attached to the approach, null if it is not specific to any runway */

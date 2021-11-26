@@ -11,6 +11,7 @@ import { Airway } from './types/Airway';
 import { VhfNavaid } from './types/VhfNavaid';
 import { NauticalMiles, Location } from './types/Common';
 import { AirportCommunication } from './types/Communication';
+import { ControlledAirspace, RestrictiveAirspace } from './types/Airspace';
 
 export enum HeightSearchRange {
     Both,
@@ -50,4 +51,8 @@ export interface DataInterface {
     getNavaidsInRange(center: Location, range: NauticalMiles, searchRange?: HeightSearchRange): Promise<VhfNavaid[]>;
     getNDBsInRange(center: Location, range: NauticalMiles, searchRange?: ZoneSearchRange): Promise<NdbNavaid[]>;
     getWaypointsInRange(center: Location, range: NauticalMiles, searchRange?: ZoneSearchRange): Promise<Waypoint[]>;
+
+    getControlledAirspaceInRange(center: Location, range: NauticalMiles): Promise<ControlledAirspace[]>
+
+    getRestrictiveAirspaceInRange(center: Location, range: NauticalMiles): Promise<RestrictiveAirspace[]>
 }

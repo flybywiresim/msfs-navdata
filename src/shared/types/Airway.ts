@@ -1,4 +1,4 @@
-import { DatabaseItem, Feet, NauticalMiles } from './Common';
+import { DatabaseItem, Feet, Level, NauticalMiles } from './Common';
 import { Waypoint } from './Waypoint';
 
 export enum AirwayType {
@@ -11,12 +11,6 @@ export enum AirwayType {
     Ats,
 }
 
-export enum AirwayLevel {
-    All,
-    High,
-    Low,
-}
-
 export enum AirwayDirection {
     Either,
     Forward,
@@ -24,7 +18,7 @@ export enum AirwayDirection {
 }
 
 export interface Airway extends DatabaseItem {
-    level: AirwayLevel,
+    level: Level,
     fixes: Waypoint[],
     turnRadius?: NauticalMiles,
     rnp?: NauticalMiles,

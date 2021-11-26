@@ -1,7 +1,7 @@
 import { BoundaryVia } from './ControlledAirspace';
 import { FlightLevel } from './EnrouteAirways';
 
-type RestrictiveAirspaceType =
+export type RestrictiveAirspaceType =
     /** Alert */
     'A' |
     /** Caution */

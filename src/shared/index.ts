@@ -3,6 +3,8 @@ export * from './types/Airway';
 export * from './types/Approach';
 export * from './types/Arrival';
 export * from './types/Common';
+export * from './types/Communication';
+export * from './types/Airspace';
 export * from './types/DatabaseIdent';
 export * from './types/Departure';
 export * from './types/GlsNavaid';

@@ -52,3 +52,9 @@ export interface ProcedureTransition {
     ident: string,
     legs: ProcedureLeg[],
 }
+
+export enum Level {
+    All,
+    High,
+    Low,
+}

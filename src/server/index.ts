@@ -6,8 +6,9 @@ import { Runway } from '../shared/types/Runway';
 import { Waypoint } from '../shared/types/Waypoint';
 import { NdbNavaid } from '../shared/types/NdbNavaid';
 import { Airway } from '../shared/types/Airway';
-import { IlsNavaid, VhfNavaid } from '../shared';
+import { IlsNavaid, RestrictiveAirspace, VhfNavaid } from '../shared';
 import { HeightSearchRange, ZoneSearchRange } from '../shared/DataInterface';
+import { ControlledAirspace } from '../shared/types/Airspace';
 
 export function msfsNavdataRouter(provider: NavigraphProvider): Router {
     const router: Router = express.Router();
@@ -91,6 +92,32 @@ export function msfsNavdataRouter(provider: NavigraphProvider): Router {
         const searchRange: ZoneSearchRange = parseInt(req.params.searchRange ?? '0');
         provider.getWaypointsInRange({ lat, lon }, range, searchRange).then((waypoints: Waypoint[]) => {
             res.json(waypoints);
+        }).catch((err) => {
+            res.status(500).send(err);
+        });
+    });
+
+    router.get('/nearby/airspaces/controlled/:ppos/:range', (req, res) => {
+        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
+            res.status(400).send('Invalid ppos');
+        }
+        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
+        const range = parseInt(req.params.range);
+        provider.getControlledAirspaceInRange({ lat, lon }, range).then((airspaces: ControlledAirspace[]) => {
+            res.json(airspaces);
+        }).catch((err) => {
+            res.status(500).send(err);
+        });
+    });
+
+    router.get('/nearby/airspaces/restrictive/:ppos/:range', (req, res) => {
+        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
+            res.status(400).send('Invalid ppos');
+        }
+        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
+        const range = parseInt(req.params.range);
+        provider.getRestrictiveAirspaceInRange({ lat, lon }, range).then((airspaces: RestrictiveAirspace[]) => {
+            res.json(airspaces);
         }).catch((err) => {
             res.status(500).send(err);
         });

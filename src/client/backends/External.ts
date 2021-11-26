@@ -14,9 +14,10 @@ import {
     Waypoint,
     DataInterface,
     HeightSearchRange,
-    ZoneSearchRange,
+    ZoneSearchRange, RestrictiveAirspace,
 } from '../../shared';
 import { AirportCommunication } from '../../shared/types/Communication';
+import { ControlledAirspace } from '../../shared/types/Airspace';
 
 export class ExternalBackend implements DataInterface {
     private readonly apiBase: string;
@@ -112,5 +113,13 @@ export class ExternalBackend implements DataInterface {
 
     getWaypointsInRange(center: Location, range: NauticalMiles, searchRange?: ZoneSearchRange): Promise<Waypoint[]> {
         return this.fetchApi(`nearby/waypoints/${center.lat},${center.lon}/${range}/${searchRange}`);
+    }
+
+    getControlledAirspaceInRange(center: Location, range: NauticalMiles): Promise<ControlledAirspace[]> {
+        return this.fetchApi(`nearby/airspaces/controlled/${center.lat},${center.lon}/${range}/`);
+    }
+
+    getRestrictiveAirspaceInRange(center: Location, range: NauticalMiles): Promise<RestrictiveAirspace[]> {
+        return this.fetchApi(`nearby/airspaces/restrictive/${center.lat},${center.lon}/${range}/`);
     }
 }

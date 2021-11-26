@@ -1,6 +1,6 @@
 import { FlightLevel } from './EnrouteAirways';
 
-type AirspaceType =
+export type AirspaceType =
     /** Class C Airspace (USA) */
      'A' |
     /** Control Area, ICAO Designation (CTA) */
@@ -55,7 +55,7 @@ export type ControlledAirspace = {
     /** indicate the type of controlled airspace */
     airspaceType: AirspaceType;
     /** indicating the published classification of the controlled airspace, when assigned */
-    airspaceClassification: string;
+    airspaceClassification: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
     /** indicate Restrictive Airspace having the same designator but subdivided or differently divided by lateral and/or vertical detail */
     multipleCode: string;
     /** Active Time */
