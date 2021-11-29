@@ -195,7 +195,7 @@ export class DFDMappers {
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
             airportIdent: runway.airportIdentifier,
-            thresholdLocation: { lat: runway.runwayLatitude, lon: runway.runwayLongitude },
+            thresholdLocation: { lat: runway.runwayLatitude, lon: runway.runwayLongitude, alt: runway.landingThresholdElevation },
             bearing: runway.runwayTrueBearing,
             magneticBearing: runway.runwayMagneticBearing,
             gradient: runway.runwayGradient,
