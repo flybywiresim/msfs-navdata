@@ -181,59 +181,6 @@ export class DFDMappers {
         };
     }
 
-    public mapLegType(legType: string): LegType {
-        switch (legType) {
-        case 'IF':
-            return LegType.IF;
-        case 'TF':
-            return LegType.TF;
-        case 'CF':
-            return LegType.CF;
-        case 'DF':
-            return LegType.DF;
-        case 'FA':
-            return LegType.FA;
-        case 'FC':
-            return LegType.FC;
-        case 'FD':
-            return LegType.FD;
-        case 'FM':
-            return LegType.FM;
-        case 'CA':
-            return LegType.CA;
-        case 'CD':
-            return LegType.CD;
-        case 'CI':
-            return LegType.CI;
-        case 'CR':
-            return LegType.CR;
-        case 'RF':
-            return LegType.RF;
-        case 'AF':
-            return LegType.AF;
-        case 'VA':
-            return LegType.VA;
-        case 'VD':
-            return LegType.VD;
-        case 'VI':
-            return LegType.VI;
-        case 'VM':
-            return LegType.VM;
-        case 'VR':
-            return LegType.VR;
-        case 'PI':
-            return LegType.PI;
-        case 'HA':
-            return LegType.HA;
-        case 'HF':
-            return LegType.HF;
-        case 'HM':
-            return LegType.HM;
-        default:
-            return LegType.Unknown;
-        }
-    }
-
     public mapAltitudeDescriptor(desc: string): AltitudeDescriptor {
         switch (desc) {
         case '+':
@@ -242,6 +189,7 @@ export class DFDMappers {
             return AltitudeDescriptor.AtOrBelowAlt1;
         case '@':
         case null:
+        default:
             return AltitudeDescriptor.AtAlt1;
         case 'B':
             return AltitudeDescriptor.BetweenAlt1Alt2;
@@ -261,8 +209,6 @@ export class DFDMappers {
             return AltitudeDescriptor.AtAlt1AngleAlt2;
         case 'Y':
             return AltitudeDescriptor.AtOrBelowAlt1AngleAlt2;
-        default:
-            return AltitudeDescriptor.None;
         }
     }
 
@@ -274,19 +220,6 @@ export class DFDMappers {
             return SpeedDescriptor.Minimum;
         case '-':
             return SpeedDescriptor.Maximum;
-        }
-    }
-
-    public mapTurnDirection(dir: string): TurnDirection | undefined {
-        switch (dir) {
-        case 'L':
-            return TurnDirection.Left;
-        case 'R':
-            return TurnDirection.Right;
-        case 'E':
-            return TurnDirection.Either;
-        default:
-            return undefined;
         }
     }
 
@@ -304,7 +237,7 @@ export class DFDMappers {
             icaoCode: leg.waypointIcaoCode ?? airport.icaoCode,
             ident: this.mapLegIdent(leg),
             procedureIdent: leg.procedureIdentifier,
-            type: this.mapLegType(leg.pathTermination),
+            type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'Y',
             waypoint: leg.waypointIdentifier ? {
                 icaoCode: leg.waypointIcaoCode,
@@ -342,13 +275,13 @@ export class DFDMappers {
             length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
             lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
             rnp: leg.rnp ?? undefined,
-            transitionAltitude: leg.transitionAltitude,
-            altitudeDescriptor: (!leg.altitude1 && !leg.altitude2) ? AltitudeDescriptor.None : this.mapAltitudeDescriptor(leg.altitudeDescription),
+            transitionAltitude: leg.transitionAltitude ?? undefined,
+            altitudeDescriptor: (!leg.altitude1 && !leg.altitude2) ? undefined : this.mapAltitudeDescriptor(leg.altitudeDescription),
             altitude1: leg.altitude1 ?? undefined,
             altitude2: leg.altitude2 ?? undefined,
             speed: leg.speedLimit ?? undefined,
             speedDescriptor: leg.speedLimit ? this.mapSpeedLimitDescriptor(leg.speedLimitDescription) : undefined,
-            turnDirection: this.mapTurnDirection(leg.turnDirection),
+            turnDirection: leg.turnDirection as TurnDirection ?? undefined,
             magneticCourse: leg.magneticCourse ?? undefined,
         };
     }

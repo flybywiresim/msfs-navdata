@@ -5,6 +5,9 @@ import { Waypoint } from './Waypoint';
 
 export interface ProcedureLeg extends DatabaseItem {
     procedureIdent: string,
+    /**
+     * Leg termination type according to ARICN424
+     */
     type: LegType,
     /**
      * Should the termination of this leg be overflown (not flown by in a turn)
@@ -57,7 +60,7 @@ export interface ProcedureLeg extends DatabaseItem {
     /**
      * Specifies the meaning of the altitude1 and altitude2 properties
      */
-    altitudeDescriptor: AltitudeDescriptor,
+    altitudeDescriptor?: AltitudeDescriptor,
     /**
      * altitudeDescriptor property specifies the meaning of this property
      */
@@ -95,157 +98,156 @@ export enum AltitudeDescriptor {
     /**
      * @, At in altitude1
      */
-    AtAlt1,
+    AtAlt1 = '@',
     /**
      * +, at or above in altitude1
      */
-    AtOrAboveAlt1,
+    AtOrAboveAlt1 = '+',
     /**
      * -, at or below in altitude1
      */
-    AtOrBelowAlt1,
+    AtOrBelowAlt1 = '-',
     /**
      * B, range between altitude1 (higher) and altitide2 (lower)
      */
-    BetweenAlt1Alt2,
+    BetweenAlt1Alt2 = 'B',
     /**
      * C, at or above in altitude 2
      */
-    AtOrAboveAlt2,
+    AtOrAboveAlt2 = 'C',
     /**
      * G, altitude1 At for FAF, altitude2 is glideslope MSL
      */
-    AtAlt1GsMslAlt2,
+    AtAlt1GsMslAlt2 = 'G',
     /**
      * H, Alt1 is At or above for FAF, Alt2 is glideslope MSL
      */
-    AtOrAboveAlt1GsMslAlt2,
+    AtOrAboveAlt1GsMslAlt2 = 'H',
     /**
      * I, Alt1 is at for FACF, Alt2 is glidelope intercept
      */
-    AtAlt1GsIntcptAlt2,
+    AtAlt1GsIntcptAlt2 = 'I',
     /**
      * J, Alt1 is at or above for FACF, Alt2 is glideslope intercept
      */
-    AtOrAboveAlt1GsIntcptAlt2,
+    AtOrAboveAlt1GsIntcptAlt2 = 'J',
     /**
      * V, Alt1 is procedure alt for step-down, Alt2 is at alt for vertical path angle
      */
-    AtOrAboveAlt1AngleAlt2,
+    AtOrAboveAlt1AngleAlt2 = 'V',
     /**
      * X, Alt 1 is at, Alt 2 is on the vertical angle
      */
-    AtAlt1AngleAlt2,
+    AtAlt1AngleAlt2 = 'X',
     /**
      * Y, Alt 1 is at or below, Alt 2 is on the vertical angle
      */
-    AtOrBelowAlt1AngleAlt2,
+    AtOrBelowAlt1AngleAlt2 = 'Y',
 }
 
 export enum SpeedDescriptor {
-    Mandatory,
-    Minimum,
-    Maximum,
+    Mandatory = '@',
+    Minimum = '+',
+    Maximum = '-',
 }
 
 export enum TurnDirection {
-    Left = 1,
-    Right = 2,
-    Either = 3,
+    Left = 'L',
+    Right = 'R',
+    Either = 'E',
 }
 
 export enum LegType {
-    Unknown = 0,
     /**
      * Arc to a fix (i.e. DME ARC)
      */
-    AF = 1,
+    AF = 'AF',
     /**
      * Course to an Altitude
      */
-    CA = 2,
+    CA = 'CA',
     /**
      * Course to a DME distance
      */
-    CD = 3,
+    CD = 'CD',
     /**
      * Course to a Fix
      */
-    CF = 4,
+    CF = 'CF',
     /**
      * Course to an intercept (next leg)
      */
-    CI = 5,
+    CI = 'CI',
     /**
      * Course to a VOR radial
      */
-    CR = 6,
+    CR = 'CR',
     /**
      * Direct to Fix from PPOS
      */
-    DF = 7,
+    DF = 'DF',
     /**
      * Track from Fix to Altitude
      */
-    FA = 8,
+    FA = 'FA',
     /**
      * Track from Fix to a Distance
      */
-    FC = 9,
+    FC = 'FC',
     /**
      * Track from Fix to a DME distance (not the same fix)
      */
-    FD = 10,
+    FD = 'FD',
     /**
      * Track from Fix to a Manual termination
      */
-    FM = 11,
+    FM = 'FM',
     /**
      * Hippodrome (hold) with Altitude termination
      */
-    HA = 12,
+    HA = 'HA',
     /**
      * Hippodrome (hold), single circuit terminating at the fix
      */
-    HF = 13,
+    HF = 'HF',
     /**
      * Hippodrome (hold) with manual termination
      */
-    HM = 14,
+    HM = 'HM',
     /**
      * Initial Fix
      */
-    IF = 15,
+    IF = 'IF',
     /**
      * Procedure turn
      */
-    PI = 16,
+    PI = 'PI',
     /**
      * Constant radius arc between two fixes, lines tangent to arc and a centre fix
      */
-    RF = 17,
+    RF = 'RF',
     /**
      * Track between fixes
      */
-    TF = 18,
+    TF = 'TF',
     /**
      * Heading to an altitude
      */
-    VA = 19,
+    VA = 'VA',
     /**
      * Heading to a DME distance
      */
-    VD = 20,
+    VD = 'VD',
     /**
      * Heading to an intercept
      */
-    VI = 21,
+    VI = 'VI',
     /**
      * Heading to a manual termination
      */
-    VM = 22,
+    VM = 'VM',
     /**
      * Heading to a VOR radial
      */
-    VR = 23,
+    VR = 'VR',
 }
