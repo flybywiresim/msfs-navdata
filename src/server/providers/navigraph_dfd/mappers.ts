@@ -1100,9 +1100,12 @@ export class DFDMappers {
         return `E${airway.icaoCode}    ${airway.routeIdentifier}`;
     }
 
+    private static isTerminalWaypoint(waypoint: NaviWaypoint): waypoint is NaviTerminalWaypoint {
+        return waypoint.hasOwnProperty('regionCode');
+    }
+
     public static waypointDatabaseId(waypoint: NaviWaypoint): string {
-        // TODO terminal waypoints are missing airportIdentifier... raise with navigraph
-        return `W${waypoint.icaoCode}    ${waypoint.waypointIdentifier}`;
+        return `W${waypoint.icaoCode}${this.isTerminalWaypoint(waypoint) ? waypoint.regionCode ?? '    ' : '    '}${waypoint.waypointIdentifier}`;
     }
 
     public static vhfNavaidDatabaseId(navaid: NaviVhfNavaid): string {

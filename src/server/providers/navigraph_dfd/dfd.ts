@@ -82,9 +82,13 @@ export class NavigraphProvider implements DataInterface {
 
     // TODO support filtering on area (terminal or enroute)
     async getWaypoints(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
-        let sql = `SELECT * FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${ idents.map(() => '?').join(',') })
+        let sql = `
+            SELECT area_code, NULL as region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, waypoint_usage, waypoint_latitude, waypoint_longitude
+            FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
             UNION ALL
-            SELECT * FROM tbl_terminal_waypoints WHERE waypoint_identifier IN (${ idents.map(() => '?').join(',')})`;
+            SELECT area_code, region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, NULL as waypoint_usage, waypoint_latitude, waypoint_longitude
+            FROM tbl_terminal_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
+        `;
         const params = idents.slice();
         if (icaoCode) {
             sql += ' AND icao_code = ?';
@@ -319,7 +323,8 @@ export class NavigraphProvider implements DataInterface {
         const sql = `SELECT area_code, airport_identifier, icao_code, ndb_identifier, ndb_name, ndb_frequency, navaid_class, ndb_latitude, ndb_longitude
             FROM tbl_terminal_ndbnavaids WHERE ${sqlWhere}
             UNION ALL
-            SELECT area_code, NULL, icao_code, ndb_identifier, ndb_name, ndb_frequency, navaid_class, ndb_latitude, ndb_longitude FROM tbl_enroute_ndbnavaids WHERE ${sqlWhere}`;
+            SELECT area_code, NULL, icao_code, ndb_identifier, ndb_name, ndb_frequency, navaid_class, ndb_latitude, ndb_longitude FROM tbl_enroute_ndbnavaids WHERE ${sqlWhere}
+        `;
 
         const rows = query(this.database.prepare(sql, sqlParams.concat(sqlParams)));
         if (rows.length < 1) {
@@ -355,11 +360,15 @@ export class NavigraphProvider implements DataInterface {
     }
 
     async getNearbyWaypoints(centre: Location, range: number): Promise<Waypoint[]> {
-        const [sqlWhere, sqlParams] = this.nearbyBoundingBoxQuery({ latitude: centre.lat, longitude: centre.lon }, range, 'ndb_');
+        const [sqlWhere, sqlParams] = this.nearbyBoundingBoxQuery({ latitude: centre.lat, longitude: centre.lon }, range, 'waypoint_');
 
-        const sql = `SELECT * FROM tbl_terminal_waypoints WHERE ${sqlWhere}
+        const sql = `
+            SELECT area_code, NULL as region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, waypoint_usage, waypoint_latitude, waypoint_longitude
+            FROM tbl_enroute_waypoints WHERE ${sqlWhere}
             UNION ALL
-            SELECT * FROM tbl_enroute_waypoints WHERE ${sqlWhere}`;
+            SELECT area_code, region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, NULL as waypoint_usage, waypoint_latitude, waypoint_longitude
+            FROM tbl_terminal_waypoints WHERE ${sqlWhere}
+        `;
 
         const rows = query(this.database.prepare(sql, sqlParams.concat(sqlParams)));
         if (rows.length < 1) {
