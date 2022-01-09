@@ -165,7 +165,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(databaseIdent);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -176,7 +176,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(airports);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -188,7 +188,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(airports);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -201,7 +201,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(airways);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -215,7 +215,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -229,7 +229,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -242,7 +242,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(waypoints);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -254,7 +254,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(airspaces);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -266,7 +266,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(airspaces);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -277,7 +277,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(runways);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -289,7 +289,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(waypoints);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -301,7 +301,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(ndbs);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -312,7 +312,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(ils);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -327,7 +327,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -342,7 +342,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -357,7 +357,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -371,7 +371,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(airways);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -382,7 +382,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(departures);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -393,7 +393,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(arrivals);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -404,7 +404,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(communications);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -415,7 +415,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(approaches);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
@@ -426,7 +426,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
                 res.json(airways);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
-            return errorResponse(error, res);
+            errorResponse(error, res);
         }
     });
 
