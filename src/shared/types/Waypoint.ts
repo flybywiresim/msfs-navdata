@@ -1,14 +1,14 @@
 import { DatabaseItem, Location, NauticalMiles } from './Common';
 
-export enum WaypointType {
-    // TODO
-    Unknown,
+export enum WaypointArea {
+    Enroute,
+    Terminal,
 }
 
 export interface Waypoint extends DatabaseItem {
     location: Location,
     name?: string,
-    type: WaypointType,
+    area: WaypointArea,
     // TODO more...
 
     /**

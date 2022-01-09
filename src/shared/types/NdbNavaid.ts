@@ -1,5 +1,5 @@
-import { DatabaseItem, Degrees, KiloHertz, Location, NauticalMiles } from './Common';
-import { VhfNavaidType } from './VhfNavaid';
+import { WaypointArea } from '..';
+import { DatabaseItem, KiloHertz, Location, NauticalMiles } from './Common';
 
 export interface NdbNavaid extends DatabaseItem {
     frequency: KiloHertz,
@@ -14,6 +14,7 @@ export interface NdbNavaid extends DatabaseItem {
      * Distance from centre location for nearby airport query
      */
     distance?: NauticalMiles,
+    area: WaypointArea,
 }
 
 export enum NdbClass {

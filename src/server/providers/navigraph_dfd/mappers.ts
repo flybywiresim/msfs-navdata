@@ -33,7 +33,7 @@ import {
     VhfNavaidType,
     VorClass,
     Waypoint,
-    WaypointType,
+    WaypointArea,
     AirwayLevel,
     ApproachWaypointDescriptor,
     WaypointDescriptor,
@@ -234,7 +234,7 @@ export class DFDMappers {
     }
 
     public mapApproachWaypointDescriptor(waypointDescriptor: string) {
-        switch (waypointDescriptor.charAt(3)) {
+        switch ((waypointDescriptor ?? '').charAt(3)) {
         case 'A':
             return ApproachWaypointDescriptor.InitialApproachFix;
         case 'B':
@@ -259,7 +259,7 @@ export class DFDMappers {
     }
 
     public mapWaypointDescriptor(waypointDescriptor: string) {
-        switch (waypointDescriptor.charAt(0)) {
+        switch ((waypointDescriptor ?? '').charAt(0)) {
         case 'A':
             return WaypointDescriptor.Airport;
         case 'E':
@@ -297,13 +297,13 @@ export class DFDMappers {
                 location: { lat: leg.waypointLatitude, lon: leg.waypointLongitude },
                 databaseId: `W${leg.waypointIcaoCode}${leg.airportIdentifier ?? '    '}${leg.waypointIdentifier}`,
                 name: leg.waypointIdentifier,
-                type: WaypointType.Unknown,
+                area: WaypointArea.Terminal, // FIXME
             } : undefined, // TODO fetch these
             recommendedNavaid: leg.recommandedNavaid ? {
                 ident: leg.recommandedNavaid,
                 databaseId: `W${leg.waypointIcaoCode}    ${leg.recommandedNavaid}`,
                 name: '',
-                type: WaypointType.Unknown,
+                area: WaypointArea.Terminal, // FIXME
                 icaoCode: leg.waypointIcaoCode, // FIXME
                 location: {
                     lat: leg.recommandedNavaidLatitude,
@@ -316,7 +316,7 @@ export class DFDMappers {
                 ident: leg.centerWaypoint,
                 databaseId: `W${leg.waypointIcaoCode}    ${leg.centerWaypoint}`,
                 name: '',
-                type: WaypointType.Unknown,
+                area: WaypointArea.Terminal, // FIXME
                 icaoCode: leg.waypointIcaoCode, // FIXME
                 location: {
                     lat: leg.centerWaypointLatitude,
@@ -740,7 +740,7 @@ export class DFDMappers {
                 databaseId: `W${fix.icaoCode}    ${fix.waypointIdentifier}`, // TODO function
                 ident: fix.waypointIdentifier,
                 location: { lat: fix.waypointLatitude, lon: fix.waypointLongitude },
-                type: WaypointType.Unknown, // TODO
+                area: WaypointArea.Unknown, // TODO
             });
         });
         return airways;
@@ -1041,7 +1041,7 @@ export class DFDMappers {
             icaoCode: waypoint.icaoCode,
             location: DFDMappers.mapLocation(waypoint.waypointLatitude, waypoint.waypointLongitude),
             name: waypoint.waypointName,
-            type: WaypointType.Unknown, // TODO
+            area: DFDMappers.isTerminalWaypoint(waypoint) ? WaypointArea.Terminal : WaypointArea.Enroute,
             distance: distanceFrom ? getDistance(distanceFrom, {latitude: waypoint.waypointLatitude, longitude: waypoint.waypointLongitude}) / 1852 : undefined,
         };
     }
@@ -1062,6 +1062,7 @@ export class DFDMappers {
             class: this.mapVorClass(navaid),
             ilsDmeBias: navaid.ilsdmeBias || undefined,
             distance: distanceFrom ? getDistance(distanceFrom, {latitude: navaid.vorLatitude, longitude: navaid.vorLongitude}) / 1852 : undefined,
+            area: DFDMappers.isTerminalVhfNavaid(navaid) ? WaypointArea.Terminal : WaypointArea.Enroute,
         }
     }
 
@@ -1120,6 +1121,7 @@ export class DFDMappers {
             class: this.mapNdbClass(navaid),
             bfoOperation: navaid.navaidClass.charAt(4) === 'B',
             distance: distanceFrom ? getDistance(distanceFrom, {latitude: navaid.ndbLatitude, longitude: navaid.ndbLongitude}) / 1852 : undefined,
+            area: DFDMappers.isTerminalNdbNavaid(navaid) ? WaypointArea.Terminal : WaypointArea.Enroute,
         };
     }
 
@@ -1141,6 +1143,18 @@ export class DFDMappers {
         return { lat, lon, alt };
     }
 
+    private static isTerminalWaypoint(waypoint: NaviWaypoint): waypoint is NaviTerminalWaypoint {
+        return waypoint.hasOwnProperty('regionCode') && waypoint['regionCode'] !== null;
+    }
+
+    private static isTerminalNdbNavaid(navaid: NaviNdbNavaid): navaid is NaviTerminalNdbNavaid {
+        return navaid.hasOwnProperty('airportIdentifier') && navaid['airportIdentifier'] !== null;
+    }
+
+    private static isTerminalVhfNavaid(navaid: NaviVhfNavaid): boolean {
+        return (navaid.navaidClass ?? '').charAt(2) === 'T';
+    }
+
     // The MSFS "icao" code is a pretty clever globally unique ID, so we follow it, and extend it where needed
     // It is important to ensure that these are truly globally unique
     public static airportDatabaseId(airport: NaviAirport): string {
@@ -1155,20 +1169,17 @@ export class DFDMappers {
         return `E${airway.icaoCode}    ${airway.routeIdentifier}`;
     }
 
-    private static isTerminalWaypoint(waypoint: NaviWaypoint): waypoint is NaviTerminalWaypoint {
-        return waypoint.hasOwnProperty('regionCode');
-    }
-
     public static waypointDatabaseId(waypoint: NaviWaypoint): string {
-        return `W${waypoint.icaoCode}${this.isTerminalWaypoint(waypoint) ? waypoint.regionCode ?? '    ' : '    '}${waypoint.waypointIdentifier}`;
+        return `W${waypoint.icaoCode}${(this.isTerminalWaypoint(waypoint) ? waypoint.regionCode : null) ?? '    '}${waypoint.waypointIdentifier}`;
     }
 
     public static vhfNavaidDatabaseId(navaid: NaviVhfNavaid): string {
-        return `V${navaid.icaoCode}${navaid.airportIdentifier ?? '    '}${navaid.vorIdentifier ?? navaid.dmeIdent}`;
+        // TODO airportIdentifier is always blank... ask Navi
+        return `V${navaid.icaoCode}${(this.isTerminalVhfNavaid(navaid) ? navaid.airportIdentifier : null) ?? '    '}${navaid.vorIdentifier ?? navaid.dmeIdent}`;
     }
 
     public static ndbNavaidDatabaseId(navaid: NaviNdbNavaid): string {
-        return `N${navaid.icaoCode}${navaid.airportIdentifier ?? '    '}${navaid.ndbIdentifier}`;
+        return `N${navaid.icaoCode}${(this.isTerminalNdbNavaid(navaid) ? navaid.airportIdentifier : null) ?? '    '}${navaid.ndbIdentifier}`;
     }
 
     public static ilsNavaidDatabaseId(navaid: NaviIls): string {

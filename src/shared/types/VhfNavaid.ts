@@ -1,3 +1,4 @@
+import { WaypointArea } from '..';
 import { DatabaseItem, Degrees, Location, MegaHertz, NauticalMiles } from './Common';
 
 export interface VhfNavaid extends DatabaseItem {
@@ -20,6 +21,7 @@ export interface VhfNavaid extends DatabaseItem {
      * distance from centre location for nearby query
      */
     distance?: NauticalMiles,
+    area: WaypointArea,
 }
 
 export type FigureOfMerit = 0 | 1 | 2 | 3;
