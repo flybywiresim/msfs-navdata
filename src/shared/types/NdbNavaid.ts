@@ -5,8 +5,14 @@ export interface NdbNavaid extends DatabaseItem {
     frequency: KiloHertz,
     location: Location,
     class: NdbClass,
+    /**
+     * Beat frequency oscillator required to make identifier audible
+     */
     bfoOperation: boolean,
 
+    /**
+     * Distance from centre location for nearby airport query
+     */
     distance?: NauticalMiles,
 }
 

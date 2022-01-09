@@ -24,8 +24,20 @@ export enum ApproachType {
     MlsTypeBC,
 }
 export interface Approach extends DatabaseItem {
+    /**
+     * Type of approach guidance
+     */
     type: ApproachType,
+    /**
+     * Arrival transitions
+     */
     transitions: ProcedureTransition[],
+    /**
+     * Approach legs (common legs and runway transition legs), ending at the MAP
+     */
     legs: ProcedureLeg[],
+    /**
+     * Missed approach legs, starting at the MAP
+     */
     missedLegs: ProcedureLeg[],
 }

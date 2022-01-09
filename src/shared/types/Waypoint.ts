@@ -11,5 +11,8 @@ export interface Waypoint extends DatabaseItem {
     type: WaypointType,
     // TODO more...
 
+    /**
+     * Distance from centre location for nearby airport query
+     */
     distance?: NauticalMiles,
 }

@@ -6,8 +6,18 @@ import { Waypoint } from './Waypoint';
 export interface ProcedureLeg extends DatabaseItem {
     procedureIdent: string,
     type: LegType,
+    /**
+     * Should the termination of this leg be overflown (not flown by in a turn)
+     */
     overfly: boolean,
+    /**
+     * The waypoint assocaited with the termination of this leg
+     * For VM legs at the end of a STAR, this shall be the airport reference point
+     */
     waypoint?: Waypoint,
+    /**
+     * Radio navaid to be used for this leg
+     */
     recommendedNavaid?: VhfNavaid | NdbNavaid | Waypoint, // TODO can be other types?
     /**
      * Distance from the recommended navaid, to the waypoint
@@ -15,6 +25,7 @@ export interface ProcedureLeg extends DatabaseItem {
     rho?: NauticalMiles,
     /**
      * Magnetic bearing from the recommended navaid, to the waypoint
+     * For AF legs this is the fix radial
      */
     theta?: DegreesMagnetic,
     /**
@@ -29,6 +40,7 @@ export interface ProcedureLeg extends DatabaseItem {
      * length if it is specified in distance
      * exact meaning depends on the leg type
      * mutually exclusive with lengthTime
+     * For PI legs, the excursion distance from the waypoint
      */
     length?: NauticalMiles,
     /**
@@ -66,7 +78,15 @@ export interface ProcedureLeg extends DatabaseItem {
      * Specifies the meaning of the speed property
      */
     speedDescriptor?: SpeedDescriptor,
+    /**
+     * Specifies the direction of the turn at the termination of this leg
+     */
     turnDirection?: TurnDirection,
+    /**
+     * Specifies the outbound course associated with the termination of this leg
+     * For AF legs this is the boundary radial
+     * For CF legs this is the course to the specified fix
+     */
     trueCourse?: DegreesTrue,
 }
 

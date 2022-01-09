@@ -4,6 +4,9 @@ export interface Runway extends DatabaseItem {
     airportIdent: string,
     bearing: DegreesTrue,
     magneticBearing: DegreesMagnetic,
+    /**
+     * slope of the runway, negative for downhill
+     */
     gradient: Degrees,
     /**
      * Location, including altitude (if available), of the threshold
