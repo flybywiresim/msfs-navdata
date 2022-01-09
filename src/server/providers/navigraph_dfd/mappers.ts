@@ -130,7 +130,7 @@ export class DFDMappers {
             databaseId: DFDMappers.airportDatabaseId(airport),
             ident: airport.airportIdentifier,
             icaoCode: airport.icaoCode,
-            airportName: airport.airportName,
+            name: airport.airportName,
             location: { lat: airport.airportRefLatitude, lon: airport.airportRefLongitude, alt: airport.elevation },
             speedLimit: airport.speedLimit || undefined,
             speedLimitAltitude: airport.speedLimitAltitude || undefined,
