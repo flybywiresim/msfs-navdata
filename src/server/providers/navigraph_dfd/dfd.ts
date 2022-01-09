@@ -1,7 +1,7 @@
 import fs from 'fs';
 import initSqlJs, { Database, Statement } from 'sql.js';
 // TODO purge geolib
-import { getBoundsOfDistance, getDistance, isPointInPolygon } from 'geolib';
+import { getBoundsOfDistance, getDistance } from 'geolib';
 import { GeolibInputCoordinates } from 'geolib/es/types';
 
 import {
@@ -82,23 +82,23 @@ export class NavigraphProvider implements DataInterface {
 
     // TODO support filtering on area (terminal or enroute)
     async getWaypoints(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
-        let sql = `SELECT * FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${ idents.map(() => "?").join(",") })
+        let sql = `SELECT * FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${ idents.map(() => '?').join(',') })
             UNION ALL
-            SELECT * FROM tbl_terminal_waypoints WHERE waypoint_identifier IN (${ idents.map(() => "?").join(",") })`;
+            SELECT * FROM tbl_terminal_waypoints WHERE waypoint_identifier IN (${ idents.map(() => '?').join(',')})`;
         const params = idents.slice();
         if (icaoCode) {
-            sql += ` AND icao_code = ?`;
+            sql += ' AND icao_code = ?';
             params.push(icaoCode);
         }
         if (airportIdent) {
-            sql += ` AND airport_identifier = ?`;
+            sql += ' AND airport_identifier = ?';
             params.push(airportIdent);
         }
         const stmt = this.database.prepare(sql, params.concat(params));
         try {
             const rows = query(stmt);
             const navaids: NaviWaypoint[] = NavigraphProvider.toCamel(rows);
-            return navaids.map((navaid => this.mappers.mapWaypoint(navaid, ppos))).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+            return navaids.map(((navaid) => this.mappers.mapWaypoint(navaid, ppos))).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
         } finally {
             stmt.free();
         }
@@ -238,21 +238,21 @@ export class NavigraphProvider implements DataInterface {
 
     // TODO support filtering on type and class
     async getVhfNavaids(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
-        let sql = `SELECT * FROM tbl_vhfnavaids WHERE vor_identifier IN (${ idents.map(() => "?").join(",") })`; // TODO vor_identifier vs. dme_identifier...?
+        let sql = `SELECT * FROM tbl_vhfnavaids WHERE vor_identifier IN (${ idents.map(() => '?').join(',') })`; // TODO vor_identifier vs. dme_identifier...?
         const params = idents.slice();
         if (icaoCode) {
-            sql += ` AND icao_code = ?`;
+            sql += ' AND icao_code = ?';
             params.push(icaoCode);
         }
         if (airportIdent) {
-            sql += ` AND airport_identifier = ?`;
+            sql += ' AND airport_identifier = ?';
             params.push(airportIdent);
         }
         const stmt = this.database.prepare(sql, params);
         try {
             const rows = query(stmt);
             const navaids: NaviVhfNavaid[] = NavigraphProvider.toCamel(rows);
-            return navaids.map((navaid => this.mappers.mapVhfNavaid(navaid, ppos))).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+            return navaids.map(((navaid) => this.mappers.mapVhfNavaid(navaid, ppos))).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
         } finally {
             stmt.free();
         }
@@ -261,37 +261,36 @@ export class NavigraphProvider implements DataInterface {
     // TODO support filtering on class
     async getNdbNavaids(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
         const results: NdbNavaid[] = [];
-        console.log(idents, ppos, icaoCode, airportIdent);
         if (!airportIdent) {
-            let sql = `SELECT * FROM tbl_enroute_ndbnavaids WHERE ndb_identifier IN (${ idents.map(() => "?").join(",") })`;
+            let sql = `SELECT * FROM tbl_enroute_ndbnavaids WHERE ndb_identifier IN (${ idents.map(() => '?').join(',') })`;
             const params = idents.slice();
             if (icaoCode) {
-                sql += ` AND icao_code = ?`;
+                sql += ' AND icao_code = ?';
                 params.push(icaoCode);
             }
             const stmt = this.database.prepare(sql, params);
             try {
                 const rows = query(stmt);
                 const navaids: NaviNdbNavaid[] = NavigraphProvider.toCamel(rows);
-                results.push(...navaids.map((navaid => this.mappers.mapNdbNavaid(navaid, ppos))));
+                results.push(...navaids.map(((navaid) => this.mappers.mapNdbNavaid(navaid, ppos))));
             } finally {
                 stmt.free();
             }
         }
-        let sql = `SELECT * FROM tbl_terminal_ndbnavaids WHERE ndb_identifier IN (${ idents.map(() => "?").join(",") })`;
+        let sql = `SELECT * FROM tbl_terminal_ndbnavaids WHERE ndb_identifier IN (${ idents.map(() => '?').join(',') })`;
         const params = idents.slice();
         if (airportIdent) {
-            sql += ` AND airport_identifier = ?`;
+            sql += ' AND airport_identifier = ?';
             params.push(airportIdent);
         } else if (icaoCode) {
-            sql += ` AND icao_code = ?`;
+            sql += ' AND icao_code = ?';
             params.push(icaoCode);
         }
         const stmt = this.database.prepare(sql, params);
         try {
             const rows = query(stmt);
             const navaids: NaviNdbNavaid[] = NavigraphProvider.toCamel(rows);
-            results.push(...navaids.map((navaid => this.mappers.mapNdbNavaid(navaid))));
+            results.push(...navaids.map(((navaid) => this.mappers.mapNdbNavaid(navaid))));
         } finally {
             stmt.free();
         }
@@ -310,15 +309,15 @@ export class NavigraphProvider implements DataInterface {
         const airways = this.mappers.mapAirways(NavigraphProvider.toCamel(rows)).filter((airway) => airway.fixes.find((fix) => getDistance(fix.location, centre) < range * 1852));
         if (levels === undefined) {
             return airways;
-        } else {
-            return airways.filter((airway) => (airway.level & levels) === airway.level);
         }
+        return airways.filter((airway) => (airway.level & levels) === airway.level);
     }
 
     async getNearbyNdbNavaids(centre: Location, range: number, classes?: NdbClass): Promise<NdbNavaid[]> {
         const [sqlWhere, sqlParams] = this.nearbyBoundingBoxQuery({ latitude: centre.lat, longitude: centre.lon }, range, 'ndb_');
 
-        const sql = `SELECT area_code, airport_identifier, icao_code, ndb_identifier, ndb_name, ndb_frequency, navaid_class, ndb_latitude, ndb_longitude FROM tbl_terminal_ndbnavaids WHERE ${sqlWhere}
+        const sql = `SELECT area_code, airport_identifier, icao_code, ndb_identifier, ndb_name, ndb_frequency, navaid_class, ndb_latitude, ndb_longitude
+            FROM tbl_terminal_ndbnavaids WHERE ${sqlWhere}
             UNION ALL
             SELECT area_code, NULL, icao_code, ndb_identifier, ndb_name, ndb_frequency, navaid_class, ndb_latitude, ndb_longitude FROM tbl_enroute_ndbnavaids WHERE ${sqlWhere}`;
 
@@ -329,7 +328,7 @@ export class NavigraphProvider implements DataInterface {
         const navaids: NaviNdbNavaid[] = NavigraphProvider.toCamel(rows);
         return navaids.map((navaid) => {
             const na = this.mappers.mapNdbNavaid(navaid);
-            na.distance = getDistance(centre, {latitude: na.location.lat, longitude: na.location.lon}) / 1852;
+            na.distance = getDistance(centre, { latitude: na.location.lat, longitude: na.location.lon }) / 1852;
             return na;
         }).filter((na) => (na.distance ?? 0) <= range && (classes === undefined || (na.class & classes) > 0)).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
     }
@@ -349,7 +348,10 @@ export class NavigraphProvider implements DataInterface {
             const loc = na.vorLocation ?? na.dmeLocation;
             na.distance = getDistance(centre, {latitude: (loc?.lat ?? centre.lat), longitude: (loc?.lon ?? centre.lon)}) / 1852;
             return na;
-        }).filter((na) => (na.distance ?? 0) <= range && (types === undefined || (na.type & types) > 0) && (classes === undefined || (na.class & classes) > 0)).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+        }).filter((na) => (na.distance ?? 0) <= range
+            && (types === undefined || (na.type & types) > 0)
+            && (classes === undefined || (na.class & classes) > 0))
+            .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
     }
 
     async getNearbyWaypoints(centre: Location, range: number): Promise<Waypoint[]> {
@@ -423,7 +425,8 @@ export class NavigraphProvider implements DataInterface {
 
         const longitudeCrosses = southWestCorner.longitude > northEastCorner.longitude;
 
-        let sql, params;
+        let sql: string;
+        let params: any[];
 
         if (longitudeCrosses) {
             sql = `${prefix}latitude >= ? AND ${prefix}latitude <= ? AND (${prefix}longitude >= ? OR ${prefix}longitude <= ?)`;
