@@ -1,4 +1,5 @@
-import { DatabaseItem, DegreesMagnetic, DegreesTrue, Feet, Knots, Minutes, NauticalMiles } from './Common';
+import { Degrees } from '..';
+import { DatabaseItem, DegreesMagnetic, Feet, Knots, Minutes, NauticalMiles } from './Common';
 import { NdbNavaid } from './NdbNavaid';
 import { VhfNavaid } from './VhfNavaid';
 import { Waypoint } from './Waypoint';
@@ -97,6 +98,11 @@ export interface ProcedureLeg extends DatabaseItem {
      * For CF legs this is the course to the specified fix
      */
     magneticCourse?: DegreesMagnetic,
+    /**
+     * Specifies the descent vertical angle (negative) referenced to the terminating fix
+     * Should be projected back up to the last coded altitude
+     */
+    verticalAngle?: Degrees;
 }
 
 export enum AltitudeDescriptor {

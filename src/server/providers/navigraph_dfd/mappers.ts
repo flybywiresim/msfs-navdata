@@ -283,6 +283,7 @@ export class DFDMappers {
             speedDescriptor: leg.speedLimit ? this.mapSpeedLimitDescriptor(leg.speedLimitDescription) : undefined,
             turnDirection: leg.turnDirection as TurnDirection ?? undefined,
             magneticCourse: leg.magneticCourse ?? undefined,
+            verticalAngle: leg.verticalAngle ?? undefined
         };
     }
 
