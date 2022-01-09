@@ -6,9 +6,6 @@
 
 /* eslint-disable no-await-in-loop */
 import { getDistance } from "geolib";
-// TODO use TS typings
-// @ts-ignore
-import MagVar from 'magvar';
 
 import {
     Airport,
@@ -350,8 +347,7 @@ export class DFDMappers {
             speed: leg.speedLimit,
             speedDescriptor: leg.speedLimit ? this.mapSpeedLimitDescriptor(leg.speedLimitDescription) : undefined,
             turnDirection: this.mapTurnDirection(leg.turnDirection),
-            // TODO unfuck this
-            trueCourse: leg.magneticCourse && (360 + leg.magneticCourse + MagVar.get(airport.location.lat, airport.location.lon)) % 360,
+            magneticCourse: leg.magneticCourse ?? undefined,
         };
     }
 

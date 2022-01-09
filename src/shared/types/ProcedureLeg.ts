@@ -83,11 +83,11 @@ export interface ProcedureLeg extends DatabaseItem {
      */
     turnDirection?: TurnDirection,
     /**
-     * Specifies the outbound course associated with the termination of this leg
+     * Specifies the outbound magnetic course associated with the termination of this leg
      * For AF legs this is the boundary radial
      * For CF legs this is the course to the specified fix
      */
-    trueCourse?: DegreesTrue,
+    magneticCourse?: DegreesMagnetic,
 }
 
 export enum AltitudeDescriptor {
