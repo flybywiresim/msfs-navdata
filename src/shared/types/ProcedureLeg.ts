@@ -56,6 +56,10 @@ export interface ProcedureLeg extends DatabaseItem {
      * Required Navigation Performance for this leg
      */
     rnp?: NauticalMiles,
+    /**
+     * Transition altitude
+     * Should be specified on the first leg of each procedure, or default 18000 feet if not specified
+     */
     transitionAltitude?: Feet,
     /**
      * Specifies the meaning of the altitude1 and altitude2 properties
@@ -82,7 +86,9 @@ export interface ProcedureLeg extends DatabaseItem {
      */
     speedDescriptor?: SpeedDescriptor,
     /**
-     * Specifies the direction of the turn at the termination of this leg
+     * Specifies the direction of the turn to capture this leg (the start of the leg)
+     * Should be specified for any track change > 135°
+     * Assume valid if defined as L or R
      */
     turnDirection?: TurnDirection,
     /**
@@ -113,6 +119,8 @@ export enum AltitudeDescriptor {
     BetweenAlt1Alt2 = 'B',
     /**
      * C, at or above in altitude 2
+     * Only permitted for CD, CF, CR, FC, FD, TF, VD, VR in SIDs
+     * Indicates conditional altitude termination
      */
     AtOrAboveAlt2 = 'C',
     /**
@@ -164,6 +172,7 @@ export enum LegType {
     AF = 'AF',
     /**
      * Course to an Altitude
+     * Only for climbing
      */
     CA = 'CA',
     /**
@@ -188,6 +197,7 @@ export enum LegType {
     DF = 'DF',
     /**
      * Track from Fix to Altitude
+     * Only for climbing
      */
     FA = 'FA',
     /**
@@ -204,10 +214,12 @@ export enum LegType {
     FM = 'FM',
     /**
      * Hippodrome (hold) with Altitude termination
+     * Only for climbing
      */
     HA = 'HA',
     /**
      * Hippodrome (hold), single circuit terminating at the fix
+     * Also known as Hold In Lieu of Procedure Turn
      */
     HF = 'HF',
     /**
