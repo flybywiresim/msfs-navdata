@@ -103,6 +103,14 @@ export interface ProcedureLeg extends DatabaseItem {
      * Should be projected back up to the last coded altitude
      */
     verticalAngle?: Degrees;
+    /**
+     * Approach-specific waypoint type
+     */
+    approachWaypointDescriptor?: ApproachWaypointDescriptor;
+    /**
+     * General waypoint type
+     */
+    waypointDescriptor?: WaypointDescriptor;
 }
 
 export enum AltitudeDescriptor {
@@ -268,4 +276,28 @@ export enum LegType {
      * Heading to a VOR radial
      */
     VR = 'VR',
+}
+
+export enum ApproachWaypointDescriptor {
+    InitialApproachFix,
+    IntermediateApproachFix,
+    InitialApproachFixWithHold,
+    InitialApproachFixWithFacf,
+    FinalEndpointFix,
+    FinalApproachFix,
+    HoldingFix,
+    FinalApproachCourseFix,
+    MissedApproachPoint,
+}
+
+export enum WaypointDescriptor {
+    Airport,
+    Essential,
+    OffAirway,
+    Runway,
+    NdbNavaid,
+    Phantom,
+    NonEssential,
+    TransitionEssential,
+    VhfNavaid,
 }

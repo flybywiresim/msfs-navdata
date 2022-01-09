@@ -35,6 +35,8 @@ import {
     Waypoint,
     WaypointType,
     AirwayLevel,
+    ApproachWaypointDescriptor,
+    WaypointDescriptor,
 } from '../../../shared';
 import {
     BoundaryPath,
@@ -231,6 +233,56 @@ export class DFDMappers {
         return leg.waypointIdentifier ?? leg.seqno.toFixed(0); // TODO proper format
     }
 
+    public mapApproachWaypointDescriptor(waypointDescriptor: string) {
+        switch (waypointDescriptor.charAt(3)) {
+        case 'A':
+            return ApproachWaypointDescriptor.InitialApproachFix;
+        case 'B':
+            return ApproachWaypointDescriptor.IntermediateApproachFix;
+        case 'C':
+            return ApproachWaypointDescriptor.InitialApproachFixWithHold;
+        case 'D':
+            return ApproachWaypointDescriptor.InitialApproachFixWithFacf;
+        case 'E':
+            return ApproachWaypointDescriptor.FinalEndpointFix;
+        case 'F':
+            return ApproachWaypointDescriptor.FinalApproachFix;
+        case 'H':
+            return ApproachWaypointDescriptor.HoldingFix;
+        case 'I':
+            return ApproachWaypointDescriptor.FinalApproachCourseFix;
+        case 'M':
+            return ApproachWaypointDescriptor.MissedApproachPoint;
+        default:
+            return undefined;
+        }
+    }
+
+    public mapWaypointDescriptor(waypointDescriptor: string) {
+        switch (waypointDescriptor.charAt(0)) {
+        case 'A':
+            return WaypointDescriptor.Airport;
+        case 'E':
+            return WaypointDescriptor.Essential;
+        case 'F':
+            return WaypointDescriptor.OffAirway;
+        case 'G':
+            return WaypointDescriptor.Runway;
+        case 'N':
+            return WaypointDescriptor.NdbNavaid;
+        case 'P':
+            return WaypointDescriptor.Phantom;
+        case 'R':
+            return WaypointDescriptor.NonEssential;
+        case 'T':
+            return WaypointDescriptor.TransitionEssential;
+        case 'V':
+            return WaypointDescriptor.VhfNavaid;
+        default:
+            return undefined;
+        }
+    }
+
     public mapLeg(leg: NaviProcedure, airport: Airport): ProcedureLeg {
         return {
             databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode) + leg.seqno,
@@ -238,10 +290,10 @@ export class DFDMappers {
             ident: this.mapLegIdent(leg),
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
-            overfly: leg.waypointDescriptionCode?.charAt(1) === 'Y',
+            overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
             waypoint: leg.waypointIdentifier ? {
                 icaoCode: leg.waypointIcaoCode,
-                ident: leg.waypointIdentifier,
+                ident: leg.waypointIdentifier, // TODO check type of waypoint and code database ID appropriately
                 location: { lat: leg.waypointLatitude, lon: leg.waypointLongitude },
                 databaseId: `W${leg.waypointIcaoCode}${leg.airportIdentifier ?? '    '}${leg.waypointIdentifier}`,
                 name: leg.waypointIdentifier,
@@ -283,7 +335,9 @@ export class DFDMappers {
             speedDescriptor: leg.speedLimit ? this.mapSpeedLimitDescriptor(leg.speedLimitDescription) : undefined,
             turnDirection: leg.turnDirection as TurnDirection ?? undefined,
             magneticCourse: leg.magneticCourse ?? undefined,
-            verticalAngle: leg.verticalAngle ?? undefined
+            verticalAngle: leg.verticalAngle ?? undefined,
+            approachWaypointDescriptor: this.mapApproachWaypointDescriptor(leg.waypointDescriptionCode),
+            waypointDescriptor: this.mapWaypointDescriptor(leg.waypointDescriptionCode),
         };
     }
 
@@ -1026,33 +1080,33 @@ export class DFDMappers {
     public mapVhfType(navaid: NaviVhfNavaid): VhfNavaidType {
         const vor = navaid.navaidClass.charAt(0) === 'V';
         switch (navaid.navaidClass.charAt(1)) {
-            case 'D':
-                return vor ? VhfNavaidType.VorDme : VhfNavaidType.Dme;
-            case 'T':
-            case 'M': // TODO should we include these military ones?
-                return vor ? VhfNavaidType.Vortac : VhfNavaidType.Tacan;
-            case 'I':
-                return VhfNavaidType.IlsDme;
-            case 'N':
-            case 'P':
-                return VhfNavaidType.Unknown;
-            default:
-                return vor ? VhfNavaidType.Vor : VhfNavaidType.Unknown;
+        case 'D':
+            return vor ? VhfNavaidType.VorDme : VhfNavaidType.Dme;
+        case 'T':
+        case 'M': // TODO should we include these military ones?
+            return vor ? VhfNavaidType.Vortac : VhfNavaidType.Tacan;
+        case 'I':
+            return VhfNavaidType.IlsDme;
+        case 'N':
+        case 'P':
+            return VhfNavaidType.Unknown;
+        default:
+            return vor ? VhfNavaidType.Vor : VhfNavaidType.Unknown;
         }
     }
 
     public mapVorClass(navaid: NaviVhfNavaid): VorClass {
         switch (navaid.navaidClass.charAt(2)) {
-            case 'T':
-                return VorClass.Terminal;
-            case 'L':
-                return VorClass.LowAlt;
-            case 'H':
-                return VorClass.HighAlt;
-            case 'U':
-            case 'C':
-            default:
-                return VorClass.Unknown;
+        case 'T':
+            return VorClass.Terminal;
+        case 'L':
+            return VorClass.LowAlt;
+        case 'H':
+            return VorClass.HighAlt;
+        case 'U':
+        case 'C':
+        default:
+            return VorClass.Unknown;
         }
     }
 
