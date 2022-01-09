@@ -122,7 +122,7 @@ export class ExternalBackend implements DataInterface {
     private formatQuery(queries: Record<string, any>): string {
         const query = [];
         for (const prop in queries) {
-            if (queries.hasOwnProperty(prop) && queries[prop] !== undefined) {
+            if (Object.prototype.hasOwnProperty.call(queries, prop) && queries[prop] !== undefined) {
                 if (queries[prop] instanceof Array) {
                     query.push(`${prop}=${queries[prop].join()}`);
                 } else {

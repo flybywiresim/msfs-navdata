@@ -277,14 +277,16 @@ export class DFDMappers {
         }
     }
 
-    public mapTurnDirection(dir: string): TurnDirection {
+    public mapTurnDirection(dir: string): TurnDirection | undefined {
         switch (dir) {
         case 'L':
             return TurnDirection.Left;
         case 'R':
             return TurnDirection.Right;
+        case 'E':
+            return TurnDirection.Either;
         default:
-            return TurnDirection.Unknown;
+            return undefined;
         }
     }
 
@@ -317,34 +319,34 @@ export class DFDMappers {
                 databaseId: `W${leg.waypointIcaoCode}    ${leg.recommandedNavaid}`,
                 name: '',
                 type: WaypointType.Unknown,
-                icaoCode: leg.waypointIcaoCode,
+                icaoCode: leg.waypointIcaoCode, // FIXME
                 location: {
                     lat: leg.recommandedNavaidLatitude,
                     lon: leg.recommandedNavaidLongitude,
                 },
             } : undefined,
-            rho: leg.rho,
-            theta: leg.theta,
+            rho: leg.rho ?? undefined,
+            theta: leg.theta ?? undefined,
             arcCentreFix: leg.centerWaypoint ? {
                 ident: leg.centerWaypoint,
                 databaseId: `W${leg.waypointIcaoCode}    ${leg.centerWaypoint}`,
                 name: '',
                 type: WaypointType.Unknown,
-                icaoCode: leg.waypointIcaoCode,
+                icaoCode: leg.waypointIcaoCode, // FIXME
                 location: {
                     lat: leg.centerWaypointLatitude,
                     lon: leg.centerWaypointLongitude,
                 },
             } : undefined,
-            arcRadius: leg.arcRadius,
+            arcRadius: leg.arcRadius ?? undefined,
             length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
             lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
-            rnp: leg.rnp,
+            rnp: leg.rnp ?? undefined,
             transitionAltitude: leg.transitionAltitude,
             altitudeDescriptor: (!leg.altitude1 && !leg.altitude2) ? AltitudeDescriptor.None : this.mapAltitudeDescriptor(leg.altitudeDescription),
-            altitude1: leg.altitude1,
-            altitude2: leg.altitude2,
-            speed: leg.speedLimit,
+            altitude1: leg.altitude1 ?? undefined,
+            altitude2: leg.altitude2 ?? undefined,
+            speed: leg.speedLimit ?? undefined,
             speedDescriptor: leg.speedLimit ? this.mapSpeedLimitDescriptor(leg.speedLimitDescription) : undefined,
             turnDirection: this.mapTurnDirection(leg.turnDirection),
             magneticCourse: leg.magneticCourse ?? undefined,
