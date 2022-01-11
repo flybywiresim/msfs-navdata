@@ -4,250 +4,431 @@ import { DatabaseIdent } from '../shared/types/DatabaseIdent';
 import { Airport } from '../shared/types/Airport';
 import { Runway } from '../shared/types/Runway';
 import { Waypoint } from '../shared/types/Waypoint';
-import { NdbNavaid } from '../shared/types/NdbNavaid';
-import { Airway } from '../shared/types/Airway';
-import { IlsNavaid, RestrictiveAirspace, VhfNavaid } from '../shared';
-import { HeightSearchRange, ZoneSearchRange } from '../shared/DataInterface';
 import { ControlledAirspace } from '../shared/types/Airspace';
+import { NdbNavaid, NdbClass } from '../shared/types/NdbNavaid';
+import { Airway, AirwayLevel } from '../shared/types/Airway';
+import { IlsNavaid, RestrictiveAirspace, VhfNavaid, VhfNavaidType, VorClass } from '../shared';
 
-export function msfsNavdataRouter(provider: NavigraphProvider): Router {
+// utility functions to parse user input
+
+class InputError extends Error {
+    get json(): Record<string, string> {
+        return {
+            error: this.message,
+        };
+    }
+}
+
+function errorResponse(error: any, res: any, development: boolean = false) {
+    if (error instanceof InputError) {
+        if (development) {
+            console.warn(error);
+        }
+        return res.status(400).json(error.json);
+    } else {
+        console.error(error);
+        return res.status(500).json({ error: (development && error instanceof Error) ? error.message : 'Internal server error' });
+    }
+}
+
+function parseFlagOptionList(input: string, options: Record<string, number>): number {
+    return input.toLowerCase().split(',').reduce((flags, val) => {
+        if (options[val] === undefined) {
+            throw new Error();
+        }
+        return flags | options[val];
+    }, 0);
+}
+
+function parsePpos(ppos: string): { lat: number, lon: number } {
+    if (!ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
+        throw new InputError(`Invalid ppos "${ppos}"`);
+    }
+    const [lat, lon] = ppos.split(',').map((v) => parseFloat(v));
+    return { lat, lon };
+}
+
+function parseRange(range: string): number {
+    if (!range.match(/^[0-9]{1,3}$/)) {
+        throw new InputError(`Invalid range "${range}"`);
+    }
+    return parseInt(range);
+}
+
+function parseAirportIdent(ident: string): string {
+    if (!ident.match(/^[A-Za-z0-9]{4}/)) {
+        throw new InputError(`Invalid airport ident "${ident}"`);
+    }
+    return ident.toUpperCase();
+}
+
+function parseFixIdent(ident: string): string {
+    if (!ident.match(/^[A-Za-z0-9]{1,5}/)) { // TODO min length?
+        throw new InputError(`Invalid fix ident "${ident}"`);
+    }
+    return ident.toUpperCase();
+}
+
+function parseVorNdbIdent(ident: string): string {
+    if (!ident.match(/^[A-Za-z0-9]{1,4}/)) {
+        throw new InputError(`Invalid navaid ident "${ident}"`);
+    }
+    return ident.toUpperCase();
+}
+
+function parseVhfNavaidTypes(types: string): VhfNavaidType {
+    try {
+        return parseFlagOptionList(types, {
+            unknown: VhfNavaidType.Unknown,
+            vor: VhfNavaidType.Vor,
+            vordme: VhfNavaidType.VorDme,
+            dme: VhfNavaidType.Dme,
+            tacan: VhfNavaidType.Tacan,
+            vortac: VhfNavaidType.Vortac,
+            vot: VhfNavaidType.Vot,
+            ilsdme: VhfNavaidType.IlsDme,
+            ilstacan: VhfNavaidType.Tacan,
+        });
+    } catch (e) {
+        throw new InputError(`Invalid VHF navaid types "${types}"`);
+    }
+}
+
+function parseVorClasses(classes: string): VorClass {
+    try {
+        return parseFlagOptionList(classes, {
+            unknown: VorClass.Unknown,
+            terminal: VorClass.Terminal,
+            low: VorClass.LowAlt,
+            high: VorClass.HighAlt,
+        });
+    } catch (e) {
+        throw new InputError(`Invalid VOR classes "${classes}"`);
+    }
+}
+
+function parseNdbClasses(classes: string): NdbClass {
+    try {
+        return parseFlagOptionList(classes, {
+            unknown: NdbClass.Unknown,
+            low: NdbClass.Low,
+            medium: NdbClass.Medium,
+            normal: NdbClass.Normal,
+            high: NdbClass.High,
+        });
+    } catch (e) {
+        throw new InputError(`Invalid NDB classes "${classes}"`);
+    }
+}
+
+function parseAirwayIdent(ident: string): string {
+    if (!ident.match(/^[A-Za-z0-9]{1,5}/)) { // TODO min length?
+        throw new InputError(`Invalid airway ident "${ident}"`);
+    }
+    return ident.toUpperCase();
+}
+
+function parseAirwayLevels(levels: string): AirwayLevel {
+    try {
+        return parseFlagOptionList(levels, {
+            both: AirwayLevel.Both,
+            low: AirwayLevel.Low,
+            high: AirwayLevel.High,
+            all: AirwayLevel.Both | AirwayLevel.Low | AirwayLevel.High,
+        });
+    } catch (e) {
+        throw new InputError(`Invalid airway levels "${levels}"`);
+    }
+}
+
+function parseIcaoCode(icao: string): string {
+    if (!icao.match(/^[A-Za-z0-9]{2}$/)) {
+        throw new InputError(`Invalid ICAO code "${icao}"`);
+    }
+    return icao.toUpperCase();
+}
+
+function parseMultipleIdents(idents: string, parser: (ident: string) => string, minimum = 1) {
+    const ret = idents.split(',').map((val) => parser(val));
+    if (ret.length < minimum) {
+        throw new InputError(`At least ${minimum} idents required, ${ret.length} given`);
+    }
+    return ret;
+}
+
+export function msfsNavdataRouter(provider: NavigraphProvider, development: boolean = false): Router {
     const router: Router = express.Router();
 
     router.get('/', (req, res) => {
-        provider.getDatabaseIdent().then((databaseIdent: DatabaseIdent) => {
-            res.json(databaseIdent);
-        });
+        try {
+            provider.getDatabaseIdent().then((databaseIdent: DatabaseIdent) => {
+                res.json(databaseIdent);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
+        }
     });
 
     router.get('/airports/:idents', (req, res) => {
-        if (!req.params.idents.match(/^[A-Za-z0-9]{4}(,[A-Za-z0-9]{4})*$/)) {
-            res.status(400).send('Invalid idents');
+        try {
+            const idents = parseMultipleIdents(req.params.idents, parseAirportIdent);
+            provider.getAirports(idents).then((airports: Airport[]) => {
+                res.json(airports);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getAirports(req.params.idents.split(',').map((ident) => ident.toUpperCase())).then((airports: Airport[]) => {
-            res.json(airports);
-        });
     });
 
     router.get('/nearby/airports/:ppos/:range', (req, res) => {
-        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
-            res.status(400).send('Invalid ppos');
+        try {
+            const location = parsePpos(req.params.ppos);
+            const range = parseRange(req.params.range);
+            provider.getNearbyAirports(location, range).then((airports: Airport[]) => {
+                res.json(airports);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
-        const range = parseInt(req.params.range ?? '381');
-        provider.getAirportsInRange({ lat, lon }, range).then((airports: Airport[]) => {
-            res.json(airports);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
-    router.get('/nearby/airways/:ppos/:range/:searchRange?', (req, res) => {
-        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
-            res.status(400).send('Invalid ppos');
+    router.get('/nearby/airways/:ppos/:range', (req, res) => {
+        try {
+            const location = parsePpos(req.params.ppos);
+            const range = parseRange(req.params.range);
+            const levels = (req.query.levels && typeof req.query.levels === 'string') ? parseAirwayLevels(req.query.levels) : undefined;
+            provider.getNearbyAirways(location, range, levels).then((airways: Airway[]) => {
+                res.json(airways);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
-        const range = parseInt(req.params.range);
-        const searchRange: HeightSearchRange = parseInt(req.params.searchRange ?? '0');
-        provider.getAirwaysInRange({ lat, lon }, range, searchRange).then((airways: Airway[]) => {
-            res.json(airways);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
-    router.get('/nearby/navaids/:ppos/:range/:searchRange?', (req, res) => {
-        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
-            res.status(400).send('Invalid ppos');
+    router.get('/nearby/vhfnavaids/:ppos/:range', (req, res) => {
+        try {
+            const location = parsePpos(req.params.ppos);
+            const range = parseRange(req.params.range);
+            const types = (req.query.types && typeof req.query.types === 'string') ? parseVhfNavaidTypes(req.query.types) : undefined;
+            const classes = (req.query.classes && typeof req.query.classes === 'string') ? parseVorClasses(req.query.classes) : undefined;
+            provider.getNearbyVhfNavaids(location, range, classes, types).then((navaids: VhfNavaid[]) => {
+                res.json(navaids);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
-        const range = parseInt(req.params.range);
-        const searchRange: HeightSearchRange = parseInt(req.params.searchRange ?? '0');
-        provider.getNavaidsInRange({ lat, lon }, range, searchRange).then((navaids: VhfNavaid[]) => {
-            res.json(navaids);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
-    router.get('/nearby/ndbs/:ppos/:range/:searchRange?', (req, res) => {
-        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
-            res.status(400).send('Invalid ppos');
+    router.get('/nearby/ndbnavaids/:ppos/:range', (req, res) => {
+        try {
+            const location = parsePpos(req.params.ppos);
+            const range = parseRange(req.params.range);
+            const classes = (req.query.classes && typeof req.query.classes === 'string') ? parseNdbClasses(req.query.classes) : undefined;
+            // TODO area? (terminal or enroute)
+            provider.getNearbyNdbNavaids(location, range, classes).then((navaids: NdbNavaid[]) => {
+                res.json(navaids);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
-        const range = parseInt(req.params.range);
-        const searchRange: ZoneSearchRange = parseInt(req.params.searchRange ?? '0');
-        provider.getNDBsInRange({ lat, lon }, range, searchRange).then((ndbs: NdbNavaid[]) => {
-            res.json(ndbs);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
-    router.get('/nearby/waypoints/:ppos/:range/:searchRange?', (req, res) => {
-        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
-            res.status(400).send('Invalid ppos');
+    router.get('/nearby/waypoints/:ppos/:range', (req, res) => {
+        try {
+            const location = parsePpos(req.params.ppos);
+            const range = parseRange(req.params.range);
+            // TODO area? (terminal or enroute)
+            provider.getNearbyWaypoints(location, range).then((waypoints: Waypoint[]) => {
+                res.json(waypoints);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
-        const range = parseInt(req.params.range);
-        const searchRange: ZoneSearchRange = parseInt(req.params.searchRange ?? '0');
-        provider.getWaypointsInRange({ lat, lon }, range, searchRange).then((waypoints: Waypoint[]) => {
-            res.json(waypoints);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
     router.get('/nearby/airspaces/controlled/:ppos/:range', (req, res) => {
-        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
-            res.status(400).send('Invalid ppos');
+        try {
+            const location = parsePpos(req.params.ppos);
+            const range = parseRange(req.params.range);
+            provider.getControlledAirspaceInRange(location, range).then((airspaces: ControlledAirspace[]) => {
+                res.json(airspaces);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
-        const range = parseInt(req.params.range);
-        provider.getControlledAirspaceInRange({ lat, lon }, range).then((airspaces: ControlledAirspace[]) => {
-            res.json(airspaces);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
     router.get('/nearby/airspaces/restrictive/:ppos/:range', (req, res) => {
-        if (!req.params.ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
-            res.status(400).send('Invalid ppos');
+        try {
+            const location = parsePpos(req.params.ppos);
+            const range = parseRange(req.params.range);
+            provider.getRestrictiveAirspaceInRange(location, range).then((airspaces: RestrictiveAirspace[]) => {
+                res.json(airspaces);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        const [lat, lon] = req.params.ppos.split(',').map((v) => parseFloat(v));
-        const range = parseInt(req.params.range);
-        provider.getRestrictiveAirspaceInRange({ lat, lon }, range).then((airspaces: RestrictiveAirspace[]) => {
-            res.json(airspaces);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
     router.get('/airport/:ident/runways', (req, res) => {
-        if (!req.params.ident.match(/^[A-Za-z0-9]{4}/)) {
-            res.status(400).send('Invalid ident');
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getRunways(ident).then((runways: Runway[]) => {
+                res.json(runways);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getRunways(req.params.ident.toUpperCase()).then((runways: Runway[]) => {
-            res.json(runways);
-        });
     });
 
+    // TODO is this a good API (should be able to cover it with a param on general /waypoints endpoint)
     router.get('/airport/:ident/waypoints', (req, res) => {
-        if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
-            res.status(400).send('Invalid ident');
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getWaypointsAtAirport(ident).then((waypoints: Waypoint[]) => {
+                res.json(waypoints);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getWaypointsAtAirport(req.params.ident).then((waypoints: Waypoint[]) => {
-            res.json(waypoints);
-        });
     });
 
+    // TODO is this a good API (should be able to cover it with a param on general /ndbnavaids endpoint)
     router.get('/airport/:ident/ndbs', (req, res) => {
-        if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
-            res.status(400).send('Invalid ident');
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getNdbsAtAirport(ident).then((ndbs: NdbNavaid[]) => {
+                res.json(ndbs);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getNDBsAtAirport(req.params.ident).then((ndbs: NdbNavaid[]) => {
-            res.json(ndbs);
-        });
     });
 
     router.get('/airport/:ident/ils', (req, res) => {
-        if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
-            res.status(400).send('Invalid ident');
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getIlsAtAirport(ident).then((ils: IlsNavaid[]) => {
+                res.json(ils);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getIlsAtAirport(req.params.ident).then((ils: IlsNavaid[]) => {
-            res.json(ils);
-        });
+    });
+
+    router.get('/vhfnavaids/:idents', (req, res) => {
+        try {
+            const idents = parseMultipleIdents(req.params.idents, parseVorNdbIdent);
+            const icaoCode = (req.query.icaoCode && typeof req.query.icaoCode === 'string') ? parseIcaoCode(req.query.icaoCode) : undefined;
+            const airport = (req.query.airport && typeof req.query.airport === 'string') ? parseAirportIdent(req.query.airport) : undefined;
+            const ppos = (req.query.ppos && typeof req.query.ppos === 'string') ? parsePpos(req.query.ppos) : undefined;
+
+            provider.getVhfNavaids(idents, ppos, icaoCode, airport).then((navaids: VhfNavaid[]) => {
+                res.json(navaids);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
+        }
+    });
+
+    router.get('/ndbnavaids/:idents', (req, res) => {
+        try {
+            const idents = parseMultipleIdents(req.params.idents, parseVorNdbIdent);
+            const icaoCode = (req.query.icaoCode && typeof req.query.icaoCode === 'string') ? parseIcaoCode(req.query.icaoCode) : undefined;
+            const airport = (req.query.airport && typeof req.query.airport === 'string') ? parseAirportIdent(req.query.airport) : undefined;
+            const ppos = (req.query.ppos && typeof req.query.ppos === 'string') ? parsePpos(req.query.ppos) : undefined;
+
+            provider.getNdbNavaids(idents, ppos, icaoCode, airport).then((navaids: NdbNavaid[]) => {
+                res.json(navaids);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
+        }
     });
 
     router.get('/waypoints/:idents', (req, res) => {
-        if (!req.params.idents.match(/^[A-Za-z0-9]{5}(,[A-Za-z0-9]{5})*$/)) {
-            res.status(400).send('Invalid idents');
+        try {
+            const idents = parseMultipleIdents(req.params.idents, parseFixIdent);
+            const icaoCode = (req.query.icaoCode && typeof req.query.icaoCode === 'string') ? parseIcaoCode(req.query.icaoCode) : undefined;
+            const airport = (req.query.airport && typeof req.query.airport === 'string') ? parseAirportIdent(req.query.airport) : undefined;
+            const ppos = (req.query.ppos && typeof req.query.ppos === 'string') ? parsePpos(req.query.ppos) : undefined;
+
+            provider.getWaypoints(idents, ppos, icaoCode, airport).then((navaids: Waypoint[]) => {
+                res.json(navaids);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getWaypoints(req.params.idents.split(',').map((ident) => ident.toUpperCase())).then((waypoints: Waypoint[]) => {
-            res.json(waypoints);
-        });
     });
 
-    router.get('/ndbs/:idents', (req, res) => {
-        if (!req.params.idents.match(/^[A-Za-z0-9]{1,3}(,[A-Za-z0-9]{1,3})*$/)) {
-            res.status(400).send('Invalid idents');
+    // FIXME, icao should be first since it has larger significance/scope
+    // FIXME can has multiple idents like other endpoints?
+    router.get('/fix/:ident/:icaoCode/airways', (req, res) => {
+        try {
+            const icaoCode = parseIcaoCode(req.params.icaoCode);
+            const ident = parseFixIdent(req.params.ident);
+            provider.getAirwaysByFix(ident, icaoCode).then((airways: Airway[]) => {
+                res.json(airways);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getNDBs(req.params.idents.split(',').map((ident) => ident.toUpperCase())).then((ndbs: NdbNavaid[]) => {
-            res.json(ndbs);
-        });
-    });
-
-    router.get('/fix/:ident/:icao/airways', (req, res) => {
-        if (!req.params.ident.match(/^[A-Za-z0-9]{1,5}/)) {
-            res.status(400).send('Invalid idents');
-        }
-        provider.getAirwaysByFix(req.params.ident, req.params.icao).then((airways: Airway[]) => {
-            res.json(airways);
-        });
-    });
-
-    router.get('/navaids/:idents', (req, res) => {
-        if (!req.params.idents.match(/^[A-Za-z0-9]{1,5}(,[A-Za-z0-9]{1,5})*$/)) {
-            res.status(400).send('Invalid idents');
-        }
-        provider.getNavaids(req.params.idents.split(',').map((ident) => ident.toUpperCase())).then((navaids: VhfNavaid[]) => {
-            res.json(navaids);
-        });
     });
 
     router.get('/airport/:ident/departures', (req, res) => {
-        if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
-            res.status(400).send('Invalid ident');
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getDepartures(ident).then((departures) => {
+                res.json(departures);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getDepartures(req.params.ident.toUpperCase()).then((departures) => {
-            res.json(departures);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
     router.get('/airport/:ident/arrivals', (req, res) => {
-        if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
-            res.status(400).send('Invalid ident');
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getArrivals(ident).then((arrivals) => {
+                res.json(arrivals);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getArrivals(req.params.ident.toUpperCase()).then((arrivals) => {
-            res.json(arrivals);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
     router.get('/airport/:ident/communications', (req, res) => {
-        if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
-            res.status(400).send('Invalid ident');
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getCommunicationsAtAirport(ident).then((communications) => {
+                res.json(communications);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getCommunicationsAtAirport(req.params.ident.toUpperCase()).then((communications) => {
-            res.json(communications);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
     router.get('/airport/:ident/approaches', (req, res) => {
-        if (!req.params.ident.match(/^[A-Z0-9]{4}/)) {
-            res.status(400).send('Invalid ident');
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getApproaches(ident).then((approaches) => {
+                res.json(approaches);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getApproaches(req.params.ident.toUpperCase()).then((routerroaches) => {
-            res.json(routerroaches);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
 
     router.get('/airways/:idents', (req, res) => {
-        if (!req.params.idents.match(/^[A-Z0-9]{1,5}(,[A-Z0-9]{1,5})*$/)) {
-            res.status(400).send('Invalid idents');
+        try {
+            const idents = parseMultipleIdents(req.params.idents, parseAirwayIdent);
+            provider.getAirways(idents).then((airways: Airway[]) => {
+                res.json(airways);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
         }
-        provider.getAirways(req.params.idents.split(',').map((ident) => ident.toUpperCase())).then((airways: Airway[]) => {
-            res.json(airways);
-        }).catch((err) => {
-            res.status(500).send(err);
-        });
     });
+
     return router;
 }

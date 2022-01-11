@@ -1,5 +1,6 @@
 import {
     Airport,
+    AirwayLevel,
     Approach,
     Arrival,
     Departure,
@@ -7,13 +8,16 @@ import {
     Airway,
     IlsNavaid,
     NdbNavaid,
+    NdbClass,
     VhfNavaid,
+    VhfNavaidType,
+    VorClass,
     Waypoint,
     Location,
     DatabaseIdent,
     DataInterface,
-    HeightSearchRange,
-    ZoneSearchRange, NauticalMiles, RestrictiveAirspace,
+    NauticalMiles,
+    RestrictiveAirspace,
 } from '../shared';
 import { AirportCommunication } from '../shared/types/Communication';
 import { ControlledAirspace } from '../shared/types/Airspace';
@@ -72,7 +76,7 @@ export class Database {
     }
 
     public getNDBsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]> {
-        return this.backend.getNDBsAtAirport(airportIdentifier);
+        return this.backend.getNdbsAtAirport(airportIdentifier);
     }
 
     public getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]> {
@@ -88,11 +92,11 @@ export class Database {
     }
 
     public getNavaids(idents: string[]): Promise<VhfNavaid[]> {
-        return this.backend.getNavaids(idents);
+        return this.backend.getVhfNavaids(idents);
     }
 
     public getNDBs(idents: string[]): Promise<NdbNavaid[]> {
-        return this.backend.getNDBs(idents);
+        return this.backend.getNdbNavaids(idents);
     }
 
     public async getAirways(idents: string[]): Promise<Airway[]> {
@@ -104,23 +108,23 @@ export class Database {
     }
 
     public getNearbyAirports(center: Location, range: number): Promise<Airport[]> {
-        return this.backend.getAirportsInRange(center, range);
+        return this.backend.getNearbyAirports(center, range);
     }
 
-    public getNearbyAirways(center: Location, range: number, searchRange?: HeightSearchRange): Promise<Airway[]> {
-        return this.backend.getAirwaysInRange(center, range, searchRange);
+    public getNearbyAirways(center: Location, range: number, levels?: AirwayLevel): Promise<Airway[]> {
+        return this.backend.getNearbyAirways(center, range, levels);
     }
 
-    public getNearbyNavaids(center: Location, range: number, searchRange?: HeightSearchRange): Promise<VhfNavaid[]> {
-        return this.backend.getNavaidsInRange(center, range, searchRange);
+    public getNearbyVhfNavaids(center: Location, range: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
+        return this.backend.getNearbyVhfNavaids(center, range, classes, types);
     }
 
-    public getNearbyNDBs(center: Location, range: number, searchRange?: ZoneSearchRange): Promise<NdbNavaid[]> {
-        return this.backend.getNDBsInRange(center, range, searchRange);
+    public getNearbyNdbNavaids(center: Location, range: number, classes?: NdbClass): Promise<NdbNavaid[]> {
+        return this.backend.getNearbyNdbNavaids(center, range, classes);
     }
 
-    public getWaypointsInRange(center: Location, range: number, searchRange?: ZoneSearchRange): Promise<Waypoint[]> {
-        return this.backend.getWaypointsInRange(center, range, searchRange);
+    public getWaypointsInRange(center: Location, range: number): Promise<Waypoint[]> {
+        return this.backend.getNearbyWaypoints(center, range);
     }
 
     public getControlledAirspacesInRange(center: Location, range: NauticalMiles): Promise<ControlledAirspace[]> {
@@ -131,6 +135,7 @@ export class Database {
         return this.backend.getRestrictiveAirspaceInRange(center, range);
     }
 
+    // TODO this doesn't belong here (backend/provider specific)
     /** Returns the identifier of the runway attached to the approach, null if it is not specific to any runway */
     public static approachToRunway(ident: string): string | null {
         if (!ident.match(/\d+/g)) return null;

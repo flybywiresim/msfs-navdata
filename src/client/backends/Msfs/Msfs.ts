@@ -1,11 +1,11 @@
-import { Airway, IlsNavaid, NdbNavaid, Waypoint } from '../../shared';
-import { Airport } from '../../shared/types/Airport';
-import { Approach } from '../../shared/types/Approach';
-import { Arrival } from '../../shared/types/Arrival';
-import { DatabaseItem } from '../../shared/types/Common';
-import { Departure } from '../../shared/types/Departure';
-import { Runway, RunwaySurfaceType } from '../../shared/types/Runway';
-import { DataInterface } from '../../shared/DataInterface';
+import { Airway, IlsNavaid, NdbNavaid, Waypoint } from '../../../shared';
+import { Airport } from '../../../shared/types/Airport';
+import { Approach } from '../../../shared/types/Approach';
+import { Arrival } from '../../../shared/types/Arrival';
+import { DatabaseItem } from '../../../shared/types/Common';
+import { Departure } from '../../../shared/types/Departure';
+import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
+import { DataInterface } from '../../../shared/DataInterface';
 
 type PendingRequest = {
     resolve: Function,
@@ -70,7 +70,7 @@ export class MsfsBackend implements DataInterface {
             ident: msAirport.icao.substring(7, 11),
             icaoCode: msAirport.icao.substring(0, 2),
             // Tracer wrote something weird on the next line, removed it for rollup, not sure what it was for
-            airportName: msAirport.name,
+            name: msAirport.name,
             location: { lat: msAirport.lat, lon: msAirport.lon, alt: elevation },
             longestRunwaySurfaceType: this.mapRunwaySurface(longestRunway[1]),
         };

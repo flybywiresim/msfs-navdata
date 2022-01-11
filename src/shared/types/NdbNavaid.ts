@@ -1,23 +1,38 @@
-import { DatabaseItem, Degrees, KiloHertz, Location, NauticalMiles } from './Common';
-import { VhfNavaidType } from './VhfNavaid';
+import { WaypointArea } from '..';
+import { DatabaseItem, KiloHertz, Location, NauticalMiles } from './Common';
 
 export interface NdbNavaid extends DatabaseItem {
-    frequency: KiloHertz;
+    frequency: KiloHertz,
+    location: Location,
+    class: NdbClass,
     /**
-     * Beware: this is NOT the same as magnetic variation
+     * Beat frequency oscillator required to make identifier audible
      */
-    stationDeclination: Degrees;
-    location: Location;
-    class: NdbClass;
-    type: VhfNavaidType;
+    bfoOperation: boolean,
 
-    distance?: NauticalMiles;
+    /**
+     * Distance from centre location for nearby airport query
+     */
+    distance?: NauticalMiles,
+    area: WaypointArea,
 }
 
 export enum NdbClass {
-    Unknown,
-    CompassLocator,
-    Mh,
-    H,
-    Hh,
+    Unknown = 1 << 0,
+    /**
+     * Low power/compass locator, power < 25 W
+     */
+    Low = 1 << 1,
+    /**
+     * Medium, power 25 - 50 W
+     */
+    Medium = 1 << 2,
+    /**
+     * Normal, power 50 - 1999 W
+     */
+    Normal = 1 << 3,
+    /**
+     * High, power >= 2000 W
+     */
+    High = 1 << 4,
 }

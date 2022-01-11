@@ -1,39 +1,46 @@
+import { WaypointArea } from '..';
 import { DatabaseItem, Degrees, Location, MegaHertz, NauticalMiles } from './Common';
 
 export interface VhfNavaid extends DatabaseItem {
-    frequency: MegaHertz;
-    figureOfMerit: number;
-    vorName?: string,
+    frequency: MegaHertz,
+    figureOfMerit: FigureOfMerit,
+    range: NauticalMiles,
+    name?: string,
+
     /**
      * Beware: this is NOT the same as magnetic variation
      */
-    stationDeclination: Degrees;
-    vorLocation: Location;
-    dmeLocation?: Location;
-    type: VhfNavaidType;
-    class?: VorClass;
+    stationDeclination: Degrees,
+    vorLocation: Location,
+    dmeLocation?: Location,
+    type: VhfNavaidType,
+    class?: VorClass,
+    ilsDmeBias?: NauticalMiles,
 
     /**
-     * Distance from center of search if queried using a range search
+     * distance from centre location for nearby query
      */
-    distance?: NauticalMiles;
+    distance?: NauticalMiles,
+    area: WaypointArea,
 }
 
+export type FigureOfMerit = 0 | 1 | 2 | 3;
+
 export enum VhfNavaidType {
-    Unknown,
-    Vor,
-    VorDme,
-    Dme,
-    Tacan,
-    Vortac,
-    Vot,
-    IlsDme,
-    IlsTacan,
+    Unknown = 1 << 0,
+    Vor = 1 << 1,
+    VorDme = 1 << 2,
+    Dme = 1 << 3,
+    Tacan = 1 << 4,
+    Vortac = 1 << 5,
+    Vot = 1 << 6,
+    IlsDme = 1 << 7,
+    IlsTacan = 1 << 8,
 }
 
 export enum VorClass {
-    Unknown,
-    Terminal,
-    LowAlt,
-    HighAlt,
+    Unknown = 1 << 0,
+    Terminal = 1 << 1,
+    LowAlt = 1 << 2,
+    HighAlt = 1 << 3,
 }

@@ -98,7 +98,7 @@ export enum FirUirIndicator {
 
 export interface Communication {
     communicationType: CommunicationType
-    frequency: number,
+    frequency: number, // FIXME either normalise to a common unit or document units and how to decode
     frequencyUnits: FrequencyUnits,
     callsign: string,
     location: Location,
