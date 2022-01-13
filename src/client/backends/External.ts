@@ -88,15 +88,15 @@ export class ExternalBackend implements DataInterface {
     }
 
     getVhfNavaids(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
-        return this.fetchApi(`vhfnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}}`);
+        return this.fetchApi(`vhfnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
     }
 
     getNdbNavaids(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
-        return this.fetchApi(`ndbnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}}`);
+        return this.fetchApi(`ndbnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
     }
 
     getWaypoints(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
-        return this.fetchApi(`waypoints/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}}`);
+        return this.fetchApi(`waypoints/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
     }
 
     getNearbyAirports(center: Location, range: NauticalMiles, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
