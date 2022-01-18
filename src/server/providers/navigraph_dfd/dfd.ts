@@ -434,7 +434,7 @@ export class NavigraphProvider implements DataInterface {
 
         if (longitudeCrosses) {
             sql = `${prefix}latitude >= ? AND ${prefix}latitude <= ? AND (${prefix}longitude >= ? OR ${prefix}longitude <= ?)`;
-            params = [southWestCorner.lat, northEastCorner.lat, southWestCorner.lat, northEastCorner.lat];
+            params = [southWestCorner.lat, northEastCorner.lat, southWestCorner.long, northEastCorner.long];
         } else if (Math.max(southWestCorner.lat, northEastCorner.lat) > 80) {
             // getting too close to or crossing the north pole... we need to just take all items above the lowest latitude and filter them ourselves later
             sql = `${prefix}latitude >= ?`;
