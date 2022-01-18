@@ -1,4 +1,5 @@
 import express, { Router } from 'express';
+import { Coordinates } from 'msfs-geo';
 import { NavigraphProvider } from './providers/navigraph_dfd/dfd';
 import { DatabaseIdent } from '../shared/types/DatabaseIdent';
 import { Airport } from '../shared/types/Airport';
@@ -25,10 +26,9 @@ function errorResponse(error: any, res: any, development: boolean = false) {
             console.warn(error);
         }
         return res.status(400).json(error.json);
-    } else {
-        console.error(error);
-        return res.status(500).json({ error: (development && error instanceof Error) ? error.message : 'Internal server error' });
     }
+    console.error(error);
+    return res.status(500).json({ error: (development && error instanceof Error) ? error.message : 'Internal server error' });
 }
 
 function parseFlagOptionList(input: string, options: Record<string, number>): number {
@@ -40,12 +40,12 @@ function parseFlagOptionList(input: string, options: Record<string, number>): nu
     }, 0);
 }
 
-function parsePpos(ppos: string): { lat: number, lon: number } {
+function parsePpos(ppos: string): Coordinates {
     if (!ppos.match(/^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$/)) {
         throw new InputError(`Invalid ppos "${ppos}"`);
     }
-    const [lat, lon] = ppos.split(',').map((v) => parseFloat(v));
-    return { lat, lon };
+    const [lat, long] = ppos.split(',').map((v) => parseFloat(v));
+    return { lat, long };
 }
 
 function parseRange(range: string): number {

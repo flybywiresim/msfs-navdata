@@ -1,4 +1,5 @@
-import { DatabaseItem, Location, NauticalMiles } from './Common';
+import { Coordinates, NauticalMiles } from 'msfs-geo';
+import { DatabaseItem } from './Common';
 
 export enum WaypointArea {
     Enroute,
@@ -6,7 +7,7 @@ export enum WaypointArea {
 }
 
 export interface Waypoint extends DatabaseItem {
-    location: Location,
+    location: Coordinates,
     name?: string,
     area: WaypointArea,
     // TODO more...

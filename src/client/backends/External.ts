@@ -1,3 +1,4 @@
+import { Coordinates, NauticalMiles } from 'msfs-geo';
 import {
     Airport,
     Airway,
@@ -8,8 +9,6 @@ import {
     Runway,
     DatabaseIdent,
     IlsNavaid,
-    Location,
-    NauticalMiles,
     NdbClass,
     NdbNavaid,
     RunwaySurfaceType,
@@ -87,36 +86,36 @@ export class ExternalBackend implements DataInterface {
         return this.fetchApi(`airport/${airportIdentifier}/communications`);
     }
 
-    getVhfNavaids(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
+    getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
         return this.fetchApi(`vhfnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
     }
 
-    getNdbNavaids(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
+    getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
         return this.fetchApi(`ndbnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
     }
 
-    getWaypoints(idents: string[], ppos?: Location, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
+    getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
         return this.fetchApi(`waypoints/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
     }
 
-    getNearbyAirports(center: Location, range: NauticalMiles, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
-        return this.fetchApi(`nearby/airports/${center.lat},${center.lon}/${range}${this.formatQuery({ longestRunwaySurfaces })}`);
+    getNearbyAirports(center: Coordinates, range: NauticalMiles, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
+        return this.fetchApi(`nearby/airports/${center.lat},${center.long}/${range}${this.formatQuery({ longestRunwaySurfaces })}`);
     }
 
-    getNearbyAirways(center: Location, range: NauticalMiles, levels?: AirwayLevel): Promise<Airway[]> {
-        return this.fetchApi(`nearby/airways/${center.lat},${center.lon}/${range}${this.formatQuery({ levels })}`);
+    getNearbyAirways(center: Coordinates, range: NauticalMiles, levels?: AirwayLevel): Promise<Airway[]> {
+        return this.fetchApi(`nearby/airways/${center.lat},${center.long}/${range}${this.formatQuery({ levels })}`);
     }
 
-    getNearbyVhfNavaids(center: Location, range?: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
-        return this.fetchApi(`nearby/vhfnavaids/${center.lat},${center.lon}/${range}${this.formatQuery({ classes, types })}`);
+    getNearbyVhfNavaids(center: Coordinates, range?: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
+        return this.fetchApi(`nearby/vhfnavaids/${center.lat},${center.long}/${range}${this.formatQuery({ classes, types })}`);
     }
 
-    getNearbyNdbNavaids(center: Location, range?: number, classes?: NdbClass): Promise<NdbNavaid[]> {
-        return this.fetchApi(`nearby/ndbnavaids/${center.lat},${center.lon}/${range}${this.formatQuery({ classes })}`);
+    getNearbyNdbNavaids(center: Coordinates, range?: number, classes?: NdbClass): Promise<NdbNavaid[]> {
+        return this.fetchApi(`nearby/ndbnavaids/${center.lat},${center.long}/${range}${this.formatQuery({ classes })}`);
     }
 
-    getNearbyWaypoints(center: Location, range?: number): Promise<Waypoint[]> {
-        return this.fetchApi(`nearby/waypoints/${center.lat},${center.lon}/${range}`);
+    getNearbyWaypoints(center: Coordinates, range?: number): Promise<Waypoint[]> {
+        return this.fetchApi(`nearby/waypoints/${center.lat},${center.long}/${range}`);
     }
 
     private formatQuery(queries: Record<string, any>): string {
@@ -133,11 +132,11 @@ export class ExternalBackend implements DataInterface {
         return query.length > 0 ? `?${query.join('&')}` : '';
     }
 
-    getControlledAirspaceInRange(center: Location, range: NauticalMiles): Promise<ControlledAirspace[]> {
-        return this.fetchApi(`nearby/airspaces/controlled/${center.lat},${center.lon}/${range}/`);
+    getControlledAirspaceInRange(center: Coordinates, range: NauticalMiles): Promise<ControlledAirspace[]> {
+        return this.fetchApi(`nearby/airspaces/controlled/${center.lat},${center.long}/${range}/`);
     }
 
-    getRestrictiveAirspaceInRange(center: Location, range: NauticalMiles): Promise<RestrictiveAirspace[]> {
-        return this.fetchApi(`nearby/airspaces/restrictive/${center.lat},${center.lon}/${range}/`);
+    getRestrictiveAirspaceInRange(center: Coordinates, range: NauticalMiles): Promise<RestrictiveAirspace[]> {
+        return this.fetchApi(`nearby/airspaces/restrictive/${center.lat},${center.long}/${range}/`);
     }
 }

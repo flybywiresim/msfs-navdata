@@ -71,7 +71,7 @@ export class MsfsBackend implements DataInterface {
             icaoCode: msAirport.icao.substring(0, 2),
             // Tracer wrote something weird on the next line, removed it for rollup, not sure what it was for
             name: msAirport.name,
-            location: { lat: msAirport.lat, lon: msAirport.lon, alt: elevation },
+            location: { lat: msAirport.lat, long: msAirport.long, alt: elevation },
             longestRunwaySurfaceType: this.mapRunwaySurface(longestRunway[1]),
         };
     }

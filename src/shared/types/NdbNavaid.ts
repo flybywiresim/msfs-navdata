@@ -1,9 +1,10 @@
+import { Coordinates, NauticalMiles } from 'msfs-geo';
 import { WaypointArea } from '..';
-import { DatabaseItem, KiloHertz, Location, NauticalMiles } from './Common';
+import { DatabaseItem, KiloHertz } from './Common';
 
 export interface NdbNavaid extends DatabaseItem {
     frequency: KiloHertz,
-    location: Location,
+    location: Coordinates,
     class: NdbClass,
     /**
      * Beat frequency oscillator required to make identifier audible

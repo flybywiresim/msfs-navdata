@@ -1,4 +1,5 @@
-import { DatabaseItem, Feet, NauticalMiles } from './Common';
+import { Feet, NauticalMiles } from 'msfs-geo';
+import { DatabaseItem } from './Common';
 import { Waypoint } from './Waypoint';
 
 export enum AirwayType {
