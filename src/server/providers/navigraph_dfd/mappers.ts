@@ -1132,8 +1132,9 @@ export class DFDMappers {
             return NdbClass.Normal;
         case 'L': // < 25 W
             return NdbClass.Low;
+        default:
+            return NdbClass.Unknown;
         }
-        return NdbClass.Unknown;
     }
 
     public static mapCoordinates(lat: number, long: number): Coordinates {
@@ -1145,11 +1146,15 @@ export class DFDMappers {
     }
 
     private static isTerminalWaypoint(waypoint: NaviWaypoint): waypoint is NaviTerminalWaypoint {
-        return waypoint.hasOwnProperty('regionCode') && waypoint.regionCode !== null;
+        // @ts-ignore
+        // eslint-disable-next-line no-prototype-builtins,dot-notation
+        return waypoint.hasOwnProperty('regionCode') && waypoint['regionCode'] !== null;
     }
 
     private static isTerminalNdbNavaid(navaid: NaviNdbNavaid): navaid is NaviTerminalNdbNavaid {
-        return navaid.hasOwnProperty('airportIdentifier') && navaid.airportIdentifier !== null;
+        // @ts-ignore
+        // eslint-disable-next-line no-prototype-builtins,dot-notation
+        return navaid.hasOwnProperty('airportIdentifier') && navaid['airportIdentifier'] !== null;
     }
 
     private static isTerminalVhfNavaid(navaid: NaviVhfNavaid): boolean {
