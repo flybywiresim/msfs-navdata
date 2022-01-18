@@ -100,7 +100,7 @@ export class DFDMappers {
             frequency: ils.llzFrequency,
             stationDeclination: 0,
             locLocation: { lat: ils.llzLatitude, long: ils.llzLongitude },
-            gsLocation: { lat: ils.gsLatitude, long: ils.gsLongitude },
+            gsLocation: { lat: ils.gsLatitude, long: ils.gsLongitude, alt: ils.gsElevation },
             runwayIdent: ils.runwayIdentifier,
             locBearing: ils.llzBearing,
             gsSlope: ils.gsAngle,

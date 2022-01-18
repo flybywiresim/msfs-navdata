@@ -1,4 +1,4 @@
-import { Coordinates, Degrees, NauticalMiles } from 'msfs-geo';
+import { Coordinates, Degrees, Feet, NauticalMiles } from 'msfs-geo';
 import { ElevatedCoordinates, WaypointArea } from '..';
 import { DatabaseItem, MegaHertz } from './Common';
 
@@ -13,7 +13,7 @@ export interface VhfNavaid extends DatabaseItem {
      */
     stationDeclination: Degrees,
     vorLocation: Coordinates,
-    dmeLocation?: ElevatedCoordinates,
+    dmeLocation?: Coordinates & { alt?: Feet },
     type: VhfNavaidType,
     class?: VorClass,
     ilsDmeBias?: NauticalMiles,

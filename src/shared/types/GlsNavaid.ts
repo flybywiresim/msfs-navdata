@@ -1,11 +1,11 @@
-import { Coordinates, Degrees, DegreesMagnetic } from 'msfs-geo';
-import { DatabaseItem, LsCategory } from './Common';
+import { Degrees, DegreesMagnetic } from 'msfs-geo';
+import { DatabaseItem, ElevatedCoordinates, LsCategory } from './Common';
 
 export interface GlsNavaid extends DatabaseItem {
     channel: number;
     category: LsCategory;
     runwayIdent: string;
-    location: Coordinates;
+    location: ElevatedCoordinates;
     bearing: DegreesMagnetic;
     slope: Degrees;
     type: GlsType;
