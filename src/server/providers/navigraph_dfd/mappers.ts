@@ -723,7 +723,6 @@ export class DFDMappers {
             if (!index || fixes[index - 1]?.waypointDescriptionCode[1] === 'E') {
                 airways.push({
                     databaseId: DFDMappers.airwayDatabaseIdent(fix),
-                    icaoCode: fix.icaoCode,
                     ident: fix.routeIdentifier,
                     level: this.mapAirwayLevel(fix.flightlevel),
                     fixes: [],
@@ -738,7 +737,7 @@ export class DFDMappers {
                 databaseId: `W${fix.icaoCode}    ${fix.waypointIdentifier}`, // TODO function
                 ident: fix.waypointIdentifier,
                 location: { lat: fix.waypointLatitude, long: fix.waypointLongitude },
-                area: WaypointArea.Unknown, // TODO
+                area: WaypointArea.Enroute, // TODO
             });
         });
         return airways;
@@ -1172,7 +1171,7 @@ export class DFDMappers {
     }
 
     public static airwayDatabaseIdent(airway: NaviAirwayFix): string {
-        return `E${airway.icaoCode}    ${airway.routeIdentifier}`;
+        return `E      ${airway.routeIdentifier}${airway.waypointIdentifier}`;
     }
 
     public static waypointDatabaseId(waypoint: NaviWaypoint): string {
