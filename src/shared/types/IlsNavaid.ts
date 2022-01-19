@@ -1,5 +1,5 @@
-import { Coordinates, Degrees, DegreesMagnetic } from 'msfs-geo';
-import { DatabaseItem, ElevatedCoordinates, KiloHertz, LsCategory } from './Common';
+import { Coordinates, Degrees, DegreesMagnetic, Feet } from 'msfs-geo';
+import { DatabaseItem, KiloHertz, LsCategory } from './Common';
 
 export interface IlsNavaid extends DatabaseItem {
     frequency: KiloHertz;
@@ -7,7 +7,7 @@ export interface IlsNavaid extends DatabaseItem {
     runwayIdent: string;
     locLocation: Coordinates;
     locBearing: DegreesMagnetic;
-    gsLocation?: ElevatedCoordinates;
+    gsLocation?: Coordinates & { alt?: Feet };
     gsSlope?: Degrees;
     /**
      * Beware: this is NOT the same as magnetic variation
