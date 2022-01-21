@@ -1,5 +1,5 @@
-import { Degrees } from '..';
-import { DatabaseItem, DegreesMagnetic, Feet, Knots, Minutes, NauticalMiles } from './Common';
+import { Degrees, DegreesMagnetic, Feet, NauticalMiles } from 'msfs-geo';
+import { DatabaseItem, Knots, Minutes } from './Common';
 import { NdbNavaid } from './NdbNavaid';
 import { VhfNavaid } from './VhfNavaid';
 import { Waypoint } from './Waypoint';

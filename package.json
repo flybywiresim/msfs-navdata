@@ -32,5 +32,8 @@
   },
   "peerDependencies": {
     "node-fetch": "^3.0.0"
+  },
+  "dependencies": {
+    "msfs-geo": "^0.1.0-alpha2"
   }
 }

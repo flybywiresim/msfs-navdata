@@ -10,5 +10,6 @@ module.exports = {
     rules: {
         "no-undef": "off",
         "import/no-unresolved": "off",
+        "no-bitwise": "off",
     }
 };

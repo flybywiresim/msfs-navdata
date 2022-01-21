@@ -1,4 +1,4 @@
-import { Location } from './Common';
+import { Coordinates } from 'msfs-geo';
 
 export enum CommunicationType {
     Unknown,
@@ -101,7 +101,7 @@ export interface Communication {
     frequency: number, // FIXME either normalise to a common unit or document units and how to decode
     frequencyUnits: FrequencyUnits,
     callsign: string,
-    location: Location,
+    location: Coordinates,
 }
 
 export interface AirportCommunication extends Communication {

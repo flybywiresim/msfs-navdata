@@ -1,19 +1,12 @@
+import { Coordinates, Feet } from 'msfs-geo';
 import { ProcedureLeg } from './ProcedureLeg';
 
-export type Degrees = number;
-export type DegreesMagnetic = Degrees;
-export type DegreesTrue = Degrees;
-export type Feet = number;
 export type FeetPerMinute = number;
 export type FlightLevel = number;
 export type KiloHertz = number;
 export type Knots = number;
-export type Latitude = Degrees;
-export type Longitude = Degrees;
 export type MegaHertz = number;
-export type Metres = number;
 export type Minutes = number;
-export type NauticalMiles = number;
 
 export interface DatabaseItem {
     /**
@@ -29,10 +22,8 @@ export interface DatabaseItem {
     ident: string,
 }
 
-export interface Location {
-    lat: Latitude,
-    lon: Longitude,
-    alt?: Feet,
+export interface ElevatedCoordinates extends Coordinates {
+    alt: Feet,
 }
 
 export enum LsCategory {

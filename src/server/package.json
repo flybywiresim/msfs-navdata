@@ -15,7 +15,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "express": "^4.17.1",
-    "geolib": "^3.3.1",
+    "msfs-geo": "^0.1.0-alpha2",
     "sql.js": "^1.6.2"
   },
   "devDependencies": {

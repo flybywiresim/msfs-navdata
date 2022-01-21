@@ -1,4 +1,9 @@
-import { Location, Degrees, DegreesTrue, DegreesMagnetic, Feet, Metres, LsCategory, DatabaseItem } from './Common';
+import { Degrees, DegreesMagnetic, DegreesTrue, Feet, Metres } from 'msfs-geo';
+import {
+    LsCategory,
+    DatabaseItem,
+    ElevatedCoordinates,
+} from './Common';
 
 export interface Runway extends DatabaseItem {
     airportIdent: string,
@@ -11,7 +16,7 @@ export interface Runway extends DatabaseItem {
     /**
      * Location, including altitude (if available), of the threshold
      */
-    thresholdLocation: Location,
+    thresholdLocation: ElevatedCoordinates,
     thresholdCrossingHeight: Feet,
     length: Metres,
     width: Metres,

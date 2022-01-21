@@ -1,4 +1,4 @@
-import { DegreesTrue, Level, Location, NauticalMiles } from './Common';
+import { Coordinates, DegreesTrue, NauticalMiles } from 'msfs-geo';
 
 export enum ControlledAirspaceType {
     ClassC,
@@ -37,9 +37,9 @@ export enum PathType {
 export interface BoundaryPath {
     sequenceNumber: number;
     pathType: PathType;
-    location?: Location;
+    location?: Coordinates;
     arc?: {
-        origin: Location;
+        origin: Coordinates;
         distance: NauticalMiles;
         bearing?: DegreesTrue;
     };
