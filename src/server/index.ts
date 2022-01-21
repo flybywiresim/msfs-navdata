@@ -419,6 +419,17 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         }
     });
 
+    router.get('/airport/:ident/holds', (req, res) => {
+        try {
+            const ident = parseAirportIdent(req.params.ident);
+            provider.getHolds(ident).then((holds) => {
+                res.json(holds);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
+        }
+    });
+
     router.get('/airways/:idents', (req, res) => {
         try {
             const idents = parseMultipleIdents(req.params.idents, parseAirwayIdent);

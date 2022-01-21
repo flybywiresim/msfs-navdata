@@ -16,6 +16,7 @@ import {
     IlsNavaid,
     NdbClass,
     NdbNavaid,
+    ProcedureLeg,
     RestrictiveAirspace,
     Runway,
     VhfNavaid,
@@ -37,6 +38,7 @@ import { ControlledAirspace as NaviControlledAirspace } from './types/Controlled
 import { RestrictiveAirspace as NaviRestrictiveAirspace } from './types/RestrictiveAirspace';
 import { LocalizerGlideslope as NaviIls } from './types/LocalizerGlideslopes';
 import { VHFNavaid as NaviVhfNavaid } from './types/VHFNavaids';
+import { Holding as NaviHolding } from './types/Holdings';
 
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
@@ -217,6 +219,17 @@ export class NavigraphProvider implements DataInterface {
             const rows = query(stmt);
             const approachLegs: NaviProcedure[] = NavigraphProvider.toCamel(rows);
             return (this.mappers.mapApproaches(approachLegs, airports[0]));
+        } finally {
+            stmt.free();
+        }
+    }
+
+    async getHolds(airportIdentifier: string): Promise<ProcedureLeg[]> {
+        const stmt = this.database.prepare('SELECT * FROM tbl_holdings WHERE region_code=$ident', { $ident: airportIdentifier });
+        try {
+            const rows = query(stmt);
+            const holds: NaviHolding[] = NavigraphProvider.toCamel(rows);
+            return (this.mappers.mapHolds(holds));
         } finally {
             stmt.free();
         }

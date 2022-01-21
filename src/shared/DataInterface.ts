@@ -12,6 +12,7 @@ import { Airway, AirwayLevel } from './types/Airway';
 import { VhfNavaid, VhfNavaidType, VorClass } from './types/VhfNavaid';
 import { AirportCommunication } from './types/Communication';
 import { ControlledAirspace, RestrictiveAirspace } from './types/Airspace';
+import { ProcedureLeg } from '.';
 
 // FIXME move to more appropriate place..
 export enum NavaidArea {
@@ -26,6 +27,7 @@ export interface DataInterface {
     getDepartures(airportIdentifier: string): Promise<Departure[]>;
     getArrivals(airportIdentifier: string): Promise<Arrival[]>;
     getApproaches(airportIdentifier: string): Promise<Approach[]>;
+    getHolds(airportIdentifier: string): Promise<ProcedureLeg[]>,
     getRunways(airportIdentifier: string): Promise<Runway[]>;
 
     getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]>;

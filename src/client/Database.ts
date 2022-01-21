@@ -10,6 +10,7 @@ import {
     IlsNavaid,
     NdbNavaid,
     NdbClass,
+    ProcedureLeg,
     VhfNavaid,
     VhfNavaidType,
     VorClass,
@@ -68,6 +69,10 @@ export class Database {
                 .find((trans) => Database.approachToRunway(approach.ident) === null || trans.ident === Database.approachToRunway(approach.ident)));
         }
         return approaches;
+    }
+
+    public async getHolds(fixIdentifier: string, airportIdentifier: string): Promise<ProcedureLeg[]> {
+        return (await this.backend.getHolds(airportIdentifier)).filter((hold) => hold.ident === fixIdentifier);
     }
 
     public getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {

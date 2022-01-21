@@ -153,6 +153,13 @@ export class MsfsBackend implements DataInterface {
         throw new Error('computer says no');
     }
 
+    /**
+     * MSFS cannot provide these at this time
+     */
+    public async getHolds(_airportIdentifier: string): Promise<ProcedureLeg[]> {
+        return [];
+    }
+
     getNdbsAtAirport(ident: string): Promise<NdbNavaid[]> {
         return Promise.resolve([]);
     }

@@ -11,6 +11,7 @@ import {
     IlsNavaid,
     NdbClass,
     NdbNavaid,
+    ProcedureLeg,
     RunwaySurfaceType,
     VhfNavaid,
     VhfNavaidType,
@@ -60,6 +61,10 @@ export class ExternalBackend implements DataInterface {
 
     getApproaches(airportIdentifier: string): Promise<Approach[]> {
         return this.fetchApi(`airport/${airportIdentifier}/approaches`);
+    }
+
+    getHolds(airportIdentifier: string): Promise<ProcedureLeg[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/holds`);
     }
 
     getAirways(idents: string[]): Promise<Airway[]> {

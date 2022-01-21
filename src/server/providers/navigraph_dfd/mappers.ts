@@ -81,6 +81,7 @@ import {
     RestrictiveAirspace as NaviRestrictiveAirspace,
     RestrictiveAirspaceType as NaviRestrictiveAirspaceType,
 } from './types/RestrictiveAirspace';
+import { Holding as NaviHolding } from './types/Holdings';
 
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
@@ -692,6 +693,49 @@ export class DFDMappers {
         });
 
         return Array.from(approaches.values());
+    }
+
+    public mapHolds(holds: NaviHolding[]): ProcedureLeg[] {
+        return holds.map((hold) => {
+            let alt1;
+            let alt2;
+            let altDesc;
+            if (hold.minimumAltitude && hold.maximumAltitude) {
+                altDesc = AltitudeDescriptor.BetweenAlt1Alt2;
+                alt1 = hold.maximumAltitude;
+                alt2 = hold.minimumAltitude;
+            } else if (hold.minimumAltitude) {
+                altDesc = AltitudeDescriptor.AtOrAboveAlt1;
+                alt1 = hold.minimumAltitude;
+            } else if (hold.maximumAltitude) {
+                altDesc = AltitudeDescriptor.AtOrBelowAlt1;
+                alt1 = hold.maximumAltitude;
+            }
+
+            return {
+                databaseId: `Z${hold.icaoCode ?? '  '}${hold.regionCode}${hold.waypointIdentifier}${hold.duplicateIdentifier}`,
+                icaoCode: hold.icaoCode,
+                procedureIdent: hold.waypointIdentifier,
+                ident: hold.waypointIdentifier,
+                type: LegType.HM,
+                overfly: false,
+                waypoint: {
+                    ident: hold.waypointIdentifier,
+                    databaseId: `W${hold.icaoCode ?? '  '}${hold.regionCode}${hold.waypointIdentifier}`,
+                    location: { lat: hold.waypointLatitude, long: hold.waypointLongitude },
+                    area: WaypointArea.Terminal,
+                },
+                length: hold.legLength,
+                lengthTime: hold.legTime,
+                altitudeDescriptor: altDesc,
+                altitude1: alt1,
+                altitude2: alt2,
+                speed: hold.holdingSpeed ?? undefined,
+                speedDescriptor: hold.holdingSpeed ? SpeedDescriptor.Mandatory : undefined,
+                turnDirection: hold.turnDirection,
+                magneticCourse: hold.inboundHoldingCourse,
+            };
+        });
     }
 
     public mapAirwayLevel(level: string): AirwayLevel {
