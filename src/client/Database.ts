@@ -10,6 +10,7 @@ import {
     IlsNavaid,
     NdbNavaid,
     NdbClass,
+    Marker,
     ProcedureLeg,
     VhfNavaid,
     VhfNavaidType,
@@ -77,6 +78,10 @@ export class Database {
 
     public getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {
         return this.backend.getIlsAtAirport(airportIdentifier);
+    }
+
+    public getLsMarkers(airportIdentifier: string, runwayIdentifier: string, llzIdentifier: string): Promise<Marker[]> {
+        return this.backend.getLsMarkers(airportIdentifier, runwayIdentifier, llzIdentifier);
     }
 
     public getNDBsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]> {

@@ -13,6 +13,7 @@ import { VhfNavaid, VhfNavaidType, VorClass } from './types/VhfNavaid';
 import { AirportCommunication } from './types/Communication';
 import { ControlledAirspace, RestrictiveAirspace } from './types/Airspace';
 import { ProcedureLeg } from '.';
+import { Marker } from './types/Marker';
 
 // FIXME move to more appropriate place..
 export enum NavaidArea {
@@ -32,8 +33,10 @@ export interface DataInterface {
 
     getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]>;
     getNdbsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]>;
+    // TODO generalise this to all LS types?
     getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]>;
     getCommunicationsAtAirport(airportIdentifier: string): Promise<AirportCommunication[]>
+    getLsMarkers(airportIdentifier: string, runwayIdentifier: string, lsIdentifier: string): Promise<Marker[]>;
 
     getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]>;
     getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]>;

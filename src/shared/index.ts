@@ -9,6 +9,7 @@ export * from './types/DatabaseIdent';
 export * from './types/Departure';
 export * from './types/GlsNavaid';
 export * from './types/IlsNavaid';
+export * from './types/Marker';
 export * from './types/NdbNavaid';
 export * from './types/ProcedureLeg';
 export * from './types/Runway';

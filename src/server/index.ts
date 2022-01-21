@@ -62,6 +62,13 @@ function parseAirportIdent(ident: string): string {
     return ident.toUpperCase();
 }
 
+function parseRunwayIdent(ident: string): string {
+    if (!ident.match(/^[Rr][Ww][0-9]{2}[LCRTlcrt]?$/)) {
+        throw new InputError(`Invalid runway ident "${ident}""`);
+    }
+    return ident.toUpperCase();
+}
+
 function parseFixIdent(ident: string): string {
     if (!ident.match(/^[A-Za-z0-9]{1,5}/)) { // TODO min length?
         throw new InputError(`Invalid fix ident "${ident}"`);
@@ -424,6 +431,19 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
             const ident = parseAirportIdent(req.params.ident);
             provider.getHolds(ident).then((holds) => {
                 res.json(holds);
+            }).catch((error) => errorResponse(error, res));
+        } catch (error) {
+            errorResponse(error, res);
+        }
+    });
+
+    router.get('/airport/:ident/ls/:ls/markers/:runway', (req, res) => {
+        try {
+            const airport = parseAirportIdent(req.params.ident);
+            const ls = parseVorNdbIdent(req.params.ls);
+            const runway = parseRunwayIdent(req.params.runway);
+            provider.getLsMarkers(airport, runway, ls).then((markers) => {
+                res.json(markers);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
             errorResponse(error, res);

@@ -9,6 +9,7 @@ import {
     Runway,
     DatabaseIdent,
     IlsNavaid,
+    Marker,
     NdbClass,
     NdbNavaid,
     ProcedureLeg,
@@ -85,6 +86,10 @@ export class ExternalBackend implements DataInterface {
 
     getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {
         return this.fetchApi(`airport/${airportIdentifier}/ils`);
+    }
+
+    getLsMarkers(airportIdentifier: string, runwayIdentifier: string, lsIdentifier: string): Promise<Marker[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/ls/${lsIdentifier}/markers/${runwayIdentifier}`);
     }
 
     getCommunicationsAtAirport(airportIdentifier: string): Promise<AirportCommunication[]> {

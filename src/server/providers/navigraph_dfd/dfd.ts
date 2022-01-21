@@ -14,6 +14,7 @@ import {
     DataInterface,
     Departure,
     IlsNavaid,
+    Marker,
     NdbClass,
     NdbNavaid,
     ProcedureLeg,
@@ -39,6 +40,7 @@ import { RestrictiveAirspace as NaviRestrictiveAirspace } from './types/Restrict
 import { LocalizerGlideslope as NaviIls } from './types/LocalizerGlideslopes';
 import { VHFNavaid as NaviVhfNavaid } from './types/VHFNavaids';
 import { Holding as NaviHolding } from './types/Holdings';
+import { LocalizerMarker as NaviMarker } from './types/LocalizerMarker';
 
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
@@ -131,6 +133,13 @@ export class NavigraphProvider implements DataInterface {
         const stmt = this.database.prepare(sql, { $ident: airportIdentifier });
         const rows = NavigraphProvider.toCamel(query(stmt)) as NaviIls[];
         return rows.map((ils) => this.mappers.mapIls(ils));
+    }
+
+    async getLsMarkers(airportIdentifier: string, runwayIdentifier: string, lsIdentifier: string): Promise<Marker[]> {
+        const sql = 'SELECT * FROM tbl_localizer_marker WHERE airport_identifier = $airport AND runway_identifier = $runway AND llz_identifier = $ls';
+        const stmt = this.database.prepare(sql, { $airport: airportIdentifier, $runway: runwayIdentifier, $ls: lsIdentifier });
+        const rows = NavigraphProvider.toCamel(query(stmt)) as NaviMarker[];
+        return rows.map((marker) => this.mappers.mapLsMarker(marker));
     }
 
     // TODO delete (use getWaypoints with airportIdentifier set)

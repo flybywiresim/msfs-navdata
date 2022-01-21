@@ -6,6 +6,7 @@ import { DatabaseItem } from '../../../shared/types/Common';
 import { Departure } from '../../../shared/types/Departure';
 import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
 import { DataInterface } from '../../../shared/DataInterface';
+import { Marker } from '../../../shared/types/Marker';
 
 type PendingRequest = {
     resolve: Function,
@@ -166,5 +167,12 @@ export class MsfsBackend implements DataInterface {
 
     getWaypointsAtAirport(ident: string): Promise<Waypoint[]> {
         return Promise.resolve([]);
+    }
+
+    /**
+     * MSFS cannot provide these at this time
+     */
+    public async getLsMarkers(_airportIdentifier: string, _runwayIdentifier: string, _llzIdentifier: string): Promise<Marker[]> {
+        return [];
     }
 }

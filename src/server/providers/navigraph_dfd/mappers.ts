@@ -20,6 +20,8 @@ import {
     IlsNavaid,
     LegType,
     LsCategory,
+    Marker,
+    MarkerType,
     NdbClass,
     NdbNavaid,
     ProcedureLeg,
@@ -82,6 +84,7 @@ import {
     RestrictiveAirspaceType as NaviRestrictiveAirspaceType,
 } from './types/RestrictiveAirspace';
 import { Holding as NaviHolding } from './types/Holdings';
+import { LocalizerMarker as NaviMarker } from './types/LocalizerMarker';
 
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
@@ -107,6 +110,20 @@ export class DFDMappers {
             gsSlope: ils.gsAngle,
             category: this.mapLsCategory(ils.ilsMlsGlsCategory),
         };
+    }
+
+    public mapLsMarker(marker: NaviMarker): Marker {
+        return {
+            icaoCode: marker.icaoCode,
+            databaseId: `M${marker.icaoCode}${marker.airportIdentifier}${marker.markerIdentifier}`,
+            airportIdentifier: marker.airportIdentifier,
+            runwayIdentifier: marker.runwayIdentifier,
+            lsIdentifier: marker.llzIdentifier,
+            ident: marker.markerIdentifier,
+            location: { lat: marker.markerLatitude, long: marker.markerLongitude },
+            type: marker.markerType.substring(1) as MarkerType,
+            locator: marker.markerType.charAt(0) === 'L',
+        }
     }
 
     public mapAirport(airport: NaviAirport): Airport {
