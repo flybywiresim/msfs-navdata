@@ -6,15 +6,15 @@ export type Holding = {
     /** Location indicator of the waypoint */
     icaoCode: string;
     /** Navaid or Waypoint identifier */
-    fixIdentifier: string;
+    waypointIdentifier: string;
     /** Holding name */
     holdingName: string;
     /** Navaid or Waypoint latitude in degrees decimal floating point (N positive, S negative) */
-    fixLatitude: number;
+    waypointLatitude: number;
     /** Navaid or Waypoint longitude in degrees decimal floating point (E positive, W negative) */
-    fixLongitude: number;
+    waypointLongitude: number;
     /** Used for more than one holding patterns for a single Navaid or Waypoint */
-    dublicateIdentifier: string;
+    duplicateIdentifier: string;
     /** Inbound magnetic course in degrees floating point */
     inboundHoldingCourse: number;
     /** Holding turn direction */
