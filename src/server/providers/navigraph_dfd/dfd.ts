@@ -78,23 +78,31 @@ export class NavigraphProvider implements DataInterface {
 
     // TODO support filtering on area (terminal or enroute)
     async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
-        let sql = `
-            SELECT area_code, NULL as region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, waypoint_usage, waypoint_latitude, waypoint_longitude
-            FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
-            UNION ALL
+        const params = idents.slice();
+
+        let queries = [`
             SELECT area_code, region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, NULL as waypoint_usage, waypoint_latitude, waypoint_longitude
             FROM tbl_terminal_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
-        `;
-        const params = idents.slice();
-        if (icaoCode) {
-            sql += ' AND icao_code = ?';
-            params.push(icaoCode);
-        }
-        if (airportIdent) {
-            sql += ' AND airport_identifier = ?';
+        `];
+        
+        if (airportIdent === undefined) {
+            queries.push(`
+                SELECT area_code, NULL as region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, waypoint_usage, waypoint_latitude, waypoint_longitude
+                FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
+            `);
+        } else {
+            queries.forEach((_, i) => queries[i] += ' AND region_code = ?')
             params.push(airportIdent);
         }
-        const stmt = this.database.prepare(sql, params.concat(params));
+        
+        if (icaoCode) {
+            queries.forEach((_, i) => queries[i] += ' AND icao_code = ?')
+            params.push(icaoCode);
+        }
+
+        const sql = queries.join(' UNION ALL ');
+
+        const stmt = this.database.prepare(sql, [].concat(... new Array(queries.length).fill(params)));
         try {
             const rows = query(stmt);
             const navaids: NaviWaypoint[] = NavigraphProvider.toCamel(rows);
