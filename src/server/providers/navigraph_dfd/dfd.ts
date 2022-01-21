@@ -80,29 +80,33 @@ export class NavigraphProvider implements DataInterface {
     async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
         const params = idents.slice();
 
-        let queries = [`
+        const queries = [`
             SELECT area_code, region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, NULL as waypoint_usage, waypoint_latitude, waypoint_longitude
             FROM tbl_terminal_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
         `];
-        
+
         if (airportIdent === undefined) {
             queries.push(`
                 SELECT area_code, NULL as region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, waypoint_usage, waypoint_latitude, waypoint_longitude
                 FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
             `);
         } else {
-            queries.forEach((_, i) => queries[i] += ' AND region_code = ?')
+            queries.forEach((_, i) => {
+                queries[i] += ' AND region_code = ?';
+            });
             params.push(airportIdent);
         }
-        
+
         if (icaoCode) {
-            queries.forEach((_, i) => queries[i] += ' AND icao_code = ?')
+            queries.forEach((_, i) => {
+                queries[i] += ' AND icao_code = ?';
+            });
             params.push(icaoCode);
         }
 
         const sql = queries.join(' UNION ALL ');
 
-        const stmt = this.database.prepare(sql, [].concat(... new Array(queries.length).fill(params)));
+        const stmt = this.database.prepare(sql, [].concat(...new Array(queries.length).fill(params)));
         try {
             const rows = query(stmt);
             const navaids: NaviWaypoint[] = NavigraphProvider.toCamel(rows);
