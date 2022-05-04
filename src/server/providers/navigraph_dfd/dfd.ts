@@ -14,6 +14,7 @@ import {
     DataInterface,
     Departure,
     IlsNavaid,
+    iso8601CalendarDate,
     Marker,
     NdbClass,
     NdbNavaid,
@@ -68,11 +69,18 @@ export class NavigraphProvider implements DataInterface {
         const stmt = this.database.prepare(sql);
         try {
             const headers: NaviHeader[] = NavigraphProvider.toCamel(query(stmt));
+            const fromTo = headers[0].effectiveFromto;
+            const [fromDay, fromMonth, toDay, toMonth, fromYear] = [fromTo, fromTo, fromTo, fromTo, fromTo].map((fromTo, index) => parseInt(fromTo.substring(2 * index, 2 * index + 2)));
+            let toYear = fromYear;
+            if (fromMonth === 12 && toMonth < 12) {
+                toYear++;
+            }
+
             const result: DatabaseIdent = {
                 provider: 'Navigraph',
                 airacCycle: headers[0].currentAirac,
-                dateFromTo: headers[0].effectiveFromto,
-                previousFromTo: headers[0].previousFromto,
+                effectiveFrom: iso8601CalendarDate(fromYear, fromMonth, fromDay),
+                effectiveTo: iso8601CalendarDate(toYear, toMonth, toDay),
             };
             return (result);
         } finally {
@@ -164,7 +172,10 @@ export class NavigraphProvider implements DataInterface {
 
     // TODO support filtering on surface type
     async getRunways(airportIdentifier: string): Promise<Runway[]> {
-        const sql = 'SELECT * FROM tbl_runways WHERE airport_identifier = $ident';
+        const sql = `
+            SELECT rwy.*, llz.llz_frequency FROM tbl_runways AS rwy
+            LEFT JOIN tbl_localizers_glideslopes AS llz ON rwy.llz_identifier = llz.llz_identifier AND rwy.airport_identifier = llz.airport_identifier
+            WHERE rwy.airport_identifier = $ident`;
         const stmt = this.database.prepare(sql, { $ident: airportIdentifier });
         try {
             const rows = NavigraphProvider.toCamel(query(stmt));
@@ -380,7 +391,7 @@ export class NavigraphProvider implements DataInterface {
         const navaids: NaviVhfNavaid[] = NavigraphProvider.toCamel(rows);
         return navaids.map((navaid) => {
             const na = this.mappers.mapVhfNavaid(navaid);
-            const loc = na.vorLocation ?? na.dmeLocation;
+            const loc = na.location ?? na.dmeLocation;
             na.distance = distanceTo(centre, { lat: (loc?.lat ?? centre.lat), long: (loc?.long ?? centre.long) });
             return na;
         }).filter((na) => (na.distance ?? 0) <= range

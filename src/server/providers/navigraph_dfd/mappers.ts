@@ -186,14 +186,16 @@ export class DFDMappers {
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
             airportIdent: runway.airportIdentifier,
-            thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation },
+            startLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
+            thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
             bearing: runway.runwayTrueBearing,
             magneticBearing: runway.runwayMagneticBearing,
             gradient: runway.runwayGradient,
             thresholdCrossingHeight: runway.thresholdCrossingHeight,
-            length: runway.runwayLength,
-            width: runway.runwayWidth,
+            length: Math.round(runway.runwayLength * 0.3048),
+            width: Math.round(runway.runwayWidth * 0.3048),
             lsIdent: runway.llzIdentifier,
+            lsFrequencyChannel: runway.llzFrequency,
             lsCategory: this.mapLsCategory(runway.llzMlsGlsCategory),
             surfaceType: RunwaySurfaceType.Unknown, // navigraph pls
         };
@@ -1115,7 +1117,7 @@ export class DFDMappers {
             range: navaid.range,
             stationDeclination: navaid.stationDeclination,
             type: this.mapVhfType(navaid),
-            vorLocation: DFDMappers.mapCoordinates(navaid.vorLatitude, navaid.vorLongitude),
+            location: DFDMappers.mapCoordinates(navaid.vorLatitude, navaid.vorLongitude),
             dmeLocation: navaid.dmeLatitude !== null ? DFDMappers.mapElevatedCoordinates(navaid.dmeLatitude, navaid.dmeLongitude, navaid.dmeElevation) : undefined,
             class: this.mapVorClass(navaid),
             ilsDmeBias: navaid.ilsdmeBias || undefined,

@@ -1,6 +1,299 @@
 // Copyright (c) 2020-2021 Working Title, FlyByWire Simulations
 // SPDX-License-Identifier: MIT
 
+// disable a few lints rules as we're using MSFS type names
+/* eslint-disable camelcase */
+
+export interface JS_Approach {
+    __Type: 'JS_Approach',
+    /** multiple approach identifier */
+    approachSuffix: string,
+    /** approach type */
+    approachType: ApproachType,
+    /** final approach legs up to and including MAP */
+    finalLegs: JS_Leg[],
+    /** seems to be empty */
+    icaos: string[],
+    /** missed approach legs, not including MAP */
+    missedLegs: JS_Leg[],
+    /** approach name */
+    name: string,
+    /** flags to identify the intended guidance source */
+    rnavTypeFlags: RnavTypeFlags,
+    /** runway as a string, empty for multiple runway approaches */
+    runway: string,
+    /** runway designator char/suffix */
+    runwayDesignator: RunwayDesignatorChar,
+    /** runway number without suffix */
+    runwayNumber: number,
+    /** approach vias/transitions */
+    transitions: JS_ApproachTransition[],
+}
+
+export interface JS_ApproachTransition {
+    __Type: 'JS_ApproachTransition',
+    legs: JS_Leg[],
+    /** unfortunately just the name of the first waypoint/initial fix */
+    name: string,
+}
+
+export interface JS_Arrival {
+    __Type: 'JS_Arrival',
+    /** legs common to all transitions and runways */
+    commonLegs: JS_Leg[],
+    /** enroute transitions */
+    enRouteTransitions: JS_EnRouteTransition[],
+    /** name in ARINC 424 format */
+    name: string,
+    runwayTransitions: JS_RunwayTransition[],
+}
+export interface JS_Departure {
+    __Type: 'JS_Departure',
+    commonLegs: JS_Leg[],
+    enRouteTransitions: JS_EnRouteTransition[],
+    /** name in ARINC 424 format */
+    name: string,
+    runwayTransitions: JS_RunwayTransition[],
+}
+
+export type JS_Procedure = JS_Approach | JS_Arrival | JS_Departure;
+
+export interface JS_EnRouteTransition {
+    __Type: 'JS_EnRouteTransition',
+    legs: JS_Leg[],
+    /** unfortunately just the name of the first waypoint/initial fix */
+    name: string,
+}
+
+export interface JS_FacilityAirport {
+    __Type: 'JS_FacilityAirport',
+    airportClass: AirportClass,
+    airportPrivateType: AirportPrivateType,
+    airpspaceType: AirspaceType,
+    approaches: JS_Approach[],
+    arrivals: JS_Arrival[],
+    /** always "Unknown"... */
+    bestApproach: string,
+    /** needs translated with Utils.Translate */
+    city: string,
+    departures: JS_Departure[],
+    frequencies: JS_Frequency[],
+    fuel1: string,
+    fuel2: string,
+    gates: JS_Gate[],
+    /** the MSFS database identifier, not 4 letter icao code! */
+    icao: string,
+    /** airport reference point latitude */
+    lat: number,
+    /** airport reference point longitude */
+    lon: number,
+    /** needs translated with Utils.Translate */
+    name: string,
+    radarCoverage: number,
+    region: string,
+    runways: JS_Runway[],
+    /** always seems to be false */
+    towered: boolean,
+}
+
+export interface JS_FacilityIntersection {
+    __Type: 'JS_FacilityIntersection',
+    /** usually empty */
+    city: string,
+    /** msfs database identifier */
+    icao: string,
+    /** facility latitude */
+    lat: number,
+    /** facility longitude */
+    lon: number,
+    /** name, usually blank */
+    name: string,
+    nearestVorDistance: number,
+    nearestVorFrequencyBCD16: number,
+    nearestVorFrequencyMHz: number,
+    nearestVorICAO: string,
+    nearestVorMagneticRadial: number,
+    nearestVorTrueRadial: number,
+    nearestVorType: VorType,
+    /** icao region (2 char) */
+    region: string,
+    /** airways to/from this intersection */
+    routes: JS_Route[],
+}
+
+/** the record for a NDB, there will be a @see JS_FacilityIntersection associated if there are airways to/from the NDB */
+export interface JS_FacilityNDB {
+    __Type: 'JS_FacilityNDB',
+    /** usually empty */
+    city: string,
+    freqBCD16: number,
+    /** frequency, actually in KHz */
+    freqMHz: number,
+    /** msfs database identifier */
+    icao: string,
+    /** facility latitude */
+    lat: number,
+    /** facility longitude */
+    lon: number,
+    /** name, usually blank */
+    name: string,
+    /** icao region (2 char) */
+    region: string,
+    /** type */
+    type: NdbType,
+    /** unknown */
+    weatherBroadcast: number,
+}
+
+/** the record for a VOR, there will be a @see JS_FacilityIntersection associated if there are airways to/from the VOR */
+export interface JS_FacilityVOR {
+    __Type: 'JS_FacilityVOR',
+    /** usually empty */
+    city: string,
+    freqBCD16: number,
+    /** frequency, with weird precision/rounding */
+    freqMHz: number,
+    /** msfs database identifier */
+    icao: string,
+    /** facility latitude */
+    lat: number,
+    /** facility longitude */
+    lon: number,
+    /** station declination coded in the database... not the current magnetic variation! */
+    magneticVariation: number,
+    /** name, usually blank */
+    name: string,
+    /** icao region (2 char) */
+    region: string,
+    /** type */
+    type: VorType,
+    /** class */
+    vorClass: VorClass,
+    /** unknown */
+    weatherBroadcast: number,
+}
+
+export type JS_Facility = JS_FacilityAirport | JS_FacilityIntersection | JS_FacilityNDB | JS_FacilityVOR;
+
+export interface JS_Frequency {
+    __Type: 'JS_Frequency',
+    freqBCD16: number,
+    freqMHz: number,
+    /** icao of the associated navaid, or empty string */
+    icao: string,
+    /** frequency name, no translation needed */
+    name: string,
+    /** 0 for non-com frequencies e.g. ILS */
+    type: FrequencyType,
+}
+
+export interface JS_Gate {
+    __Type: 'JS_Gate',
+    /** values currently borked */
+    latitude: number,
+    /** values currently borked */
+    longitude: number,
+    /** unknown meaning */
+    name: number,
+    /** gate number */
+    number: number,
+    /** unknown meaning */
+    suffix: number,
+}
+
+export interface JS_Leg {
+    __Type: 'JS_Leg',
+    /** altitude descriptor per ARINC 424... only the first few seem to be used */
+    altDesc: AltitudeDescriptor,
+    /** altitude 1 in metres to be interpreted per @see altDesc */
+    altitude1: number,
+    /** altitude 2 in metres to be interpreted per @see altDesc */
+    altitude2: number,
+    /** centre fix for RF legs */
+    arcCenterFixIcao: string,
+    /** course in degrees, true or mag depending on @see trueDegrees */
+    course: number,
+    /** distance in metres or minutes, to be intrepeted per ARINC 424 depending on leg type and @see distanceMinutes */
+    distance: number,
+    /** is the distance in minutes */
+    distanceMinutes: boolean,
+    /** the waypoint for this leg, to be intrepeted per ARINC 424 */
+    fixIcao: string,
+    /** identifies IF, IAF, FAF, MAP, etc. */
+    fixTypeFlags: FixTypeFlags,
+    /** should this leg termination be overflown */
+    flyOver: boolean,
+    /** recommended navaid, to be intrepeted per ARINC 424 */
+    originIcao: string,
+    /** rho in metres, to be intrepeted per ARINC 424 depending on leg type */
+    rho: number,
+    /** the speed limit, assumed at or below */
+    speedRestriction: number,
+    /** theta in magnetic degrees, to be intrepeted per ARINC 424 */
+    theta: number,
+    /** if the @see course is in true degrees instead of magnetic */
+    trueDegrees: boolean,
+    /** forced turn direction for the transition onto this leg, turn direction valid is implied */
+    turnDirection: TurnDirection,
+    /** ARINC 424 leg type */
+    type: LegType,
+}
+
+export interface JS_Route {
+    __Type: 'JS_Route',
+    /** airway name */
+    name: string,
+    /** waypoint after this on the airway */
+    nextIcao: string,
+    /** waypoint before this on the airway */
+    prevIcao: string,
+    type: RouteType,
+}
+
+export interface JS_Runway {
+    __Type: 'JS_Runway',
+    /** runway designation numbers only, split by - */
+    designation: string,
+    designatorCharPrimary: RunwayDesignatorChar,
+    designatorCharSecondary: RunwayDesignatorChar,
+    /** runway bearing in true degrees */
+    direction: number,
+    /** runway elevation in metres */
+    elevation: number,
+    /** latitude of the centre of the runway */
+    latitude: number,
+    /** runway length in metres */
+    length: number,
+    /** seems to always be 0 */
+    lighting: RunwayLighting,
+    /** longitude of the centre of the runway */
+    longitude: number,
+    /** primary elevation in metres... not sure if threshold or end */
+    primaryElevation: number,
+    /** ils frequency for the primary end... not always filled */
+    primaryILSFrequency: JS_Frequency,
+    /** offset of the primary end threshold in metres */
+    primaryThresholdLength: number,
+    /** secondary elevation in metres... not sure if threshold or end */
+    secondaryElevation: number,
+    /** ils frequency for the secondary end... not always filled */
+    secondaryILSFrequency: JS_Frequency,
+    /** offset of the secondary end threshold in metres */
+    secondaryThresholdLength: number,
+    surface: RunwaySurface,
+    /** runway width in metres */
+    width: number,
+}
+
+export interface JS_RunwayTransition {
+    __Type: 'JS_RunwayTransition',
+    legs: JS_Leg[],
+    /** matches up to @see JS_Runway.designatorCharPrimary and @see JS_Runway.designatorCharSecondary */
+    runwayDesignation: RunwayDesignatorChar,
+    /** matches up to @see JS_Runway.designation and @see JS_Runway.designation as a number */
+    runwayNumber: number,
+}
+
 export enum AirportClass {
     Unknown = 0,
     Normal = 1,
@@ -73,7 +366,6 @@ export enum ApproachType {
     NdbDme = 9,
     Rnav = 10,
     Backcourse = 11,
-    Visual = 99,
 }
 
 export enum FixTypeFlags {
@@ -102,6 +394,14 @@ export enum FrequencyType {
     ASOS = 13,
     ClearancePreTaxi = 14,
     RemoteDeliveryClearance = 15,
+}
+
+export enum IcaoSearchFilter {
+    None = 0,
+    Airports = 1,
+    Intersections = 2,
+    Vors = 3,
+    Ndbs = 4,
 }
 
 // ARINC424 names
@@ -227,7 +527,7 @@ export enum VorClass {
     Unknown = 0,
     Terminal = 1, // T
     LowAltitude = 2, // L
-    HighAlttitude = 3, // H
+    HighAltitude = 3, // H
     ILS = 4, // C TODO Tacan as well according to ARINC?
     VOT = 5,
 }
