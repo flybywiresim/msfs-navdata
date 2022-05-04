@@ -11,5 +11,15 @@ module.exports = {
         "no-undef": "off",
         "import/no-unresolved": "off",
         "no-bitwise": "off",
+        'no-mixed-operators': ['error', {
+            groups: [
+              // ['+', '-', '*', '/', '%', '**'],
+              ['&', '|', '^', '~', '<<', '>>', '>>>'],
+              ['==', '!=', '===', '!==', '>', '>=', '<', '<='],
+              ['&&', '||'],
+              ['in', 'instanceof']
+            ],
+            allowSamePrecedence: false
+          }],
     }
 };
