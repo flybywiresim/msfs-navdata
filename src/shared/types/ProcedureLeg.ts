@@ -1,10 +1,10 @@
 import { Degrees, DegreesMagnetic, Feet, NauticalMiles } from 'msfs-geo';
-import { DatabaseItem, Knots, Minutes } from './Common';
+import { Knots, Minutes } from './Common';
 import { NdbNavaid } from './NdbNavaid';
 import { VhfNavaid } from './VhfNavaid';
 import { Waypoint } from './Waypoint';
 
-export interface ProcedureLeg extends DatabaseItem {
+export interface ProcedureLeg {
     procedureIdent: string,
     /**
      * Leg termination type according to ARICN424

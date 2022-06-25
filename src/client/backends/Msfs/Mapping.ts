@@ -15,6 +15,7 @@ import {
     FrequencyUnits,
     IlsNavaid,
     LegType,
+    LevelOfService,
     LsCategory,
     NdbClass,
     NdbNavaid,
@@ -60,6 +61,7 @@ import {
     FrequencyType,
     IcaoSearchFilter,
     RouteType,
+    RnavTypeFlags,
 } from './FsTypes';
 import { FacilityCache, LoadType } from './FacilityCache';
 
@@ -71,7 +73,10 @@ type FacilityType<T> =
 
 export class MsfsMapping {
     // eslint-disable-next-line no-useless-constructor
-    constructor(private cache: FacilityCache) {}
+    constructor(
+        private cache: FacilityCache,
+    // eslint-disable-next-line no-empty-function
+    ) {}
 
     private mapRunwaySurface(surface?: RunwaySurface): RunwaySurfaceType {
         // TODO
@@ -90,7 +95,7 @@ export class MsfsMapping {
             }
             elevations.push(runway.elevation);
         });
-        console.log('map', msAirport);
+
         // MSFS doesn't give the airport elevation... so we take the mean of the runway elevations
         const elevation = elevations.reduce((a, b) => a + b) / elevations.length;
         return {
@@ -293,7 +298,7 @@ export class MsfsMapping {
                 category: LsCategory.None,
                 runwayIdent: runways.get(icao)!,
                 locLocation: { lat: ils.lat, long: ils.lon },
-                locBearing: bearings.get(icao),
+                locBearing: bearings.get(icao) ?? -1,
                 stationDeclination: ils.magneticVariation,
             };
         });
@@ -361,11 +366,33 @@ export class MsfsMapping {
         return msAirport.approaches.map((approach) => {
             const approachName = this.mapApproachName(approach);
 
+            // the AR flag is not available so we do our best guess
+            // if there's an RF leg in the final approach it's classed AR
+            let authorisationRequired = false;
+            for (let i = approach.finalLegs.length - 1; i >= 0; i--) {
+                const leg = approach.finalLegs[i];
+                if (leg.fixTypeFlags & FixTypeFlags.FAF) {
+                    break;
+                }
+                if (leg.type === MsLegType.RF) {
+                    authorisationRequired = true;
+                    break;
+                }
+            }
+
+            const runwayIdent = `${approach.runwayNumber.toString().padStart(2, '0')}${this.mapRunwayDesignator(approach.runwayDesignator)}`;
+
+            const levelOfService = this.mapRnavTypeFlags(approach.rnavTypeFlags);
+
             return {
                 databaseId: `P${icaoCode}${airportIdent}${approach.name}`,
                 icaoCode,
                 ident: approachName,
+                runwayIdent,
+                multipleIndicator: approach.approachSuffix,
                 type: this.mapApproachType(approach.approachType),
+                authorisationRequired,
+                levelOfService,
                 transitions: approach.transitions.map((trans) => this.mapApproachTransition(trans, facilities, msAirport, approachName, icaoCode)),
                 legs: approach.finalLegs.map((leg) => this.mapLeg(leg, facilities, msAirport, approachName, icaoCode, approach.approachType)),
                 missedLegs: approach.missedLegs.map((leg) => this.mapLeg(leg, facilities, msAirport, approachName, icaoCode)),
@@ -399,6 +426,7 @@ export class MsfsMapping {
             databaseId: `P${icaoCode}${airportIdent}${departure.name}`,
             icaoCode,
             ident: departure.name,
+            authorisationRequired: false, // flag unavailable
             commonLegs: departure.commonLegs.map((leg) => this.mapLeg(leg, facilities, msAirport, departure.name, icaoCode)),
             engineOutLegs: [],
             enrouteTransitions: departure.enRouteTransitions.map((trans) => this.mapEnrouteTransition(trans, facilities, msAirport, departure.name, icaoCode)),
@@ -508,9 +536,6 @@ export class MsfsMapping {
 
         // TODO for approach, pass approach type to mapMsAltDesc
         return {
-            databaseId: 'blahblah', // TODO
-            icaoCode,
-            ident: 'blahblah', // TODO
             procedureIdent,
             type: this.mapMsLegType(leg.type),
             overfly: leg.flyOver,
@@ -907,6 +932,23 @@ export class MsfsMapping {
         default:
             return AirwayLevel.Both;
         }
+    }
+
+    private mapRnavTypeFlags(flags: RnavTypeFlags): LevelOfService {
+        let levels = 0;
+        if (flags & RnavTypeFlags.LNAV) {
+            levels |= LevelOfService.Lnav;
+        }
+        if (flags & RnavTypeFlags.LNAVVNAV) {
+            levels |= LevelOfService.LnavVnav;
+        }
+        if (flags & RnavTypeFlags.LP) {
+            levels |= LevelOfService.Lp;
+        }
+        if (flags & RnavTypeFlags.LPV) {
+            levels |= LevelOfService.Lpv;
+        }
+        return levels;
     }
 
     /** @todo move to msfs-geo */
