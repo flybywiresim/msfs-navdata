@@ -1,4 +1,5 @@
 import { Coordinates, DegreesTrue, NauticalMiles } from 'msfs-geo';
+import { AirwayLevel } from './Airway';
 
 export enum ControlledAirspaceType {
     ClassC,
@@ -51,7 +52,7 @@ export interface ControlledAirspace {
     name: string;
     type: ControlledAirspaceType;
     classification: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
-    level: Level;
+    level: AirwayLevel;
     boundaryPaths: BoundaryPath[];
 }
 
@@ -60,6 +61,6 @@ export interface RestrictiveAirspace {
     designation: string;
     name: string;
     type: RestrictiveAirspaceType;
-    level: Level;
+    level: AirwayLevel;
     boundaryPaths: BoundaryPath[];
 }
