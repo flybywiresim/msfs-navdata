@@ -1,8 +1,8 @@
 import { Coordinates, Degrees, DegreesMagnetic, Feet } from 'msfs-geo';
-import { DatabaseItem, KiloHertz, LsCategory } from './Common';
+import { DatabaseItem, LsCategory, MegaHertz } from './Common';
 
 export interface IlsNavaid extends DatabaseItem {
-    frequency: KiloHertz;
+    frequency: MegaHertz;
     category: LsCategory;
     runwayIdent: string;
     locLocation: Coordinates;

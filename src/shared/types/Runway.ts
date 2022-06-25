@@ -1,4 +1,4 @@
-import { Degrees, DegreesMagnetic, DegreesTrue, Feet, Metres } from 'msfs-geo';
+import { Coordinates, Degrees, DegreesMagnetic, DegreesTrue, Feet, Metres } from 'msfs-geo';
 import {
     LsCategory,
     DatabaseItem,
@@ -13,15 +13,18 @@ export interface Runway extends DatabaseItem {
      * slope of the runway, negative for downhill
      */
     gradient: Degrees,
+    startLocation: Coordinates,
     /**
      * Location, including altitude (if available), of the threshold
      */
     thresholdLocation: ElevatedCoordinates,
     thresholdCrossingHeight: Feet,
+    // TODO is this TORA, ASDA, LDW, ???
     length: Metres,
     width: Metres,
+    lsFrequencyChannel?: number,
     lsIdent: string,
-    lsCategory: LsCategory,
+    lsCategory?: LsCategory,
     surfaceType?: RunwaySurfaceType,
 }
 

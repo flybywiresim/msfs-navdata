@@ -1,178 +1,265 @@
-import { Airway, IlsNavaid, NdbNavaid, Waypoint } from '../../../shared';
+// Copyright (c) 2021, 2022 FlyByWire Simulations
+// SPDX-License-Identifier: GPL-3.0
+
+/* eslint-disable camelcase */
+
+import { Coordinates, NauticalMiles } from 'msfs-geo';
+import {
+    AirportCommunication,
+    Airway,
+    AirwayLevel,
+    ControlledAirspace,
+    DatabaseIdent,
+    IlsNavaid,
+    iso8601CalendarDate,
+    NdbClass,
+    NdbNavaid,
+    ProcedureLeg,
+    RestrictiveAirspace,
+    VhfNavaid,
+    VhfNavaidType,
+    VorClass,
+    Waypoint,
+} from '../../../shared';
 import { Airport } from '../../../shared/types/Airport';
 import { Approach } from '../../../shared/types/Approach';
 import { Arrival } from '../../../shared/types/Arrival';
-import { DatabaseItem } from '../../../shared/types/Common';
 import { Departure } from '../../../shared/types/Departure';
 import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
 import { DataInterface } from '../../../shared/DataInterface';
 import { Marker } from '../../../shared/types/Marker';
-
-type PendingRequest = {
-    resolve: Function,
-    reject: Function,
-    pendingFacilities: string[],
-    results: DatabaseItem[],
-};
+import {
+    IcaoSearchFilter,
+    JS_FacilityAirport,
+} from './FsTypes';
+import { FacilityCache, LoadType } from './FacilityCache';
+import { MsfsMapping } from './Mapping';
 
 export class MsfsBackend implements DataInterface {
-    getIlsAtAirport(ident: string): Promise<IlsNavaid[]> {
-        throw new Error('Method not implemented.');
-    }
+    private cache: FacilityCache;
 
-    getAirwaysByIdents(idents: string[]): Promise<Airway[]> {
-        throw new Error('Method not implemented.');
-    }
-
-    getAirwaysByFix(ident: string): Promise<Airway[]> {
-        throw new Error('Method not implemented.');
-    }
-
-    private listener;
-
-    private pendingRequests: PendingRequest[] = [];
-
-    private cache: Map<string, DatabaseItem> = {};
+    private mapping: MsfsMapping;
 
     constructor() {
-        this.listener = RegisterViewListener('JS_LISTENER_FACILITY');
-
-        Coherent.on('SendAirport', this.receiveFacility.bind(this));
+        this.cache = new FacilityCache();
+        this.mapping = new MsfsMapping(this.cache);
     }
 
-    private mapLla(lla) {
+    /** @inheritdoc */
+    public async getDatabaseIdent(): Promise<DatabaseIdent> {
+        // "APR21MAY18/22"
+        const range = SimVar.GetGameVarValue('FLIGHT NAVDATA DATE RANGE', 'string');
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const fromMonth = months.indexOf(range.substring(0, 3)) + 1;
+        const fromDay = parseInt(range.substring(3, 5));
+        const toMonth = months.indexOf(range.substring(5, 8)) + 1;
+        const toDay = parseInt(range.substring(8, 10));
+        const fromYear = parseInt(range.substring(11, 13));
+
+        let toYear = fromYear;
+        if (fromMonth === 12 && toMonth < 12) {
+            toYear++;
+        }
+
+        // the to date is supposed to overlap the next cycle
+        const toDate = new Date(Date.UTC(toYear, toMonth - 1, toDay));
+        toDate.setUTCDate(toDay + 1);
+
         return {
-            lat: lla.lat,
-            lon: lla.lon,
-            alt: lla.alt,
+            provider: 'Msfs', // TODO navi or navblue
+            airacCycle: '', // TODO
+            effectiveFrom: iso8601CalendarDate(fromYear, fromMonth, fromDay),
+            effectiveTo: iso8601CalendarDate(toDate.getUTCFullYear(), toDate.getUTCMonth() + 1, toDate.getUTCDate()),
         };
     }
 
-    private mapRunwaySurface(surface): RunwaySurfaceType {
-        switch (surface) {
-        default:
-            return RunwaySurfaceType.Hard;
-        }
+    /** @inheritdoc */
+    public async getAirports(idents: string[]): Promise<Airport[]> {
+        // firstly fetch all the facilities from the MSFS database
+        const icaos = idents.map((ident) => `A      ${ident}`);
+
+        const airports = await this.cache.getFacilities(icaos, LoadType.Airport);
+
+        return Array.from(airports.values()).map((airport) => this.mapping.mapAirport(airport));
     }
 
-    private mapAirport(msAirport): Airport {
-        const elevations: number[] = [];
-        let longestRunway = [0, undefined];
-        msAirport.infos.runways.forEach((runway) => {
-            if (runway.length > longestRunway[0]) {
-                longestRunway = [runway.length, runway];
-            }
-            elevations.push(runway.elevation);
-        });
-        // MSFS doesn't give the airport elevation... so we take the mean of the runway elevations
-        const elevation = elevations.reduce((a, b) => a + b) / elevations.length;
-        return {
-            databaseId: msAirport.icao,
-            ident: msAirport.icao.substring(7, 11),
-            icaoCode: msAirport.icao.substring(0, 2),
-            // Tracer wrote something weird on the next line, removed it for rollup, not sure what it was for
-            name: msAirport.name,
-            location: { lat: msAirport.lat, long: msAirport.long, alt: elevation },
-            longestRunwaySurfaceType: this.mapRunwaySurface(longestRunway[1]),
-        };
-    }
-
-    private receiveFacility(facility): void {
-        let item: DatabaseItem;
-        switch (facility.icao.charAt(0)) {
-        case 'A':
-            item = this.mapAirport(facility);
-            break;
-        default:
-            console.error(`Unknown facility ${facility.icao}`);
-            return;
-        }
-
-        this.cache.set(facility.icao, item);
-
-        for (let i = this.pendingRequests.length - 1; i >= 0; i--) {
-            const request = this.pendingRequests[i];
-            const index = request.pendingFacilities.findIndex(facility.icao);
-            if (index !== -1) {
-                request.results.push(item);
-                request.pendingFacilities.splice(index, 1);
-
-                if (request.pendingFacilities.length === 0) {
-                    request.resolve(request.results);
-                    this.pendingRequests.splice(i, 1);
-                }
-            }
-        }
-    }
-
-    public async getAirportsByIdent(idents: string[]): Promise<Airport[]> {
-        return new Promise(async (resolve, reject) => {
-            const icaos = idents.map((ident) => `A      ${ident}`);
-            const results: DatabaseItem[] = [];
-            for (let i = icaos.length - 1; i >= 0; i--) {
-                if (this.cache.has(icaos[i])) {
-                    icaos.splice(i, 1);
-                    results.push(this.cache.get(icaos[i]));
-                }
-            }
-
-            if (icaos.length === 0) {
-                resolve(results);
-            }
-
-            const index = this.pendingRequests.push({
-                resolve,
-                reject,
-                pendingFacilities: icaos,
-                results,
-            }) - 1;
-            const result: boolean[] = await Coherent.call('LOAD_AIRPORTS', icaos);
-            if (result.length < icaos.length) {
-                this.pendingRequests[index].reject();
-                this.pendingRequests.splice(index, 1);
-            }
-        });
-    }
-
-    public async getNearbyAirports(lat: number, lon: number, range?: number): Promise<Airport[]> {
-        throw new Error('computer says no');
-    }
-
-    public async getRunways(airportIdentifier: string): Promise<Runway[]> {
-        throw new Error('computer says no');
-    }
-
+    /** @inheritdoc */
     public async getDepartures(airportIdentifier: string): Promise<Departure[]> {
-        throw new Error('computer says no');
+        const airport = await this.fetchMsfsAirport(airportIdentifier);
+
+        if (!airport) {
+            return [];
+        }
+
+        return this.mapping.mapDepartures(airport);
     }
 
+    /** @inheritdoc */
     public async getArrivals(airportIdentifier: string): Promise<Arrival[]> {
-        throw new Error('computer says no');
+        const airport = await this.fetchMsfsAirport(airportIdentifier);
+
+        if (!airport) {
+            return [];
+        }
+
+        return this.mapping.mapArrivals(airport);
     }
 
+    /** @inheritdoc */
     public async getApproaches(airportIdentifier: string): Promise<Approach[]> {
-        throw new Error('computer says no');
+        const airport = await this.fetchMsfsAirport(airportIdentifier);
+
+        if (!airport) {
+            return [];
+        }
+
+        return this.mapping.mapApproaches(airport);
     }
 
-    /**
-     * MSFS cannot provide these at this time
-     */
+    /** MSFS database does not contain enroute holds */
     public async getHolds(_airportIdentifier: string): Promise<ProcedureLeg[]> {
         return [];
     }
 
-    getNdbsAtAirport(ident: string): Promise<NdbNavaid[]> {
-        return Promise.resolve([]);
+    /** @inheritdoc */
+    public async getRunways(airportIdentifier: string): Promise<Runway[]> {
+        const airport = await this.fetchMsfsAirport(airportIdentifier);
+
+        if (!airport) {
+            return [];
+        }
+
+        return this.mapping.mapAirportRunways(airport);
     }
 
-    getWaypointsAtAirport(ident: string): Promise<Waypoint[]> {
-        return Promise.resolve([]);
+    /** @inheritdoc */
+    public async getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]> {
+        const airport = await this.fetchMsfsAirport(airportIdentifier);
+
+        if (!airport) {
+            return [];
+        }
+
+        return this.mapping.mapAirportWaypoints(airport);
     }
 
-    /**
-     * MSFS cannot provide these at this time
-     */
-    public async getLsMarkers(_airportIdentifier: string, _runwayIdentifier: string, _llzIdentifier: string): Promise<Marker[]> {
+    /** @inheritdoc */
+    public async getNdbsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]> {
         return [];
+    }
+
+    /** @inheritdoc */
+    public async getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {
+        const airport = await this.fetchMsfsAirport(airportIdentifier);
+
+        if (!airport) {
+            return [];
+        }
+
+        return this.mapping.mapAirportIls(airport);
+    }
+
+    /** @inheritdoc */
+    public async getCommunicationsAtAirport(airportIdentifier: string): Promise<AirportCommunication[]> {
+        const airport = await this.fetchMsfsAirport(airportIdentifier);
+
+        if (!airport) {
+            return [];
+        }
+
+        return this.mapping.mapAirportCommunications(airport);
+    }
+
+    /** not supported */
+    public async getLsMarkers(airportIdentifier: string, runwayIdentifier: string, lsIdentifier: string): Promise<Marker[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
+        const results = new Map<string, Waypoint>();
+
+        for (const ident in idents) {
+            (await this.cache.searchByIdent(ident, IcaoSearchFilter.Intersections, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
+        }
+
+        return [...results.values()];
+    }
+
+    /** @inheritdoc */
+    public async getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
+        const results = new Map<string, NdbNavaid>();
+
+        for (const ident in idents) {
+            (await this.cache.searchByIdent(ident, IcaoSearchFilter.Ndbs, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
+        }
+
+        return [...results.values()];
+    }
+
+    /** @inheritdoc */
+    public async getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
+        const results = new Map<string, VhfNavaid>();
+
+        for (const ident in idents) {
+            (await this.cache.searchByIdent(ident, IcaoSearchFilter.Vors, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
+        }
+
+        return [...results.values()];
+    }
+
+    /** not supported... maybe */
+    public async getAirways(idents: string[]): Promise<Airway[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getAirwaysByFix(ident: string, icaoCode: string): Promise<Airway[]> {
+        return this.mapping.getAirways(ident, icaoCode);
+    }
+
+    /** @inheritdoc */
+    public async getNearbyAirports(center: Coordinates, range: NauticalMiles, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getNearbyAirways(center: Coordinates, range: NauticalMiles, levels?: AirwayLevel): Promise<Airway[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getNearbyVhfNavaids(centre: Coordinates, range: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getNearbyNdbNavaids(center: Coordinates, range: NauticalMiles, classes?: NdbClass): Promise<NdbNavaid[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getNearbyWaypoints(center: Coordinates, range: NauticalMiles): Promise<Waypoint[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getControlledAirspaceInRange(center: Coordinates, range: NauticalMiles): Promise<ControlledAirspace[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getRestrictiveAirspaceInRange(center: Coordinates, range: NauticalMiles): Promise<RestrictiveAirspace[]> {
+        return [];
+    }
+
+    private async fetchMsfsAirport(ident: string): Promise<JS_FacilityAirport | undefined> {
+        if (ident.trim().length !== 4) {
+            return undefined;
+        }
+
+        const icao = `A      ${ident}`;
+
+        return this.cache.getFacility(icao, LoadType.Airport);
     }
 }

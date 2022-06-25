@@ -123,7 +123,7 @@ export class DFDMappers {
             location: { lat: marker.markerLatitude, long: marker.markerLongitude },
             type: marker.markerType.substring(1) as MarkerType,
             locator: marker.markerType.charAt(0) === 'L',
-        }
+        };
     }
 
     public mapAirport(airport: NaviAirport): Airport {
@@ -186,14 +186,16 @@ export class DFDMappers {
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
             airportIdent: runway.airportIdentifier,
-            thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation },
+            startLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
+            thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
             bearing: runway.runwayTrueBearing,
             magneticBearing: runway.runwayMagneticBearing,
             gradient: runway.runwayGradient,
             thresholdCrossingHeight: runway.thresholdCrossingHeight,
-            length: runway.runwayLength,
-            width: runway.runwayWidth,
+            length: Math.round(runway.runwayLength * 0.3048),
+            width: Math.round(runway.runwayWidth * 0.3048),
             lsIdent: runway.llzIdentifier,
+            lsFrequencyChannel: runway.llzFrequency,
             lsCategory: this.mapLsCategory(runway.llzMlsGlsCategory),
             surfaceType: RunwaySurfaceType.Unknown, // navigraph pls
         };
@@ -239,10 +241,6 @@ export class DFDMappers {
         case '-':
             return SpeedDescriptor.Maximum;
         }
-    }
-
-    public mapLegIdent(leg: NaviProcedure): string {
-        return leg.waypointIdentifier ?? leg.seqno.toFixed(0); // TODO proper format
     }
 
     public mapLocalizerGlideslope(leg: NaviProcedure): string {
@@ -299,11 +297,8 @@ export class DFDMappers {
         }
     }
 
-    public mapLeg(leg: NaviProcedure, airport: Airport): ProcedureLeg {
+    public mapLeg(leg: NaviProcedure): ProcedureLeg {
         return {
-            databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode) + leg.seqno,
-            icaoCode: leg.waypointIcaoCode ?? airport.icaoCode,
-            ident: this.mapLegIdent(leg),
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
@@ -367,6 +362,7 @@ export class DFDMappers {
                     icaoCode: airport.icaoCode,
                     databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
+                    authorisationRequired: false, // flag not available
                     runwayTransitions: [],
                     commonLegs: [],
                     enrouteTransitions: [],
@@ -374,7 +370,7 @@ export class DFDMappers {
                 });
             }
 
-            const apiLeg = this.mapLeg(leg, airport);
+            const apiLeg = this.mapLeg(leg);
             const departure = departures.get(leg.procedureIdentifier);
             let transition;
             switch (leg.routeType) {
@@ -468,7 +464,7 @@ export class DFDMappers {
                 transition.legs.push(apiLeg);
                 break;
             default:
-                console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: SID`);
+                console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: SID`);
             }
         }
 
@@ -491,7 +487,7 @@ export class DFDMappers {
                 });
             }
 
-            const apiLeg = this.mapLeg(leg, airport);
+            const apiLeg = this.mapLeg(leg);
             const arrival = arrivals.get(leg.procedureIdentifier);
             let transition;
             switch (leg.routeType) {
@@ -582,7 +578,7 @@ export class DFDMappers {
                 }
                 break;
             default:
-                console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: STAR`);
+                console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: STAR`);
             }
         }
 
@@ -638,26 +634,44 @@ export class DFDMappers {
         const approaches: Map<string, Approach> = new Map();
 
         let missedApproachStarted = false;
+        let finalApproachStarted = false;
         // legs are sorted in sequence order by the db... phew
         legs.forEach((leg) => {
             if (!approaches.has(leg.procedureIdentifier)) {
+                const match = leg.procedureIdentifier.match(/^[A-Z]([0-9]{2}[LCRT]?)(-?([A-Z]))?$/);
+                const runwayIdent = match !== null ? `RW${match[1]}` : undefined;
+                const multipleIndicator = match !== null ? match[3] ?? '' : '';
                 approaches.set(leg.procedureIdentifier, {
                     icaoCode: airport.icaoCode,
                     databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
+                    runwayIdent,
+                    multipleIndicator,
+                    authorisationRequired: false,
                     type: ApproachType.Unknown,
                     transitions: [],
                     legs: [],
                     missedLegs: [],
                 });
                 missedApproachStarted = false;
+                finalApproachStarted = false;
             }
 
-            const apiLeg = this.mapLeg(leg, airport);
+            const apiLeg = this.mapLeg(leg);
             const approach = approaches.get(leg.procedureIdentifier);
 
             if (leg.waypointDescriptionCode?.charAt(2) === 'M') {
                 missedApproachStarted = true;
+            }
+
+            // the AR flag is not available so we do our best guess
+            // if there's an RF leg in the final approach it's classed AR
+            if (finalApproachStarted && leg.pathTermination === 'RF') {
+                approach.authorisationRequired = true;
+            }
+
+            if (leg.waypointDescriptionCode?.charAt(3) === 'F') {
+                finalApproachStarted = true;
             }
 
             if (missedApproachStarted) {
@@ -704,7 +718,7 @@ export class DFDMappers {
                     approach?.missedLegs.push(apiLeg);
                     break;
                 default:
-                    console.error(`Unmappable leg ${apiLeg.ident}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
+                    console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
                 }
             }
         });
@@ -730,13 +744,11 @@ export class DFDMappers {
             }
 
             return {
-                databaseId: `Z${hold.icaoCode ?? '  '}${hold.regionCode}${hold.waypointIdentifier}${hold.duplicateIdentifier}`,
-                icaoCode: hold.icaoCode,
                 procedureIdent: hold.waypointIdentifier,
-                ident: hold.waypointIdentifier,
                 type: LegType.HM,
                 overfly: false,
                 waypoint: {
+                    icaoCode: 'TODO',
                     ident: hold.waypointIdentifier,
                     databaseId: `W${hold.icaoCode ?? '  '}${hold.regionCode}${hold.waypointIdentifier}`,
                     location: { lat: hold.waypointLatitude, long: hold.waypointLongitude },
@@ -749,7 +761,7 @@ export class DFDMappers {
                 altitude2: alt2,
                 speed: hold.holdingSpeed ?? undefined,
                 speedDescriptor: hold.holdingSpeed ? SpeedDescriptor.Mandatory : undefined,
-                turnDirection: hold.turnDirection,
+                turnDirection: hold.turnDirection === 'L' ? TurnDirection.Left : TurnDirection.Right,
                 magneticCourse: hold.inboundHoldingCourse,
             };
         });
@@ -1115,7 +1127,7 @@ export class DFDMappers {
             range: navaid.range,
             stationDeclination: navaid.stationDeclination,
             type: this.mapVhfType(navaid),
-            vorLocation: DFDMappers.mapCoordinates(navaid.vorLatitude, navaid.vorLongitude),
+            location: DFDMappers.mapCoordinates(navaid.vorLatitude, navaid.vorLongitude),
             dmeLocation: navaid.dmeLatitude !== null ? DFDMappers.mapElevatedCoordinates(navaid.dmeLatitude, navaid.dmeLongitude, navaid.dmeElevation) : undefined,
             class: this.mapVorClass(navaid),
             ilsDmeBias: navaid.ilsdmeBias || undefined,

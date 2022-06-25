@@ -33,4 +33,6 @@ export type Runway = {
     llzIdentifier: string;
     /** ILS/MLS/GLS performance categories */
     llzMlsGlsCategory: IlsMlsGlsCategory;
+    /** ILS frequency */
+    llzFrequency?: number;
 }

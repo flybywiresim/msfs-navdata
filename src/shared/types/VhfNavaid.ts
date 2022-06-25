@@ -12,7 +12,7 @@ export interface VhfNavaid extends DatabaseItem {
      * Beware: this is NOT the same as magnetic variation
      */
     stationDeclination: Degrees,
-    vorLocation: Coordinates,
+    location: Coordinates,
     dmeLocation?: Coordinates & { alt?: Feet },
     type: VhfNavaidType,
     class?: VorClass,
@@ -25,7 +25,8 @@ export interface VhfNavaid extends DatabaseItem {
     area: WaypointArea,
 }
 
-export type FigureOfMerit = 0 | 1 | 2 | 3;
+// TODO enum
+export type FigureOfMerit = 0 | 1 | 2 | 3 | 7 | 9;
 
 export enum VhfNavaidType {
     Unknown = 1 << 0,
