@@ -22,6 +22,7 @@ import {
 } from '../shared';
 import { AirportCommunication } from '../shared/types/Communication';
 import { ControlledAirspace } from '../shared/types/Airspace';
+import { Gate } from '../shared/types/Gate';
 
 export class Database {
     backend: DataInterface;
@@ -70,6 +71,10 @@ export class Database {
                 .find((trans) => Database.approachToRunway(approach.ident) === null || trans.ident === Database.approachToRunway(approach.ident)));
         }
         return approaches;
+    }
+
+    public async getGates(airportIdentifier: string): Promise<Gate[]> {
+        return this.backend.getGates(airportIdentifier);
     }
 
     public async getHolds(fixIdentifier: string, airportIdentifier: string): Promise<ProcedureLeg[]> {

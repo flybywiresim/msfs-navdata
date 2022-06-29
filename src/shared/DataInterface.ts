@@ -14,6 +14,7 @@ import { AirportCommunication } from './types/Communication';
 import { ControlledAirspace, RestrictiveAirspace } from './types/Airspace';
 import { ProcedureLeg } from '.';
 import { Marker } from './types/Marker';
+import { Gate } from './types/Gate';
 
 // FIXME move to more appropriate place..
 export enum NavaidArea {
@@ -50,6 +51,12 @@ export interface DataInterface {
      * @param airportIdentifier 4-letter ICAO code for the airport
      */
     getApproaches(airportIdentifier: string): Promise<Approach[]>;
+
+    /**
+     * Retreive the gates at an airport
+     * @param airportIdentifier 4-letter ICAO code for the airport
+     */
+     getGates(airportIdentifier: string): Promise<Gate[]>;
 
     /**
      * Retreive the terminal area holds for an airport

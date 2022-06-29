@@ -85,6 +85,8 @@ import {
 } from './types/RestrictiveAirspace';
 import { Holding as NaviHolding } from './types/Holdings';
 import { LocalizerMarker as NaviMarker } from './types/LocalizerMarker';
+import { Gate as NaviGate } from './types/Gates';
+import { Gate } from '../../../shared/types/Gate';
 
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
@@ -724,6 +726,15 @@ export class DFDMappers {
         });
 
         return Array.from(approaches.values());
+    }
+
+    public mapGates(gates: NaviGate[]): Gate[] {
+        return gates.map((gate) => ({
+            airportIcao: gate.airportIdentifier,
+            icaoCode: gate.icaoCode,
+            ident: gate.gateIdentifier,
+            location: { lat: gate.gateLatitude, long: gate.gateLongitude },
+        }));
     }
 
     public mapHolds(holds: NaviHolding[]): ProcedureLeg[] {

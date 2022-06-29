@@ -23,6 +23,7 @@ import {
 } from '../../shared';
 import { AirportCommunication } from '../../shared/types/Communication';
 import { ControlledAirspace } from '../../shared/types/Airspace';
+import { Gate } from '../../shared/types/Gate';
 
 export class ExternalBackend implements DataInterface {
     private readonly apiBase: string;
@@ -62,6 +63,10 @@ export class ExternalBackend implements DataInterface {
 
     getApproaches(airportIdentifier: string): Promise<Approach[]> {
         return this.fetchApi(`airport/${airportIdentifier}/approaches`);
+    }
+
+    getGates(airportIdentifier: string): Promise<Gate[]> {
+        return this.fetchApi(`airport/${airportIdentifier}/gates`);
     }
 
     getHolds(airportIdentifier: string): Promise<ProcedureLeg[]> {
