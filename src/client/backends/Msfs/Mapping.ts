@@ -447,6 +447,8 @@ export class MsfsMapping {
             const suffix = msGate.suffix >= 12 && msGate.suffix < 38 ? MsfsMapping.letters[msGate.suffix - 12] : '';
             const ident = `${prefix}${msGate.number.toString()}${suffix}`;
 
+            const databaseId = `G${icaoCode}${airportIcao}${ident}`;
+
             // the lat/lon are encoded as an offset from the airport reference point in meteres
             // circumference of the earth at average MSL
             const earthCircumference = 2 * Math.PI * 6371000;
@@ -459,9 +461,10 @@ export class MsfsMapping {
             };
 
             return {
-                airportIcao,
+                databaseId,
                 icaoCode,
                 ident,
+                airportIcao,
                 location,
             };
         });

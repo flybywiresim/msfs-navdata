@@ -2,16 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
 import { Coordinates } from 'msfs-geo';
+import { DatabaseItem } from './Common';
 
-export interface Gate {
+export interface Gate extends DatabaseItem {
     /** The airport this gate belongs to */
     airportIcao: string,
-
-    /** 2-digit ICAO region the airport belongs to */
-    icaoCode: string,
-
-    /** identifier name for the gate, up to 5 alpha-numeric chars */
-    ident: string,
 
     /** location of the parking position at the gate */
     location: Coordinates

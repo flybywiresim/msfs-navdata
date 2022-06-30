@@ -730,9 +730,10 @@ export class DFDMappers {
 
     public mapGates(gates: NaviGate[]): Gate[] {
         return gates.map((gate) => ({
-            airportIcao: gate.airportIdentifier,
+            databaseId: `G${gate.icaoCode}${gate.airportIdentifier}${gate.gateIdentifier}`,
             icaoCode: gate.icaoCode,
             ident: gate.gateIdentifier,
+            airportIcao: gate.airportIdentifier,
             location: { lat: gate.gateLatitude, long: gate.gateLongitude },
         }));
     }
