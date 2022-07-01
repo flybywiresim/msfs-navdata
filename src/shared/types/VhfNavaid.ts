@@ -1,8 +1,9 @@
 import { Coordinates, Degrees, Feet, NauticalMiles } from 'msfs-geo';
-import { ElevatedCoordinates, WaypointArea } from '..';
-import { DatabaseItem, MegaHertz } from './Common';
+import { Fix, FixType, WaypointArea } from '..';
+import { MegaHertz } from './Common';
 
-export interface VhfNavaid extends DatabaseItem {
+export interface VhfNavaid extends Fix {
+    fixType: FixType.VhfNavaid;
     frequency: MegaHertz,
     figureOfMerit: FigureOfMerit,
     range: NauticalMiles,

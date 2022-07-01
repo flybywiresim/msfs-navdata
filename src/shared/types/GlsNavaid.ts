@@ -1,7 +1,8 @@
 import { Degrees, DegreesMagnetic } from 'msfs-geo';
-import { DatabaseItem, ElevatedCoordinates, LsCategory } from './Common';
+import { ElevatedCoordinates, Fix, FixType, LsCategory } from './Common';
 
-export interface GlsNavaid extends DatabaseItem {
+export interface GlsNavaid extends Fix {
+    fixType: FixType.GlsNavaid;
     channel: number;
     category: LsCategory;
     runwayIdent: string;

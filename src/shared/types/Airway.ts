@@ -1,5 +1,6 @@
 import { Feet, NauticalMiles } from 'msfs-geo';
 import { Waypoint } from './Waypoint';
+import { Fix } from './Common';
 
 export enum AirwayType {
     Airline,
@@ -27,7 +28,7 @@ export interface Airway {
     databaseId: string,
     ident: string,
     level: AirwayLevel,
-    fixes: Waypoint[],
+    fixes: Fix[],
     turnRadius?: NauticalMiles,
     rnp?: NauticalMiles,
     direction: AirwayDirection,

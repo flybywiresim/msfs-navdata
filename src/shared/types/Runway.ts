@@ -1,11 +1,13 @@
 import { Coordinates, Degrees, DegreesMagnetic, DegreesTrue, Feet, Metres } from 'msfs-geo';
 import {
     LsCategory,
-    DatabaseItem,
     ElevatedCoordinates,
+    Fix,
+    FixType,
 } from './Common';
 
-export interface Runway extends DatabaseItem {
+export interface Runway extends Fix {
+    fixType: FixType.Runway;
     airportIdent: string,
     bearing: DegreesTrue,
     magneticBearing: DegreesMagnetic,
@@ -17,7 +19,7 @@ export interface Runway extends DatabaseItem {
     /**
      * Location, including altitude (if available), of the threshold
      */
-    thresholdLocation: ElevatedCoordinates,
+    location: ElevatedCoordinates,
     thresholdCrossingHeight: Feet,
     // TODO is this TORA, ASDA, LDW, ???
     length: Metres,

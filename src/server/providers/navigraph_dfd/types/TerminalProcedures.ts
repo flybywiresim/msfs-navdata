@@ -249,4 +249,5 @@ export type TerminalProcedure = {
     recommandedId: string;
     /** Table reference for the arc centre fix */
     centerId: string;
+    aircraftCategory: string;
 };

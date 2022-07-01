@@ -6,17 +6,22 @@
 
 /* eslint-disable no-await-in-loop */
 
-import { Coordinates, distanceTo } from 'msfs-geo';
+import { Coordinates, distanceTo, Latitude, Longitude } from 'msfs-geo';
 import {
     Airport,
     Airway,
     AirwayDirection,
+    AirwayLevel,
     AltitudeDescriptor,
     Approach,
     ApproachType,
+    ApproachWaypointDescriptor,
     Arrival,
     Departure,
+    ElevatedCoordinates,
     FigureOfMerit,
+    Fix,
+    FixType,
     IlsNavaid,
     LegType,
     LsCategory,
@@ -35,9 +40,7 @@ import {
     VorClass,
     Waypoint,
     WaypointArea,
-    AirwayLevel,
-    ApproachWaypointDescriptor,
-    WaypointDescriptor, ElevatedCoordinates,
+    WaypointDescriptor,
 } from '../../../shared';
 import {
     BoundaryPath,
@@ -109,12 +112,13 @@ export class DFDMappers {
 
     public mapIls(ils: NaviIls): IlsNavaid {
         return {
+            fixType: FixType.IlsNavaid,
             icaoCode: ils.icaoCode,
             ident: ils.llzIdentifier,
             databaseId: DFDMappers.ilsNavaidDatabaseId(ils),
             frequency: ils.llzFrequency,
             stationDeclination: 0,
-            locLocation: { lat: ils.llzLatitude, long: ils.llzLongitude },
+            location: { lat: ils.llzLatitude, long: ils.llzLongitude },
             gsLocation: { lat: ils.gsLatitude, long: ils.gsLongitude, alt: ils.gsElevation },
             runwayIdent: ils.runwayIdentifier,
             locBearing: ils.llzBearing,
@@ -153,6 +157,7 @@ export class DFDMappers {
             surfaceCode = RunwaySurfaceType.Unknown;
         }
         return {
+            fixType: FixType.Airport,
             databaseId: DFDMappers.airportDatabaseId(airport),
             ident: airport.airportIdentifier,
             icaoCode: airport.icaoCode,
@@ -193,12 +198,13 @@ export class DFDMappers {
 
     public mapRunway(runway: NaviRunway): Runway {
         return {
+            fixType: FixType.Runway,
             icaoCode: runway.icaoCode,
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
             airportIdent: runway.airportIdentifier,
             startLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
-            thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
+            location: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
             bearing: runway.runwayTrueBearing,
             magneticBearing: runway.runwayMagneticBearing,
             gradient: runway.runwayGradient,
@@ -308,6 +314,66 @@ export class DFDMappers {
         }
     }
 
+    public mapFix(id: string, lat: Latitude, long: Longitude): Fix {
+        let fixType;
+        let icaoCode;
+        let ident;
+        let airportIdent: string | undefined = undefined;
+        if (id.includes('tbl_airports')) {
+            fixType = FixType.Airport;
+            icaoCode = id.substr(13, 2);
+            ident = id.substr(15);
+            airportIdent = ident;
+        } else if (id.includes('tbl_gls')) {
+            fixType = FixType.GlsNavaid;
+            icaoCode = id.substr(12, 2);
+            ident = id.substr(14);
+            airportIdent = id.substr(8, 4);
+        } else if (id.includes('tbl_localizers_glideslopes')) {
+            fixType = FixType.IlsNavaid;
+            icaoCode = id.substr(31, 2);
+            ident = id.substr(33);
+            airportIdent = id.substr(27, 4);
+        } else if (id.includes('tbl_enroute_ndbnavaids')) {
+            fixType = FixType.NdbNavaid;
+            icaoCode = id.substr(23, 2);
+            ident = id.substr(25);
+        } else if (id.includes('tbl_terminal_ndbnavaids')) {
+            fixType = FixType.NdbNavaid;
+            icaoCode = id.substr(28, 2);
+            ident = id.substr(30);
+            airportIdent = id.substr(24, 4);
+        } else if (id.includes('tbl_runways')) {
+            fixType = FixType.Runway;
+            icaoCode = id.substr(16, 2);
+            ident = id.substr(18);
+            airportIdent = id.substr(12, 4);
+        } else if (id.includes('tbl_vhfnavaids')) {
+            fixType = FixType.VhfNavaid;
+            icaoCode = id.substr(15, 2);
+            ident = id.substr(17);
+        } else if (id.includes('tbl_enroute_waypoints')) {
+            fixType = FixType.Waypoint;
+            icaoCode = id.substr(22, 2);
+            ident = id.substr(24);
+        } else if (id.includes('tbl_terminal_waypoints')) {
+            fixType = FixType.Waypoint;
+            icaoCode = id.substr(27, 2);
+            ident = id.substr(29);
+            airportIdent = id.substr(23, 4);
+        } else {
+            throw new Error(`Fix id "${id}" cannot be correlated to a type`);
+        }
+        return {
+            fixType,
+            icaoCode,
+            ident,
+            location: { lat, long },
+            databaseId: `F${icaoCode}${airportIdent ?? '    '}${ident}`,
+            airportIdent,
+        };
+    }
+
     public mapLeg(leg: NaviProcedure): ProcedureLeg {
         const waypoint = DFDMappers.decodeIdColumn(leg.id);
         const recNavaid = DFDMappers.decodeIdColumn(leg.recommandedId);
@@ -317,38 +383,14 @@ export class DFDMappers {
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
-            waypoint: leg.waypointIdentifier ? {
-                icaoCode: leg.waypointIcaoCode,
-                ident: leg.waypointIdentifier,
-                location: { lat: leg.waypointLatitude, long: leg.waypointLongitude },
-                databaseId: DFDMappers.mapFixDatabaseId(waypoint),
-                name: leg.waypointIdentifier,
-                area: waypoint?.area,
-            } : undefined,
-            recommendedNavaid: leg.recommandedNavaid ? {
-                ident: leg.recommandedNavaid,
-                databaseId: DFDMappers.mapFixDatabaseId(recNavaid),
-                name: '',
-                area: recNavaid?.area,
-                icaoCode: recNavaid?.icaoCode,
-                location: {
-                    lat: leg.recommandedNavaidLatitude,
-                    long: leg.recommandedNavaidLongitude,
-                },
-            } : undefined,
+            fix: leg.waypointIdentifier
+                ? this.mapFix(leg.id, leg.waypointLatitude, leg.waypointLongitude) : undefined,
+            recommendedNavaid: leg.recommandedNavaid
+                ? this.mapFix(leg.recommandedId, leg.recommandedNavaidLatitude, leg.recommandedNavaidLongitude) : undefined,
             rho: leg.rho ?? undefined,
             theta: leg.theta ?? undefined,
-            arcCentreFix: leg.centerWaypoint ? {
-                ident: leg.centerWaypoint,
-                databaseId: DFDMappers.mapFixDatabaseId(arcCentreFix),
-                name: '',
-                area: arcCentreFix?.area,
-                icaoCode: arcCentreFix?.icaoCode,
-                location: {
-                    lat: leg.centerWaypointLatitude,
-                    long: leg.centerWaypointLongitude,
-                },
-            } : undefined,
+            arcCentreFix: leg.centerWaypoint
+                ? this.mapFix(leg.centerId, leg.centerWaypointLatitude, leg.centerWaypointLongitude) : undefined,
             arcRadius: leg.arcRadius ?? undefined,
             length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
             lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
@@ -1131,6 +1173,7 @@ export class DFDMappers {
 
     public mapWaypoint(waypoint: NaviWaypoint, distanceFrom?: Coordinates): Waypoint {
         return {
+            fixType: FixType.Waypoint,
             databaseId: DFDMappers.waypointDatabaseId(waypoint),
             ident: waypoint.waypointIdentifier,
             icaoCode: waypoint.icaoCode,
@@ -1143,6 +1186,7 @@ export class DFDMappers {
 
     public mapVhfNavaid(navaid: NaviVhfNavaid, distanceFrom?: Coordinates): VhfNavaid {
         return {
+            fixType: FixType.VhfNavaid,
             databaseId: DFDMappers.vhfNavaidDatabaseId(navaid),
             ident: navaid.vorIdentifier ?? navaid.dmeIdent,
             name: navaid.vorName,
@@ -1207,6 +1251,7 @@ export class DFDMappers {
 
     public mapNdbNavaid(navaid: NaviNdbNavaid, distanceFrom?: Coordinates): NdbNavaid {
         return {
+            fixType: FixType.NdbNavaid,
             databaseId: DFDMappers.ndbNavaidDatabaseId(navaid),
             ident: navaid.ndbIdentifier,
             icaoCode: navaid.icaoCode,

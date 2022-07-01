@@ -1,8 +1,5 @@
 import { Degrees, DegreesMagnetic, Feet, NauticalMiles } from 'msfs-geo';
-import { Knots, Minutes } from './Common';
-import { NdbNavaid } from './NdbNavaid';
-import { VhfNavaid } from './VhfNavaid';
-import { Waypoint } from './Waypoint';
+import { Fix, Knots, Minutes } from './Common';
 
 export interface ProcedureLeg {
     procedureIdent: string,
@@ -15,14 +12,14 @@ export interface ProcedureLeg {
      */
     overfly: boolean,
     /**
-     * The waypoint assocaited with the termination of this leg
+     * The fix associated with the termination of this leg
      * For VM legs at the end of a STAR, this shall be the airport reference point
      */
-    waypoint?: Waypoint,
+    fix?: Fix,
     /**
      * Radio navaid to be used for this leg
      */
-    recommendedNavaid?: VhfNavaid | NdbNavaid | Waypoint, // TODO can be other types?
+    recommendedNavaid?: Fix,
     /**
      * Distance from the recommended navaid, to the waypoint
      */
@@ -35,7 +32,7 @@ export interface ProcedureLeg {
     /**
      * Defines the arc for RF legs
      */
-    arcCentreFix?: Waypoint,
+    arcCentreFix?: Fix,
     /**
      * Defines the radius for RF legs
      */

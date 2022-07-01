@@ -43,3 +43,19 @@ export interface ProcedureTransition {
     ident: string,
     legs: ProcedureLeg[],
 }
+
+export enum FixType {
+    Airport,
+    GlsNavaid,
+    IlsNavaid,
+    NdbNavaid,
+    Runway,
+    VhfNavaid,
+    Waypoint,
+}
+
+export interface Fix extends DatabaseItem {
+    fixType: FixType,
+    location: Coordinates,
+    airportIdent?: string,
+}
