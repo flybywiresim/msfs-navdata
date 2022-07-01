@@ -42,6 +42,8 @@ import { LocalizerGlideslope as NaviIls } from './types/LocalizerGlideslopes';
 import { VHFNavaid as NaviVhfNavaid } from './types/VHFNavaids';
 import { Holding as NaviHolding } from './types/Holdings';
 import { LocalizerMarker as NaviMarker } from './types/LocalizerMarker';
+import { Gate } from '../../../shared/types/Gate';
+import { Gate as NaviGate } from './types/Gates';
 
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
@@ -239,6 +241,17 @@ export class NavigraphProvider implements DataInterface {
             const rows = query(stmt);
             const approachLegs: NaviProcedure[] = NavigraphProvider.toCamel(rows);
             return (this.mappers.mapApproaches(approachLegs, airports[0]));
+        } finally {
+            stmt.free();
+        }
+    }
+
+    async getGates(airportIdentifier: string): Promise<Gate[]> {
+        const stmt = this.database.prepare('SELECT * FROM tbl_gate WHERE airport_identifier=$ident', { $ident: airportIdentifier });
+        try {
+            const rows = query(stmt);
+            const gates: NaviGate[] = NavigraphProvider.toCamel(rows);
+            return (this.mappers.mapGates(gates));
         } finally {
             stmt.free();
         }

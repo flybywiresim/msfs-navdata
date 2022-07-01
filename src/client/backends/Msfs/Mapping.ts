@@ -64,6 +64,7 @@ import {
     RnavTypeFlags,
 } from './FsTypes';
 import { FacilityCache, LoadType } from './FacilityCache';
+import { Gate } from '../../../shared/types/Gate';
 
 type FacilityType<T> =
         T extends JS_FacilityIntersection ? Waypoint
@@ -72,6 +73,8 @@ type FacilityType<T> =
         : never;
 
 export class MsfsMapping {
+    private static letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
     // eslint-disable-next-line no-useless-constructor
     constructor(
         private cache: FacilityCache,
@@ -432,6 +435,39 @@ export class MsfsMapping {
             enrouteTransitions: departure.enRouteTransitions.map((trans) => this.mapEnrouteTransition(trans, facilities, msAirport, departure.name, icaoCode)),
             runwayTransitions: departure.runwayTransitions.map((trans) => this.mapRunwayTransition(trans, facilities, msAirport, departure.name, icaoCode)),
         }));
+    }
+
+    public async mapGates(msAirport: JS_FacilityAirport): Promise<Gate[]> {
+        const icaoCode = this.getIcaoCodeFromAirport(msAirport);
+        const airportIcao = FacilityCache.ident(msAirport.icao);
+
+        return msAirport.gates.map((msGate) => {
+            // values less than 12 are gate types, which we don't care for... 12 or greater are alphabetical chars which we do care for
+            const prefix = msGate.name >= 12 && msGate.name < 38 ? MsfsMapping.letters[msGate.name - 12] : '';
+            const suffix = msGate.suffix >= 12 && msGate.suffix < 38 ? MsfsMapping.letters[msGate.suffix - 12] : '';
+            const ident = `${prefix}${msGate.number.toString()}${suffix}`;
+
+            const databaseId = `G${icaoCode}${airportIcao}${ident}`;
+
+            // the lat/lon are encoded as an offset from the airport reference point in meteres
+            // circumference of the earth at average MSL
+            const earthCircumference = 2 * Math.PI * 6371000;
+            const latOffset = 360 * msGate.latitude / earthCircumference;
+            const longOffset = 360 * msGate.longitude / (earthCircumference * Math.cos(msAirport.lat / 180 * Math.PI));
+
+            const location = {
+                lat: msAirport.lat + latOffset,
+                long: msAirport.lon + longOffset,
+            };
+
+            return {
+                databaseId,
+                icaoCode,
+                ident,
+                airportIcao,
+                location,
+            };
+        });
     }
 
     private async loadFacilitiesFromProcedures(procedures: JS_Procedure[]): Promise<Map< string, JS_Facility>> {

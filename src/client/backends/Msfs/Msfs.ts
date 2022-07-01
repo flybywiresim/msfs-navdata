@@ -34,6 +34,7 @@ import {
 } from './FsTypes';
 import { FacilityCache, LoadType } from './FacilityCache';
 import { MsfsMapping } from './Mapping';
+import { Gate } from '../../../shared/types/Gate';
 
 export class MsfsBackend implements DataInterface {
     private cache: FacilityCache;
@@ -114,6 +115,16 @@ export class MsfsBackend implements DataInterface {
         }
 
         return this.mapping.mapApproaches(airport);
+    }
+
+    public async getGates(airportIdentifier: string): Promise<Gate[]> {
+        const airport = await this.fetchMsfsAirport(airportIdentifier);
+
+        if (!airport) {
+            return [];
+        }
+
+        return this.mapping.mapGates(airport);
     }
 
     /** MSFS database does not contain enroute holds */
