@@ -243,4 +243,10 @@ export type TerminalProcedure = {
     centerWaypointLatitude: number;
     /** center fix longitude in degrees decimal floating point (E positive, W negative) */
     centerWaypointLongitude: number;
+    /** Table reference for the waypoint */
+    id: string;
+    /** Table reference for the recommended navaid */
+    recommandedId: string;
+    /** Table reference for the arc centre fix */
+    centerId: string;
 };

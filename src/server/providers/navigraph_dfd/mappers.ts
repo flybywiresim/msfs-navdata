@@ -91,6 +91,15 @@ import { Gate } from '../../../shared/types/Gate';
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
 
+type FixInfo = {
+    icaoCode: string,
+    airportIdent: string,
+    ident: string,
+    area: WaypointArea,
+    prefix: string,
+    suppressIcaoCode: boolean,
+};
+
 export class DFDMappers {
     private queries: NavigraphProvider;
 
@@ -300,24 +309,28 @@ export class DFDMappers {
     }
 
     public mapLeg(leg: NaviProcedure): ProcedureLeg {
+        const waypoint = DFDMappers.decodeIdColumn(leg.id);
+        const recNavaid = DFDMappers.decodeIdColumn(leg.recommandedId);
+        const arcCentreFix = DFDMappers.decodeIdColumn(leg.centerId);
+
         return {
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
             waypoint: leg.waypointIdentifier ? {
                 icaoCode: leg.waypointIcaoCode,
-                ident: leg.waypointIdentifier, // TODO check type of waypoint and code database ID appropriately
+                ident: leg.waypointIdentifier,
                 location: { lat: leg.waypointLatitude, long: leg.waypointLongitude },
-                databaseId: `W${leg.waypointIcaoCode}${leg.airportIdentifier ?? '    '}${leg.waypointIdentifier}`,
+                databaseId: DFDMappers.mapFixDatabaseId(waypoint),
                 name: leg.waypointIdentifier,
-                area: WaypointArea.Terminal, // FIXME
-            } : undefined, // TODO fetch these
+                area: waypoint?.area,
+            } : undefined,
             recommendedNavaid: leg.recommandedNavaid ? {
                 ident: leg.recommandedNavaid,
-                databaseId: `W${leg.waypointIcaoCode}    ${leg.recommandedNavaid}`,
+                databaseId: DFDMappers.mapFixDatabaseId(recNavaid),
                 name: '',
-                area: WaypointArea.Terminal, // FIXME
-                icaoCode: leg.waypointIcaoCode, // FIXME
+                area: recNavaid?.area,
+                icaoCode: recNavaid?.icaoCode,
                 location: {
                     lat: leg.recommandedNavaidLatitude,
                     long: leg.recommandedNavaidLongitude,
@@ -327,10 +340,10 @@ export class DFDMappers {
             theta: leg.theta ?? undefined,
             arcCentreFix: leg.centerWaypoint ? {
                 ident: leg.centerWaypoint,
-                databaseId: `W${leg.waypointIcaoCode}    ${leg.centerWaypoint}`,
+                databaseId: DFDMappers.mapFixDatabaseId(arcCentreFix),
                 name: '',
-                area: WaypointArea.Terminal, // FIXME
-                icaoCode: leg.waypointIcaoCode, // FIXME
+                area: arcCentreFix?.area,
+                icaoCode: arcCentreFix?.icaoCode,
                 location: {
                     lat: leg.centerWaypointLatitude,
                     long: leg.centerWaypointLongitude,
@@ -1274,5 +1287,48 @@ export class DFDMappers {
 
     public static ilsNavaidDatabaseId(navaid: NaviIls): string {
         return `V${navaid.icaoCode}${navaid.airportIdentifier ?? '    '}${navaid.llzIdentifier}`;
+    }
+
+    public static decodeIdColumn(id: string): FixInfo | undefined {
+        if (!id) {
+            return undefined;
+        }
+
+        const [table, mapping] = id.split('|', 2);
+
+        const terminal = table.indexOf('terminal') !== -1 || table === 'tbl_runways' || table === 'tbl_localizers_glideslopes' || table === 'tbl_gls';
+        const area = terminal ? WaypointArea.Terminal : WaypointArea.Enroute;
+        const suppressIcaoCode = table === 'tbl_localizers_glideslopes' || table === 'tbl_gls';
+        const icaoCode = terminal ? mapping.substring(4, 6) : mapping.substring(0, 2);
+        const airportIdent = terminal ? mapping.substring(0, 4) : '    ';
+        const ident = terminal ? mapping.substring(6) : mapping.substring(2);
+
+        let prefix = 'W';
+        if (table.indexOf('vhfnavaid') !== -1 || table === 'tbl_localizers_glideslopes') {
+            prefix = 'V';
+        } else if (table === 'tbl_gls') {
+            prefix = 'J';
+        } else if (table.indexOf('ndbnavaid') !== -1) {
+            prefix = 'N';
+        } else if (table === 'tbl_airports') {
+            prefix = 'A';
+        }
+
+        return {
+            icaoCode,
+            airportIdent,
+            ident,
+            area,
+            prefix,
+            suppressIcaoCode,
+        };
+    }
+
+    public static mapFixDatabaseId(fixIdent?: FixInfo): string | undefined {
+        if (!fixIdent) {
+            return undefined;
+        }
+
+        return `${fixIdent.prefix}${fixIdent.suppressIcaoCode ? '  ' : fixIdent.icaoCode ?? '  '}${fixIdent.airportIdent ?? '    '}${fixIdent.ident ?? ''}`;
     }
 }
