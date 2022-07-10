@@ -1,5 +1,4 @@
 import { Feet, NauticalMiles } from 'msfs-geo';
-import { Waypoint } from './Waypoint';
 import { Fix } from './Common';
 
 export enum AirwayType {

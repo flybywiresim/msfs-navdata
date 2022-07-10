@@ -53,7 +53,7 @@ type StarRouteType =
 type IAPRouteType =
     /** Approach Transition */
     | 'A'
-    /** Localizer/Back course Approach	 */
+    /** Localizer/Back course Approach */
     | 'B'
     /** VORDME Approach */
     | 'D'

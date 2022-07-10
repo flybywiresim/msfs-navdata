@@ -1,6 +1,6 @@
 import { Coordinates, Degrees, Feet, NauticalMiles } from 'msfs-geo';
-import { Fix, FixType, WaypointArea } from '..';
-import { MegaHertz } from './Common';
+import { Fix, FixType } from '..';
+import { Area, MegaHertz } from './Common';
 
 export interface VhfNavaid extends Fix {
     fixType: FixType.VhfNavaid;
@@ -23,7 +23,7 @@ export interface VhfNavaid extends Fix {
      * distance from centre location for nearby query
      */
     distance?: NauticalMiles,
-    area: WaypointArea,
+    area: Area,
 }
 
 // TODO enum

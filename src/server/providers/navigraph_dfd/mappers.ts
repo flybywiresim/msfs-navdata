@@ -16,6 +16,7 @@ import {
     Approach,
     ApproachType,
     ApproachWaypointDescriptor,
+    Area,
     Arrival,
     Departure,
     ElevatedCoordinates,
@@ -39,7 +40,6 @@ import {
     VhfNavaidType,
     VorClass,
     Waypoint,
-    WaypointArea,
     WaypointDescriptor,
 } from '../../../shared';
 import {
@@ -746,7 +746,7 @@ export class DFDMappers {
                     ident: hold.waypointIdentifier,
                     databaseId: `W${hold.icaoCode ?? '  '}${hold.regionCode}${hold.waypointIdentifier}`,
                     location: { lat: hold.waypointLatitude, long: hold.waypointLongitude },
-                    area: WaypointArea.Terminal,
+                    area: Area.Terminal,
                 },
                 length: hold.legLength,
                 lengthTime: hold.legTime,
@@ -1100,7 +1100,7 @@ export class DFDMappers {
             icaoCode: waypoint.icaoCode,
             location: DFDMappers.mapCoordinates(waypoint.waypointLatitude, waypoint.waypointLongitude),
             name: waypoint.waypointName,
-            area: DFDMappers.isTerminalWaypoint(waypoint) ? WaypointArea.Terminal : WaypointArea.Enroute,
+            area: DFDMappers.isTerminalWaypoint(waypoint) ? Area.Terminal : Area.EnRoute,
             distance: distanceFrom ? distanceTo(distanceFrom, { lat: waypoint.waypointLatitude, long: waypoint.waypointLongitude }) : undefined,
         };
     }
@@ -1122,7 +1122,7 @@ export class DFDMappers {
             class: this.mapVorClass(navaid),
             ilsDmeBias: navaid.ilsdmeBias || undefined,
             distance: distanceFrom ? distanceTo(distanceFrom, { lat: navaid.vorLatitude, long: navaid.vorLongitude }) : undefined,
-            area: DFDMappers.isTerminalVhfNavaid(navaid) ? WaypointArea.Terminal : WaypointArea.Enroute,
+            area: DFDMappers.isTerminalVhfNavaid(navaid) ? Area.Terminal : Area.EnRoute,
         };
     }
 
@@ -1181,7 +1181,7 @@ export class DFDMappers {
             class: this.mapNdbClass(navaid),
             bfoOperation: navaid.navaidClass.charAt(4) === 'B',
             distance: distanceFrom ? distanceTo(distanceFrom, { lat: navaid.ndbLatitude, long: navaid.ndbLongitude }) : undefined,
-            area: DFDMappers.isTerminalNdbNavaid(navaid) ? WaypointArea.Terminal : WaypointArea.Enroute,
+            area: DFDMappers.isTerminalNdbNavaid(navaid) ? Area.Terminal : Area.EnRoute,
         };
     }
 

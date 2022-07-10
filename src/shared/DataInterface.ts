@@ -16,12 +16,6 @@ import { ProcedureLeg } from '.';
 import { Marker } from './types/Marker';
 import { Gate } from './types/Gate';
 
-// FIXME move to more appropriate place..
-export enum NavaidArea {
-    Terminal = 1 << 0,
-    EnRoute = 1 << 1,
-}
-
 export interface DataInterface {
     /**
      * Retrieve source and effectivity dates for this database
