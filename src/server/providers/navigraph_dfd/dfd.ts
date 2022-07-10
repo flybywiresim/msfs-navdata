@@ -67,17 +67,13 @@ export class NavigraphProvider implements DataInterface {
 
     private static readDates(date: string): [Date, Date] {
         const [fromDay, fromMonth, toDay, toMonth, fromYear] = Array(5).fill(date).map((fromTo, index) => parseInt(fromTo.substring(2 * index, 2 * index + 2)));
-        const start = new Date();
-        start.setFullYear(fromYear + 2000, fromMonth, fromDay);
 
-        let toYear = fromYear;
-        if (fromMonth === 12 && toMonth < 12) {
-            toYear++;
-        }
+        const toYear = fromMonth === 12 && toMonth < 12 ? fromYear + 1 : fromYear;
 
-        const end = new Date();
-        end.setUTCFullYear(toYear + 2000, toMonth, toDay);
-        return [start, end];
+        return [
+            new Date(Date.UTC(fromYear + 2000, fromMonth - 1, fromDay)),
+            new Date(Date.UTC(toYear + 2000, toMonth - 1, toDay)),
+        ];
     }
 
     async getDatabaseIdent(): Promise<DatabaseIdent> {
