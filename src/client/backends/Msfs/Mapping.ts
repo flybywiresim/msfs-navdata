@@ -10,8 +10,11 @@ import {
     AirwayLevel,
     AltitudeDescriptor,
     ApproachType,
+    Area,
     CommunicationType,
     FigureOfMerit,
+    Fix,
+    FixType,
     FrequencyUnits,
     IlsNavaid,
     LegType,
@@ -27,7 +30,6 @@ import {
     VhfNavaidType,
     VorClass,
     Waypoint,
-    WaypointArea,
     WaypointDescriptor,
 } from '../../../shared';
 import { Airport } from '../../../shared/types/Airport';
@@ -102,6 +104,7 @@ export class MsfsMapping {
         // MSFS doesn't give the airport elevation... so we take the mean of the runway elevations
         const elevation = elevations.reduce((a, b) => a + b) / elevations.length;
         return {
+            fixType: FixType.Airport,
             databaseId: msAirport.icao,
             ident: msAirport.icao.substring(7, 11),
             icaoCode: msAirport.icao.substring(1, 3), // TODO
@@ -150,6 +153,7 @@ export class MsfsMapping {
                 const lsFrequencyChannel = lsAppr ? navaids.get(lsAppr.finalLegs[lsAppr.finalLegs.length - 1].originIcao)?.freqMHz ?? 0 : 0;
 
                 runways.push({
+                    fixType: FixType.Runway,
                     databaseId,
                     icaoCode,
                     ident,
@@ -158,7 +162,7 @@ export class MsfsMapping {
                     magneticBearing: this.trueToMagnetic(bearing, magVar),
                     gradient: primary ? gradient : -gradient,
                     startLocation,
-                    thresholdLocation,
+                    location: thresholdLocation,
                     thresholdCrossingHeight,
                     length: msRunway.length,
                     width: msRunway.width,
@@ -208,6 +212,7 @@ export class MsfsMapping {
                 const lsIdent = lsAppr ? FacilityCache.ident(lsAppr.finalLegs[lsAppr.finalLegs.length - 1].originIcao) : '';
 
                 runways.push({
+                    fixType: FixType.Runway,
                     databaseId,
                     icaoCode,
                     ident,
@@ -216,7 +221,7 @@ export class MsfsMapping {
                     magneticBearing: this.trueToMagnetic(bearing, magVar),
                     gradient: primary ? gradient : -gradient,
                     startLocation,
-                    thresholdLocation,
+                    location: thresholdLocation,
                     thresholdCrossingHeight,
                     length: msRunway.length,
                     width: msRunway.width,
@@ -294,13 +299,14 @@ export class MsfsMapping {
         return Array.from(ils.values()).filter((ils) => !!ils).map((ils) => {
             const icao = ils.icao.trim();
             return {
+                fixType: FixType.IlsNavaid,
                 databaseId: ils.icao,
                 icaoCode,
                 ident: FacilityCache.ident(ils.icao),
                 frequency: ils.freqMHz,
                 category: LsCategory.None,
                 runwayIdent: runways.get(icao)!,
-                locLocation: { lat: ils.lat, long: ils.lon },
+                location: { lat: ils.lat, long: ils.lon },
                 locBearing: bearings.get(icao) ?? -1,
                 stationDeclination: ils.magneticVariation,
             };
@@ -554,7 +560,7 @@ export class MsfsMapping {
         const arcCentreFix = arcCentreFixFacility ? this.mapFacilityToWaypoint(arcCentreFixFacility) : undefined;
         let waypoint;
         if (leg.fixIcao.charAt(0) === 'R') {
-            waypoint = this.mapRunwayWaypoint(airport, leg.fixIcao);
+            waypoint = this.mapRunwayFix(airport, leg.fixIcao);
         } else {
             const waypointFacility = FacilityCache.validFacilityIcao(leg.fixIcao) ? facilities.get(leg.fixIcao) : undefined;
             waypoint = waypointFacility ? this.mapFacilityToWaypoint(waypointFacility) : undefined;
@@ -575,7 +581,7 @@ export class MsfsMapping {
             procedureIdent,
             type: this.mapMsLegType(leg.type),
             overfly: leg.flyOver,
-            waypoint,
+            fix: waypoint,
             recommendedNavaid,
             rho: leg.rho / 1852,
             theta: leg.theta,
@@ -595,18 +601,18 @@ export class MsfsMapping {
         };
     }
 
-    private mapRunwayWaypoint(airport: JS_FacilityAirport, icao: string): Waypoint | undefined {
+    private mapRunwayFix(airport: JS_FacilityAirport, icao: string): Fix | undefined {
         const runwayIdent = `${icao.substring(7).trim()}`;
         const runways = this.mapAirportRunwaysPartial(airport);
 
         for (const runway of runways) {
             if (runway.ident === runwayIdent) {
                 return {
+                    fixType: FixType.Runway,
                     databaseId: icao,
                     icaoCode: icao.substring(1, 3),
                     ident: `${runway.ident}`,
-                    location: runway.thresholdLocation,
-                    area: WaypointArea.Terminal,
+                    location: runway.location,
                 };
             }
         }
@@ -674,7 +680,7 @@ export class MsfsMapping {
             ident: FacilityCache.ident(facility.icao),
             name: Utils.Translate(facility.name),
             location: { lat: facility.lat, long: facility.lon },
-            area: facility.icao.substring(3, 7).trim().length > 0 ? WaypointArea.Terminal : WaypointArea.Enroute,
+            area: facility.icao.substring(3, 7).trim().length > 0 ? Area.Terminal : Area.EnRoute,
         };
 
         switch (facility.icao.charAt(0)) {
@@ -937,7 +943,7 @@ export class MsfsMapping {
         }
 
         const fix = this.mapFacilityToWaypoint(fixes[0]);
-        const routes = fixes[0].routes;
+        const { routes } = fixes[0];
 
         const airways = routes.map((route) => ({
             databaseId: `E${icaoCode}    ${route.name}${fixIdent}`,
