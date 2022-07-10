@@ -66,4 +66,5 @@ export type EnRouteAirway = {
     inboundCourse: number;
     /** Contains segment distances/along track distances/excursion distances/DME distances in nautical miles */
     inboundDistance: number;
+    id: string;
 }

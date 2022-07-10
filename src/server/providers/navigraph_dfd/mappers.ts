@@ -799,13 +799,7 @@ export class DFDMappers {
                     maximumAltitude: fix.maximumAltitude,
                 });
             }
-            airways[airways.length - 1].fixes.push({
-                icaoCode: fix.icaoCode,
-                databaseId: `W${fix.icaoCode}    ${fix.waypointIdentifier}`, // TODO function
-                ident: fix.waypointIdentifier,
-                location: { lat: fix.waypointLatitude, long: fix.waypointLongitude },
-                area: WaypointArea.Enroute, // TODO
-            });
+            airways[airways.length - 1].fixes.push(DFDMappers.decodeIdColumn(fix.id, fix.waypointLatitude, fix.waypointLongitude));
         });
         return airways;
     }
