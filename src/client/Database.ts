@@ -19,6 +19,7 @@ import {
     DatabaseIdent,
     DataInterface,
     RestrictiveAirspace,
+    Fix,
 } from '../shared';
 import { AirportCommunication } from '../shared/types/Communication';
 import { ControlledAirspace } from '../shared/types/Airspace';
@@ -78,7 +79,7 @@ export class Database {
     }
 
     public async getHolds(fixIdentifier: string, airportIdentifier: string): Promise<ProcedureLeg[]> {
-        return (await this.backend.getHolds(airportIdentifier)).filter((hold) => hold.ident === fixIdentifier);
+        return (await this.backend.getHolds(airportIdentifier)).filter((hold) => hold.fix?.ident === fixIdentifier);
     }
 
     public getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {
@@ -117,7 +118,7 @@ export class Database {
         return this.backend.getAirways(idents);
     }
 
-    public async getAirwaysByFix(fix: Waypoint | NdbNavaid | VhfNavaid): Promise<Airway[]> {
+    public async getAirwaysByFix(fix: Fix): Promise<Airway[]> {
         return this.backend.getAirwaysByFix(fix.ident, fix.icaoCode);
     }
 
