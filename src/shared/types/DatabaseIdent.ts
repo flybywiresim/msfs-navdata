@@ -3,8 +3,8 @@ export interface DatabaseIdent {
     provider: string,
     /** yycc where yy = last 2 digits of effective year, cc = sequential cycle number */
     airacCycle: string,
-    /** UTC ISO8601 calender date YYYY-MM-DD */
-    effectiveFrom: string,
-    /** UTC ISO8601 calender date YYYY-MM-DD, inclusive of first day of next cycle */
-    effectiveTo: string,
+    /** Dates where this data is effective between */
+    effectiveFromTo: [Date, Date],
+    /** Dates between which the previous cycle was active */
+    previousEffectiveFromTo: [Date, Date],
 }

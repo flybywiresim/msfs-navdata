@@ -14,7 +14,6 @@ import {
     DataInterface,
     Departure,
     IlsNavaid,
-    iso8601CalendarDate,
     Marker,
     NdbClass,
     NdbNavaid,
@@ -49,7 +48,7 @@ type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
 
 const query = (stmt: Statement) => {
-    const rows = [];
+    const rows: any[] = [];
     while (stmt.step()) rows.push(stmt.getAsObject());
     return rows;
 };
@@ -66,25 +65,32 @@ export class NavigraphProvider implements DataInterface {
         });
     }
 
+    private static readDates(date: string): [Date, Date] {
+        const [fromDay, fromMonth, toDay, toMonth, fromYear] = Array(5).fill(date).map((fromTo, index) => parseInt(fromTo.substring(2 * index, 2 * index + 2)));
+        const start = new Date();
+        start.setFullYear(fromYear + 2000, fromMonth, fromDay);
+
+        let toYear = fromYear;
+        if (fromMonth === 12 && toMonth < 12) {
+            toYear++;
+        }
+
+        const end = new Date();
+        end.setUTCFullYear(toYear + 2000, toMonth, toDay);
+        return [start, end];
+    }
+
     async getDatabaseIdent(): Promise<DatabaseIdent> {
         const sql = 'SELECT current_airac, effective_fromto, previous_fromto FROM tbl_header';
         const stmt = this.database.prepare(sql);
         try {
-            const headers: NaviHeader[] = NavigraphProvider.toCamel(query(stmt));
-            const fromTo = headers[0].effectiveFromto;
-            const [fromDay, fromMonth, toDay, toMonth, fromYear] = [fromTo, fromTo, fromTo, fromTo, fromTo].map((fromTo, index) => parseInt(fromTo.substring(2 * index, 2 * index + 2)));
-
-            // If your using this after the year 2099, i'm sorry,
-            let toYear = fromYear + 2000;
-            if (fromMonth === 12 && toMonth < 12) {
-                toYear++;
-            }
+            const [header]: NaviHeader[] = NavigraphProvider.toCamel(query(stmt));
 
             const result: DatabaseIdent = {
                 provider: 'Navigraph',
-                airacCycle: headers[0].currentAirac,
-                effectiveFrom: iso8601CalendarDate(fromYear + 2000, fromMonth, fromDay),
-                effectiveTo: iso8601CalendarDate(toYear, toMonth, toDay),
+                airacCycle: header.currentAirac,
+                effectiveFromTo: NavigraphProvider.readDates(header.effectiveFromto),
+                previousEffectiveFromTo: NavigraphProvider.readDates(header.previousFromto),
             };
             return (result);
         } finally {
