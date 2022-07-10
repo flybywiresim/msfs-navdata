@@ -448,7 +448,7 @@ export class DFDMappers {
                 transition.legs.push(apiLeg);
                 break;
             default:
-                console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: SID`);
+                throw new Error(`Unknown routeType "${leg.routeType}" found on ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Departure`);
             }
         }
 
@@ -562,7 +562,7 @@ export class DFDMappers {
                 }
                 break;
             default:
-                console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: STAR`);
+                throw new Error(`Unknown routeType "${leg.routeType}" found on ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Arrival`);
             }
         }
 
@@ -642,7 +642,7 @@ export class DFDMappers {
             }
 
             const apiLeg = this.mapLeg(leg);
-            const approach = approaches.get(leg.procedureIdentifier);
+            const approach = approaches.get(leg.procedureIdentifier)!;
 
             if (leg.waypointDescriptionCode?.charAt(2) === 'M') {
                 missedApproachStarted = true;
@@ -702,7 +702,7 @@ export class DFDMappers {
                     approach?.missedLegs.push(apiLeg);
                     break;
                 default:
-                    console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
+                    throw new Error(`Unknown routeType "${leg.routeType}" found on ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
                 }
             }
         });
