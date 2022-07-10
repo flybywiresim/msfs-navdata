@@ -94,15 +94,6 @@ import { Gate } from '../../../shared/types/Gate';
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
 
-type FixInfo = {
-    icaoCode: string,
-    airportIdent: string,
-    ident: string,
-    area: WaypointArea,
-    prefix: string,
-    suppressIcaoCode: boolean,
-};
-
 export class DFDMappers {
     private queries: NavigraphProvider;
 
@@ -314,83 +305,19 @@ export class DFDMappers {
         }
     }
 
-    public mapFix(id: string, lat: Latitude, long: Longitude): Fix {
-        let fixType;
-        let icaoCode;
-        let ident;
-        let airportIdent: string | undefined = undefined;
-        if (id.includes('tbl_airports')) {
-            fixType = FixType.Airport;
-            icaoCode = id.substr(13, 2);
-            ident = id.substr(15);
-            airportIdent = ident;
-        } else if (id.includes('tbl_gls')) {
-            fixType = FixType.GlsNavaid;
-            icaoCode = id.substr(12, 2);
-            ident = id.substr(14);
-            airportIdent = id.substr(8, 4);
-        } else if (id.includes('tbl_localizers_glideslopes')) {
-            fixType = FixType.IlsNavaid;
-            icaoCode = id.substr(31, 2);
-            ident = id.substr(33);
-            airportIdent = id.substr(27, 4);
-        } else if (id.includes('tbl_enroute_ndbnavaids')) {
-            fixType = FixType.NdbNavaid;
-            icaoCode = id.substr(23, 2);
-            ident = id.substr(25);
-        } else if (id.includes('tbl_terminal_ndbnavaids')) {
-            fixType = FixType.NdbNavaid;
-            icaoCode = id.substr(28, 2);
-            ident = id.substr(30);
-            airportIdent = id.substr(24, 4);
-        } else if (id.includes('tbl_runways')) {
-            fixType = FixType.Runway;
-            icaoCode = id.substr(16, 2);
-            ident = id.substr(18);
-            airportIdent = id.substr(12, 4);
-        } else if (id.includes('tbl_vhfnavaids')) {
-            fixType = FixType.VhfNavaid;
-            icaoCode = id.substr(15, 2);
-            ident = id.substr(17);
-        } else if (id.includes('tbl_enroute_waypoints')) {
-            fixType = FixType.Waypoint;
-            icaoCode = id.substr(22, 2);
-            ident = id.substr(24);
-        } else if (id.includes('tbl_terminal_waypoints')) {
-            fixType = FixType.Waypoint;
-            icaoCode = id.substr(27, 2);
-            ident = id.substr(29);
-            airportIdent = id.substr(23, 4);
-        } else {
-            throw new Error(`Fix id "${id}" cannot be correlated to a type`);
-        }
-        return {
-            fixType,
-            icaoCode,
-            ident,
-            location: { lat, long },
-            databaseId: `F${icaoCode}${airportIdent ?? '    '}${ident}`,
-            airportIdent,
-        };
-    }
-
     public mapLeg(leg: NaviProcedure): ProcedureLeg {
-        const waypoint = DFDMappers.decodeIdColumn(leg.id);
-        const recNavaid = DFDMappers.decodeIdColumn(leg.recommandedId);
-        const arcCentreFix = DFDMappers.decodeIdColumn(leg.centerId);
-
         return {
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
             fix: leg.waypointIdentifier
-                ? this.mapFix(leg.id, leg.waypointLatitude, leg.waypointLongitude) : undefined,
+                ? DFDMappers.decodeIdColumn(leg.id, leg.waypointLatitude, leg.waypointLongitude) : undefined,
             recommendedNavaid: leg.recommandedNavaid
-                ? this.mapFix(leg.recommandedId, leg.recommandedNavaidLatitude, leg.recommandedNavaidLongitude) : undefined,
+                ? DFDMappers.decodeIdColumn(leg.recommandedId, leg.recommandedNavaidLatitude, leg.recommandedNavaidLongitude) : undefined,
             rho: leg.rho ?? undefined,
             theta: leg.theta ?? undefined,
             arcCentreFix: leg.centerWaypoint
-                ? this.mapFix(leg.centerId, leg.centerWaypointLatitude, leg.centerWaypointLongitude) : undefined,
+                ? DFDMappers.decodeIdColumn(leg.centerId, leg.centerWaypointLatitude, leg.centerWaypointLongitude) : undefined,
             arcRadius: leg.arcRadius ?? undefined,
             length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
             lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
@@ -1334,46 +1261,42 @@ export class DFDMappers {
         return `V${navaid.icaoCode}${navaid.airportIdentifier ?? '    '}${navaid.llzIdentifier}`;
     }
 
-    public static decodeIdColumn(id: string): FixInfo | undefined {
-        if (!id) {
-            return undefined;
-        }
-
+    public static decodeIdColumn(id: string, lat: Latitude, long: Longitude): Fix {
         const [table, mapping] = id.split('|', 2);
 
-        const terminal = table.indexOf('terminal') !== -1 || table === 'tbl_runways' || table === 'tbl_localizers_glideslopes' || table === 'tbl_gls';
-        const area = terminal ? WaypointArea.Terminal : WaypointArea.Enroute;
-        const suppressIcaoCode = table === 'tbl_localizers_glideslopes' || table === 'tbl_gls';
+        let terminal = table.includes('terminal');
+        let fixType: FixType;
+        if (table.includes('airports')) {   
+            fixType = FixType.Airport;
+        } else if(table.includes('gls')) {
+            fixType = FixType.GlsNavaid;
+        } else if (table.includes('localizers_glideslopes')) {
+            terminal = true;
+            fixType = FixType.IlsNavaid;
+        } else if (table.includes('ndbnavaids')) {
+            fixType = FixType.NdbNavaid;
+        } else if (table.includes('runways')) {
+            terminal = true;
+            fixType = FixType.Runway;
+        } else if(table.includes('vhfnavaids')) {
+            fixType = FixType.VhfNavaid;
+        } else if(table.includes('waypoints')) {
+            fixType = FixType.Waypoint;
+        } else {
+            throw new Error(`Unknown table ${table}`);
+        }
+
         const icaoCode = terminal ? mapping.substring(4, 6) : mapping.substring(0, 2);
         const airportIdent = terminal ? mapping.substring(0, 4) : '    ';
         const ident = terminal ? mapping.substring(6) : mapping.substring(2);
-
-        let prefix = 'W';
-        if (table.indexOf('vhfnavaid') !== -1 || table === 'tbl_localizers_glideslopes') {
-            prefix = 'V';
-        } else if (table === 'tbl_gls') {
-            prefix = 'J';
-        } else if (table.indexOf('ndbnavaid') !== -1) {
-            prefix = 'N';
-        } else if (table === 'tbl_airports') {
-            prefix = 'A';
-        }
-
+        
         return {
+            databaseId: `F${icaoCode}${airportIdent ?? '    '}${ident}`,
             icaoCode,
             airportIdent,
+            fixType,
             ident,
-            area,
-            prefix,
-            suppressIcaoCode,
+            location: { lat, long },
         };
-    }
-
-    public static mapFixDatabaseId(fixIdent?: FixInfo): string | undefined {
-        if (!fixIdent) {
-            return undefined;
-        }
-
-        return `${fixIdent.prefix}${fixIdent.suppressIcaoCode ? '  ' : fixIdent.icaoCode ?? '  '}${fixIdent.airportIdent ?? '    '}${fixIdent.ident ?? ''}`;
     }
 }
