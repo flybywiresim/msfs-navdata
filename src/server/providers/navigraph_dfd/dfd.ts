@@ -73,7 +73,9 @@ export class NavigraphProvider implements DataInterface {
             const headers: NaviHeader[] = NavigraphProvider.toCamel(query(stmt));
             const fromTo = headers[0].effectiveFromto;
             const [fromDay, fromMonth, toDay, toMonth, fromYear] = [fromTo, fromTo, fromTo, fromTo, fromTo].map((fromTo, index) => parseInt(fromTo.substring(2 * index, 2 * index + 2)));
-            let toYear = fromYear;
+
+            // If your using this after the year 2099, i'm sorry,
+            let toYear = fromYear + 2000;
             if (fromMonth === 12 && toMonth < 12) {
                 toYear++;
             }
@@ -81,7 +83,7 @@ export class NavigraphProvider implements DataInterface {
             const result: DatabaseIdent = {
                 provider: 'Navigraph',
                 airacCycle: headers[0].currentAirac,
-                effectiveFrom: iso8601CalendarDate(fromYear, fromMonth, fromDay),
+                effectiveFrom: iso8601CalendarDate(fromYear + 2000, fromMonth, fromDay),
                 effectiveTo: iso8601CalendarDate(toYear, toMonth, toDay),
             };
             return (result);
