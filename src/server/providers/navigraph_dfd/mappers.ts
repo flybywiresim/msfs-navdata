@@ -1282,15 +1282,15 @@ export class DFDMappers {
 
         const ident = terminal ? mapping.substring(6) : mapping.substring(2);
         const icaoCode = terminal ? mapping.substring(4, 6) : mapping.substring(0, 2);
-        let airportIdent: string;
+        let airportIdent: string | undefined;
         if (fixType === FixType.Airport) {
             airportIdent = ident;
         } else {
-            airportIdent = terminal ? mapping.substring(0, 4) : '    ';
+            airportIdent = terminal ? mapping.substring(0, 4) : undefined;
         }
 
         return {
-            databaseId: `F${icaoCode}${airportIdent}${ident}`,
+            databaseId: `F${icaoCode}${airportIdent ?? '    '}${ident}`,
             icaoCode,
             airportIdent: fixType === FixType.Airport ? ident : airportIdent,
             fixType,
