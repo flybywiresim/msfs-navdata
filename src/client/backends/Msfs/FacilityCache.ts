@@ -216,22 +216,22 @@ export class FacilityCache {
         const icaos: string[] = (await Coherent.call('SEARCH_BY_IDENT', ident, type, maxItems)).filter((icao: string) => ident === icao.substring(7).trim() && icao.charAt(0) !== 'A');
 
         if (type === IcaoSearchFilter.Intersections) {
-            return [...(await this.getFacilities(icaos, LoadType.Intersection)).values()];
+            return [...(await this.getFacilities(icaos, LoadType.Intersection))] as any as SearchedFacilityType<T>;
         }
 
         if (type === IcaoSearchFilter.Ndbs) {
-            return [...(await this.getFacilities(icaos, LoadType.Ndb)).values()];
+            return [...(await this.getFacilities(icaos, LoadType.Ndb)).values()] as any as SearchedFacilityType<T>;
         }
 
         if (type === IcaoSearchFilter.Vors) {
-            return [...(await this.getFacilities(icaos, LoadType.Vor)).values()];
+            return [...(await this.getFacilities(icaos, LoadType.Vor)).values()] as any as SearchedFacilityType<T>;
         }
 
         const vors = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'V'), LoadType.Vor);
         const ndbs = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'N'), LoadType.Ndb);
         const wps = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'W'), LoadType.Intersection);
 
-        return [...wps.values(), ...ndbs.values(), ...vors.values()];
+        return [...wps.values(), ...ndbs.values(), ...vors.values()] as any as SearchedFacilityType<T>;
     }
 
     private addToAirwayCache(facility: JS_FacilityIntersection): void {
