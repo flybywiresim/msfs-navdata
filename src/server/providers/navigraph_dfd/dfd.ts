@@ -161,7 +161,12 @@ export class NavigraphProvider implements DataInterface {
     }
 
     async getAirports(idents: string[]): Promise<Airport[]> {
-        const sql = `SELECT * FROM tbl_airports WHERE airport_identifier IN (${idents.map(() => '?').join(',')})`;
+        const sql = `
+            SELECT apt.*, rwy.longest_runway_length
+            FROM tbl_airports as apt
+            LEFT JOIN (SELECT airport_identifier, MAX(runway_length) as longest_runway_length FROM tbl_runways GROUP BY airport_identifier) as rwy
+            ON apt.airport_identifier = rwy.airport_identifier
+            WHERE apt.airport_identifier IN (${idents.map(() => '?').join(',')})`;
         const stmt = this.database.prepare(sql, idents);
         try {
             const rows = query(stmt);
@@ -189,9 +194,14 @@ export class NavigraphProvider implements DataInterface {
 
     // TODO support filtering on longest surface type
     async getNearbyAirports(centre: Coordinates, range: number): Promise<Airport[]> {
-        const [sqlWhere, sqlParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'airport_ref_');
+        const [sqlWhere, sqlParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'apt.airport_ref_');
 
-        const sql = `SELECT * FROM tbl_airports WHERE ${sqlWhere}`;
+        const sql = `
+            SELECT apt.*, rwy.longest_runway_length
+            FROM tbl_airports as apt
+            LEFT JOIN (SELECT airport_identifier, MAX(runway_length) as longest_runway_length FROM tbl_runways GROUP BY airport_identifier) as rwy
+            ON apt.airport_identifier = rwy.airport_identifier
+            WHERE ${sqlWhere}`;
         const rows = query(this.database.prepare(sql, sqlParams));
         const airports: NaviAirport[] = NavigraphProvider.toCamel(rows);
         return (airports.map((airport) => {

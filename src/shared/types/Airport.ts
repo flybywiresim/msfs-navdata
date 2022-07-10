@@ -28,6 +28,10 @@ export interface Airport extends DatabaseItem {
      */
     transitionLevel?: FlightLevel;
     /**
+     * Length of the longest runway (not necessarily the "best" runway)
+     */
+    longestRunwayLength: Feet;
+    /**
      * Surface type of the longest runway (not necessarily the "best" runway)
      */
     longestRunwaySurfaceType: RunwaySurfaceType;
