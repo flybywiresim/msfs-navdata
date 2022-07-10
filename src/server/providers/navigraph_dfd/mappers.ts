@@ -163,6 +163,7 @@ export class DFDMappers {
             transitionAltitude: airport.transitionAltitude || undefined,
             transitionLevel: airport.transitionLevel / 100 || undefined,
             longestRunwaySurfaceType: surfaceCode,
+            longestRunwayLength: airport.longestRunwayLength,
         };
     }
 

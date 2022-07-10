@@ -107,6 +107,7 @@ export class MsfsMapping {
             icaoCode: msAirport.icao.substring(1, 3), // TODO
             name: Utils.Translate(msAirport.name),
             location: { lat: msAirport.lat, long: msAirport.lon, alt: elevation },
+            longestRunwayLength: longestRunway[0],
             longestRunwaySurfaceType: this.mapRunwaySurface(longestRunway[1]?.surface),
         };
     }

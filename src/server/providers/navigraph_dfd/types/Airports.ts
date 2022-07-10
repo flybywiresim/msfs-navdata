@@ -59,4 +59,7 @@ export type Airport = {
 
     /** IATA/ATA airport designator code */
     iataAtaDesignator: string;
+
+    /** Length of the longest runway in feet */
+    longestRunwayLength: number;
 }
