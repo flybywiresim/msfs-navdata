@@ -1266,9 +1266,9 @@ export class DFDMappers {
 
         let terminal = table.includes('terminal');
         let fixType: FixType;
-        if (table.includes('airports')) {   
+        if (table.includes('airports')) {
             fixType = FixType.Airport;
-        } else if(table.includes('gls')) {
+        } else if (table.includes('gls')) {
             fixType = FixType.GlsNavaid;
         } else if (table.includes('localizers_glideslopes')) {
             terminal = true;
@@ -1278,22 +1278,27 @@ export class DFDMappers {
         } else if (table.includes('runways')) {
             terminal = true;
             fixType = FixType.Runway;
-        } else if(table.includes('vhfnavaids')) {
+        } else if (table.includes('vhfnavaids')) {
             fixType = FixType.VhfNavaid;
-        } else if(table.includes('waypoints')) {
+        } else if (table.includes('waypoints')) {
             fixType = FixType.Waypoint;
         } else {
             throw new Error(`Unknown table ${table}`);
         }
 
-        const icaoCode = terminal ? mapping.substring(4, 6) : mapping.substring(0, 2);
-        const airportIdent = terminal ? mapping.substring(0, 4) : '    ';
         const ident = terminal ? mapping.substring(6) : mapping.substring(2);
-        
+        const icaoCode = terminal ? mapping.substring(4, 6) : mapping.substring(0, 2);
+        let airportIdent: string;
+        if (fixType === FixType.Airport) {
+            airportIdent = ident;
+        } else {
+            airportIdent = terminal ? mapping.substring(0, 4) : '    ';
+        }
+
         return {
-            databaseId: `F${icaoCode}${airportIdent ?? '    '}${ident}`,
+            databaseId: `F${icaoCode}${airportIdent}${ident}`,
             icaoCode,
-            airportIdent,
+            airportIdent: fixType === FixType.Airport ? ident : airportIdent,
             fixType,
             ident,
             location: { lat, long },
