@@ -41,22 +41,27 @@ export class Database {
         return this.backend.getDatabaseIdent();
     }
 
-    public getEnrouteFixes<T extends FixTypeFlags>(idents: string[], type?: T): Promise<EnrouteFix[]> {
+    public getEnrouteFixes<T extends FixTypeFlags>(idents: string[], airports?: string[], type?: T): Promise<EnrouteFix[]> {
+        if (airports?.length === 0) {
+            // Empty array specified so return no terminal waypoints
+            // Empty array cannot be sent through API so add airport which doesent exist
+            airports = ['0000'];
+        }
         const promises: Promise<EnrouteFix[]>[] = [];
         if ((!type || (type & FixTypeFlags.NdbNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
-            promises.push(this.backend.getNdbNavaids(idents));
+            promises.push(this.backend.getNdbNavaids(idents, undefined, undefined, airports));
         }
         if ((!type || (type & FixTypeFlags.VhfNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
-            promises.push(this.backend.getVhfNavaids(idents));
+            promises.push(this.backend.getVhfNavaids(idents, undefined, undefined, airports));
         }
         if ((!type || (type & FixTypeFlags.Waypoint) > 0) && idents.find((ident) => ident.length <= 5)) {
-            promises.push(this.backend.getWaypoints(idents));
+            promises.push(this.backend.getWaypoints(idents, undefined, undefined, airports));
         }
         return Promise.all(promises).then((data) => data.flat());
     }
 
-    public getFixes<T extends FixTypeFlags>(idents: string[], type?: T): Promise<StandaloneFix[]> {
-        const promises: Promise<StandaloneFix[]>[] = [this.getEnrouteFixes(idents, type)];
+    public getFixes<T extends FixTypeFlags>(idents: string[], airports?: string[], type?: T): Promise<StandaloneFix[]> {
+        const promises: Promise<StandaloneFix[]>[] = [this.getEnrouteFixes(idents, airports, type)];
         if ((!type || (type & FixTypeFlags.Airport) > 0) && idents.find((ident) => ident.length === 4)) {
             promises.push(this.backend.getAirports(idents));
         }
@@ -77,17 +82,17 @@ export class Database {
         return Promise.all(promises).then((data) => data.flat());
     }
 
-    public getNavaids<T extends FixTypeFlags>(idents: string[], airportIdentifier?: string, type?: T): Promise<Navaid[]> {
+    public getNavaids<T extends FixTypeFlags>(idents: string[], airports?: string[], type?: T): Promise<Navaid[]> {
         const promises: Promise<Navaid[]>[] = [];
         // Todo get GLS
-        if (airportIdentifier && (!type || (type & FixTypeFlags.IlsNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
-            promises.push(this.backend.getIlsAtAirport(airportIdentifier).then((data) => data.filter((ils) => idents.includes(ils.ident))));
+        if (airports && (!type || (type & FixTypeFlags.IlsNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
+            airports.forEach((airport) => promises.push(this.backend.getIlsAtAirport(airport).then((data) => data.filter((ils) => idents.includes(ils.ident)))));
         }
-        if (airportIdentifier && (!type || (type & FixTypeFlags.NdbNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
-            promises.push(this.backend.getNdbNavaids(idents));
+        if (airports && (!type || (type & FixTypeFlags.NdbNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
+            promises.push(this.backend.getNdbNavaids(idents, undefined, undefined, airports));
         }
-        if (airportIdentifier && (!type || (type & FixTypeFlags.VhfNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
-            promises.push(this.backend.getVhfNavaids(idents));
+        if (airports && (!type || (type & FixTypeFlags.VhfNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
+            promises.push(this.backend.getVhfNavaids(idents, undefined, undefined, airports));
         }
         return Promise.all(promises).then((data) => data.flat());
     }

@@ -106,27 +106,27 @@ export interface DataInterface {
      * @param idents waypoint identifier
      * @param ppos provide ppos if you want the distance from this position to each waypoint
      * @param icaoCode provide the 2-letter ICAO region if you want to limit the query to a region
-     * @param airportIdent provide the 4-letter ICAO airport code if you want to limit the query to a terminal area
+     * @param airportIdent provide the 4-letter ICAO airport codes if you would like to limit which terminal waypoints can be returned
      */
-    getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]>;
+    getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<Waypoint[]>;
 
     /**
      * Retrieve NDB navaid(s) from the database
      * @param idents NDB identifier
      * @param ppos provide ppos if you want the distance from this position to each navaid
      * @param icaoCode provide the 2-letter ICAO region if you want to limit the query to a region
-     * @param airportIdent provide the 4-letter ICAO airport code if you want to limit the query to a terminal area
+     * @param airportIdent provide the 4-letter ICAO airport codes if you would like to limit which terminal navaids can be returned
      */
-    getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]>;
+    getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<NdbNavaid[]>;
 
     /**
      * Retrieve VHF navaid(s) from the database, including ILS/LOC
      * @param idents navaid identifier
      * @param ppos provide ppos if you want the distance from this position to each navaid
      * @param icaoCode provide the 2-letter ICAO region if you want to limit the query to a region
-     * @param airportIdent provide the 4-letter ICAO airport code if you want to limit the query to a terminal area
+     * @param airportIdents provide the 4-letter ICAO airport codes if you would like to limit which terminal navaids can be returned
      */
-    getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]>;
+    getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<VhfNavaid[]>;
 
     /**
      * Retrieve arbitrary airway(s) by ident
