@@ -187,7 +187,7 @@ export class MsfsBackend implements DataInterface {
     }
 
     /** @inheritdoc */
-    public async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
+    public async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<Waypoint[]> {
         const results = new Map<string, Waypoint>();
 
         idents.forEach(async (ident) => {
@@ -198,7 +198,7 @@ export class MsfsBackend implements DataInterface {
     }
 
     /** @inheritdoc */
-    public async getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
+    public async getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<NdbNavaid[]> {
         const results = new Map<string, NdbNavaid>();
 
         idents.forEach(async (ident) => {
@@ -209,7 +209,7 @@ export class MsfsBackend implements DataInterface {
     }
 
     /** @inheritdoc */
-    public async getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
+    public async getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<VhfNavaid[]> {
         const results = new Map<string, VhfNavaid>();
 
         idents.forEach(async (ident) => {
