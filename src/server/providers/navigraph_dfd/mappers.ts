@@ -347,6 +347,7 @@ export class DFDMappers {
 
     public async mapDepartures(legs: NaviProcedure[], airport: Airport): Promise<Departure[]> {
         const departures: Map<string, Departure> = new Map();
+        const runways = await this.queries.getRunways(legs[0].airportIdentifier);
 
         // legs are sorted in sequence order by the db... phew
         for (const leg of legs) {
@@ -375,19 +376,19 @@ export class DFDMappers {
             case 'F':
             case 'T':
                 if (leg.transitionIdentifier[4] === 'B') {
-                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
-                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
-                    runways.forEach((runway) => {
-                        transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
-                        if (!transition) {
-                            transition = {
-                                ident: runway.ident,
-                                legs: [],
-                            };
-                            departure?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    });
+                    runways
+                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4))
+                        .forEach((runway) => {
+                            transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                };
+                                departure?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
                 } else {
                     transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                     if (!transition) {
@@ -404,7 +405,6 @@ export class DFDMappers {
             case '5':
             case 'M':
                 if (leg.transitionIdentifier === 'ALL') {
-                    const runways = await this.queries.getRunways(leg.airportIdentifier);
                     runways.forEach((runway) => {
                         transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
                         if (!transition) {
@@ -417,19 +417,19 @@ export class DFDMappers {
                         transition.legs.push(apiLeg);
                     });
                 } else if (leg.transitionIdentifier?.[4] === 'B') {
-                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
-                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
-                    runways.forEach((runway) => {
-                        transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
-                        if (!transition) {
-                            transition = {
-                                ident: runway.ident,
-                                legs: [],
-                            };
-                            departure?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    });
+                    runways
+                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4))
+                        .forEach((runway) => {
+                            transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                };
+                                departure?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
                 } else if (leg.transitionIdentifier) {
                     transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                     if (!transition) {
@@ -466,6 +466,7 @@ export class DFDMappers {
 
     public async mapArrivals(legs: NaviProcedure[], airport: Airport): Promise<Arrival[]> {
         const arrivals: Map<string, Arrival> = new Map();
+        const runways = await this.queries.getRunways(legs[0].airportIdentifier);
 
         // legs are sorted in sequence order by the db... phew
         for (const leg of legs) {
@@ -502,7 +503,6 @@ export class DFDMappers {
             case '8':
             case 'M':
                 if (leg.transitionIdentifier === 'ALL') {
-                    const runways = await this.queries.getRunways(leg.airportIdentifier);
                     runways.forEach((runway) => {
                         transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
                         if (!transition) {
@@ -515,19 +515,19 @@ export class DFDMappers {
                         transition.legs.push(apiLeg);
                     });
                 } else if (leg.transitionIdentifier?.[4] === 'B') {
-                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
-                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
-                    runways.forEach((runway) => {
-                        transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
-                        if (!transition) {
-                            transition = {
-                                ident: runway.ident,
-                                legs: [],
-                            };
-                            arrival?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    });
+                    runways
+                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4))
+                        .forEach((runway) => {
+                            transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                };
+                                arrival?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
                 } else if (leg.transitionIdentifier) {
                     transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                     if (!transition) {
@@ -545,19 +545,19 @@ export class DFDMappers {
             case '9':
             case 'S':
                 if (leg.transitionIdentifier[4] === 'B') {
-                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
-                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
-                    runways.forEach((runway) => {
-                        transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
-                        if (!transition) {
-                            transition = {
-                                ident: runway.ident,
-                                legs: [],
-                            };
-                            arrival?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    });
+                    runways
+                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4))
+                        .forEach((runway) => {
+                            transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                };
+                                arrival?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
                 } else {
                     transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                     if (!transition) {
