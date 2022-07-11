@@ -14,6 +14,8 @@ describe('Database', () => {
         expect(res.length).toBe(12);
         res = await db.getEnrouteFixes(['GUTBU', 'NS', 'NP'], ['EPTM', 'NZCH'], FixTypeFlags.Waypoint | FixTypeFlags.NdbNavaid);
         expect(res.length).toBe(9);
+        res = await db.getEnrouteFixes(['GUTBU', 'NS', 'NP'], undefined);
+        expect(res.length).toBe(12);
     });
     it('Standalone Fixes', async () => {
         let res = await db.getFixes(['NZCH', 'GUTBU']);

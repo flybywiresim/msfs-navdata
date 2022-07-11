@@ -43,11 +43,6 @@ export class Database {
     }
 
     public getEnrouteFixes<T extends FixTypeFlags>(idents: string[], airports?: string[], type?: T): Promise<EnrouteFix[]> {
-        if (airports?.length === 0) {
-            // Empty array specified so return no terminal waypoints
-            // Empty array cannot be sent through API so add airport which doesent exist
-            airports = ['0000'];
-        }
         const promises: Promise<EnrouteFix[]>[] = [];
         if ((!type || (type & FixTypeFlags.NdbNavaid) > 0) && idents.find((ident) => ident.length <= 4)) {
             promises.push(this.backend.getNdbNavaids(idents, undefined, undefined, airports));
