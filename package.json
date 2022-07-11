@@ -38,6 +38,6 @@
   },
   "dependencies": {
     "msfs-geo": "^0.1.0-alpha2",
-    "request": "^2.88.2"
+    "node-fetch": "^2.6.7"
   }
 }

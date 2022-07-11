@@ -27,4 +27,8 @@ describe('Database', () => {
         res = await db.getAirportFixes(['RW02', 'ICH'], 'NZCH', FixTypeFlags.Runway);
         expect(res.length).toBe(1);
     });
+    it('DatabaseId', async () => {
+        const res = await db.getDatabaseIdent();
+        expect(res.provider).toBe('Navigraph');
+    });
 });

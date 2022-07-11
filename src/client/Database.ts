@@ -25,6 +25,7 @@ import {
     AirportFix,
     Navaid,
     FixTypeFlags,
+    PopulatedFix,
 } from '../shared';
 import { AirportCommunication } from '../shared/types/Communication';
 import { ControlledAirspace } from '../shared/types/Airspace';
