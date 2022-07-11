@@ -94,6 +94,15 @@ import { Gate } from '../../../shared/types/Gate';
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
 
+interface DecodedIdColumn {
+    icaoCode: string,
+    airportIdent?: string,
+    ident: string,
+    area: Area,
+    fixType: FixType,
+    suppressIcaoCode: boolean,
+}
+
 export class DFDMappers {
     private queries: NavigraphProvider;
 
@@ -311,13 +320,13 @@ export class DFDMappers {
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
             fix: leg.waypointIdentifier
-                ? DFDMappers.decodeIdColumn(leg.id, leg.waypointLatitude, leg.waypointLongitude) : undefined,
+                ? DFDMappers.fixInfoToFix(DFDMappers.decodeIdColumn(leg.id), leg.waypointLatitude, leg.waypointLongitude) : undefined,
             recommendedNavaid: leg.recommandedNavaid
-                ? DFDMappers.decodeIdColumn(leg.recommandedId, leg.recommandedNavaidLatitude, leg.recommandedNavaidLongitude) : undefined,
+                ? DFDMappers.fixInfoToFix(DFDMappers.decodeIdColumn(leg.recommandedId), leg.recommandedNavaidLatitude, leg.recommandedNavaidLongitude) : undefined,
             rho: leg.rho ?? undefined,
             theta: leg.theta ?? undefined,
             arcCentreFix: leg.centerWaypoint
-                ? DFDMappers.decodeIdColumn(leg.centerId, leg.centerWaypointLatitude, leg.centerWaypointLongitude) : undefined,
+                ? DFDMappers.fixInfoToFix(DFDMappers.decodeIdColumn(leg.centerId), leg.centerWaypointLatitude, leg.centerWaypointLongitude) : undefined,
             arcRadius: leg.arcRadius ?? undefined,
             length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
             lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
@@ -799,7 +808,7 @@ export class DFDMappers {
                     maximumAltitude: fix.maximumAltitude,
                 });
             }
-            airways[airways.length - 1].fixes.push(DFDMappers.decodeIdColumn(fix.id, fix.waypointLatitude, fix.waypointLongitude));
+            airways[airways.length - 1].fixes.push(DFDMappers.fixInfoToFix(DFDMappers.decodeIdColumn(fix.id), fix.waypointLatitude, fix.waypointLongitude));
         });
         return airways;
     }
@@ -1255,7 +1264,22 @@ export class DFDMappers {
         return `V${navaid.icaoCode}${navaid.airportIdentifier ?? '    '}${navaid.llzIdentifier}`;
     }
 
-    public static decodeIdColumn(id: string, lat: Latitude, long: Longitude): Fix {
+    public static fixTypeToDatabaseIdPrefix(type: FixType): string {
+        if (type === FixType.IlsNavaid) return 'V';
+        return type;
+    }
+
+    public static fixInfoToFix(info: DecodedIdColumn, lat: Latitude, long: Longitude): Fix {
+        return {
+            fixType: info.fixType,
+            databaseId: DFDMappers.mapFixDatabaseId(info),
+            location: { lat, long },
+            icaoCode: info.icaoCode,
+            ident: info.ident,
+        };
+    }
+
+    public static decodeIdColumn(id: string): DecodedIdColumn {
         const [table, mapping] = id.split('|', 2);
 
         let terminal = table.includes('terminal');
@@ -1263,6 +1287,7 @@ export class DFDMappers {
         if (table.includes('airports')) {
             fixType = FixType.Airport;
         } else if (table.includes('gls')) {
+            terminal = true;
             fixType = FixType.GlsNavaid;
         } else if (table.includes('localizers_glideslopes')) {
             terminal = true;
@@ -1290,12 +1315,18 @@ export class DFDMappers {
         }
 
         return {
-            databaseId: `F${icaoCode}${airportIdent ?? '    '}${ident}`,
-            icaoCode,
-            airportIdent: fixType === FixType.Airport ? ident : airportIdent,
             fixType,
+            area: terminal ? Area.Terminal : Area.EnRoute,
+            icaoCode,
+            airportIdent,
             ident,
-            location: { lat, long },
+            suppressIcaoCode: table === 'tbl_localizers_glideslopes' || table === 'tbl_gls',
         };
+    }
+
+    public static mapFixDatabaseId(fixIdent: DecodedIdColumn): string {
+        return (DFDMappers.fixTypeToDatabaseIdPrefix(fixIdent.fixType)
+            + (fixIdent.suppressIcaoCode ? '  ' : fixIdent.icaoCode ?? '  ')
+             + (fixIdent.airportIdent ?? '    ') + fixIdent.ident);
     }
 }

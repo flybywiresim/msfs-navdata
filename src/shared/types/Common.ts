@@ -57,13 +57,13 @@ export interface ProcedureTransition {
 }
 
 export enum FixType {
-    Airport,
-    GlsNavaid,
-    IlsNavaid,
-    NdbNavaid,
-    Runway,
-    VhfNavaid,
-    Waypoint,
+    Airport = 'A',
+    GlsNavaid = 'G',
+    IlsNavaid = 'I',
+    NdbNavaid = 'N',
+    Runway = 'R',
+    VhfNavaid = 'V',
+    Waypoint = 'W',
 }
 
 export enum FixTypeFlags {
