@@ -1,4 +1,5 @@
 import { Coordinates, NauticalMiles } from 'msfs-geo';
+import request from 'request';
 import {
     Airport,
     Airway,
@@ -37,8 +38,15 @@ export class ExternalBackend implements DataInterface {
     }
 
     async fetchApi(path: string): Promise<any> {
-        const resp = fetch(`${this.apiBase}/${path}`);
-        return (await resp).json();
+        return new Promise((resolve, reject) => {
+            request(`${this.apiBase}/${path}`, { json: true }, (error, res, body) => {
+                if (error) {
+                    reject(error);
+                } else if (!error && res.statusCode === 200) {
+                    resolve(body);
+                }
+            });
+        });
     }
 
     getDatabaseIdent(): Promise<DatabaseIdent> {
