@@ -305,10 +305,9 @@ export class NavigraphProvider implements DataInterface {
         `;
 
         if (airports) {
-            // Navigraph does not supply airport identifiers for VHF navaids yet
-            // sql += ` AND airport_identifier IN (${airports.map(() => '?').join(',')})`;
+            sql += ` AND (airport_identifier IS NULL OR airport_identifier IN (${airports.map(() => '?').join(',')}))`;
 
-            // params.push(...airports.slice());
+            params.push(...airports.slice());
         }
 
         if (icaoCode) {
