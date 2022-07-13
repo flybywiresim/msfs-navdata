@@ -17,7 +17,7 @@
     "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
     "lint-fix": "npm run lint -- --fix",
     "prepublishOnly": "npm run build",
-    "test": "jest --passWithNoTests"
+    "test": "jest"
   },
   "devDependencies": {
     "@flybywiresim/eslint-config": "^0.2.2",
