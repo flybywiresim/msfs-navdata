@@ -193,7 +193,7 @@ export class NavigraphProvider implements DataInterface {
     }
 
     // TODO support filtering on longest surface type
-    async getNearbyAirports(centre: Coordinates, range: number): Promise<Airport[]> {
+    async getNearbyAirports(centre: Coordinates, range: number, limit?: number): Promise<Airport[]> {
         const [sqlWhere, sqlParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'apt.airport_ref_');
 
         const sql = `
@@ -208,7 +208,9 @@ export class NavigraphProvider implements DataInterface {
             const ap = this.mappers.mapAirport(airport);
             ap.distance = distanceTo(centre, ap.location);
             return ap;
-        }).filter((ap) => (ap.distance ?? 0) <= range).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0)));
+        }).filter((ap) => (ap.distance ?? 0) <= range)
+            .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0)))
+            .slice(0, limit);
     }
 
     async getDepartures(airportIdentifier: string): Promise<Departure[]> {
@@ -366,7 +368,7 @@ export class NavigraphProvider implements DataInterface {
         return results.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
     }
 
-    async getNearbyAirways(centre: Coordinates, range: NauticalMiles, levels?: AirwayLevel): Promise<Airway[]> {
+    async getNearbyAirways(centre: Coordinates, range: NauticalMiles, limit?: number, levels?: AirwayLevel): Promise<Airway[]> {
         const [sqlWhere, sqlParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'waypoint_');
         // TODO: This currently loads all Airways with a route_identifier which is the same as an in range airway.
         // Queries significantly more airways than it should, the distanceTo fixes it but bad performance
@@ -378,10 +380,10 @@ export class NavigraphProvider implements DataInterface {
         if (levels === undefined) {
             return airways;
         }
-        return airways.filter((airway) => (airway.level & levels) === airway.level);
+        return airways.filter((airway) => (airway.level & levels) === airway.level).slice(0, limit);
     }
 
-    async getNearbyNdbNavaids(centre: Coordinates, range: number, classes?: NdbClass): Promise<NdbNavaid[]> {
+    async getNearbyNdbNavaids(centre: Coordinates, range: number, limit?: number, classes?: NdbClass): Promise<NdbNavaid[]> {
         const [sqlWhere, sqlParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'ndb_');
 
         const sql = `SELECT area_code, airport_identifier, icao_code, ndb_identifier, ndb_name, ndb_frequency, navaid_class, ndb_latitude, ndb_longitude
@@ -399,10 +401,12 @@ export class NavigraphProvider implements DataInterface {
             const na = this.mappers.mapNdbNavaid(navaid);
             na.distance = distanceTo(centre, na.location);
             return na;
-        }).filter((na) => (na.distance ?? 0) <= range && (classes === undefined || (na.class & classes) > 0)).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+        }).filter((na) => (na.distance ?? 0) <= range && (classes === undefined || (na.class & classes) > 0))
+            .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0))
+            .slice(0, limit);
     }
 
-    async getNearbyVhfNavaids(centre: Coordinates, range: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
+    async getNearbyVhfNavaids(centre: Coordinates, range: number, limit?: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
         const [vorWhere, vorParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'vor_');
         const [dmeWhere, dmeParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'dme_');
 
@@ -418,12 +422,13 @@ export class NavigraphProvider implements DataInterface {
             na.distance = distanceTo(centre, { lat: (loc?.lat ?? centre.lat), long: (loc?.long ?? centre.long) });
             return na;
         }).filter((na) => (na.distance ?? 0) <= range
-            && (types === undefined || (na.type & types) > 0)
-            && (classes === undefined || (na.class & classes) > 0))
-            .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+                && (types === undefined || (na.type & types) > 0)
+                && (classes === undefined || (na.class & classes) > 0))
+            .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0))
+            .slice(0, limit);
     }
 
-    async getNearbyWaypoints(centre: Coordinates, range: number): Promise<Waypoint[]> {
+    async getNearbyWaypoints(centre: Coordinates, range: number, limit?: number): Promise<Waypoint[]> {
         const [sqlWhere, sqlParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'waypoint_');
 
         const sql = `
@@ -443,7 +448,9 @@ export class NavigraphProvider implements DataInterface {
             const na = this.mappers.mapWaypoint(navaid);
             na.distance = distanceTo(centre, na.location);
             return na;
-        }).filter((ap) => (ap.distance ?? 0) <= range).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+        }).filter((ap) => (ap.distance ?? 0) <= range)
+            .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0))
+            .slice(0, limit);
     }
 
     async getControlledAirspaceInRange(centre: Coordinates, range: NauticalMiles): Promise<ControlledAirspace[]> {

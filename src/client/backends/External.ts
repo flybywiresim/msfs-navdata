@@ -113,23 +113,23 @@ export class ExternalBackend implements DataInterface {
         return this.fetchApi(`waypoints/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
     }
 
-    getNearbyAirports(center: Coordinates, range: NauticalMiles, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
-        return this.fetchApi(`nearby/airports/${center.lat},${center.long}/${range}${this.formatQuery({ longestRunwaySurfaces })}`);
+    getNearbyAirports(center: Coordinates, range: NauticalMiles, limit?: number, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
+        return this.fetchApi(`nearby/airports/${center.lat},${center.long}/${range}${this.formatQuery({ limit, longestRunwaySurfaces })}`);
     }
 
-    getNearbyAirways(center: Coordinates, range: NauticalMiles, levels?: AirwayLevel): Promise<Airway[]> {
-        return this.fetchApi(`nearby/airways/${center.lat},${center.long}/${range}${this.formatQuery({ levels })}`);
+    getNearbyAirways(center: Coordinates, range: NauticalMiles, limit?: number, levels?: AirwayLevel): Promise<Airway[]> {
+        return this.fetchApi(`nearby/airways/${center.lat},${center.long}/${range}${this.formatQuery({ limit, levels })}`);
     }
 
-    getNearbyVhfNavaids(center: Coordinates, range?: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
-        return this.fetchApi(`nearby/vhfnavaids/${center.lat},${center.long}/${range}${this.formatQuery({ classes, types })}`);
+    getNearbyVhfNavaids(center: Coordinates, range?: number, limit?: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
+        return this.fetchApi(`nearby/vhfnavaids/${center.lat},${center.long}/${range}${this.formatQuery({ limit, classes, types })}`);
     }
 
-    getNearbyNdbNavaids(center: Coordinates, range?: number, classes?: NdbClass): Promise<NdbNavaid[]> {
-        return this.fetchApi(`nearby/ndbnavaids/${center.lat},${center.long}/${range}${this.formatQuery({ classes })}`);
+    getNearbyNdbNavaids(center: Coordinates, range?: number, limit?: number, classes?: NdbClass): Promise<NdbNavaid[]> {
+        return this.fetchApi(`nearby/ndbnavaids/${center.lat},${center.long}/${range}${this.formatQuery({ limit, classes })}`);
     }
 
-    getNearbyWaypoints(center: Coordinates, range?: number): Promise<Waypoint[]> {
+    getNearbyWaypoints(center: Coordinates, range?: number, limit?: number): Promise<Waypoint[]> {
         return this.fetchApi(`nearby/waypoints/${center.lat},${center.long}/${range}`);
     }
 

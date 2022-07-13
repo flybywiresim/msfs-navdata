@@ -121,24 +121,24 @@ export class Database {
         return this.backend.getAirwaysByFix(fix.ident, fix.icaoCode);
     }
 
-    public getNearbyAirports(center: Coordinates, range: number): Promise<Airport[]> {
-        return this.backend.getNearbyAirports(center, range);
+    public getNearbyAirports(center: Coordinates, range: number, limit?: number): Promise<Airport[]> {
+        return this.backend.getNearbyAirports(center, range, limit);
     }
 
-    public getNearbyAirways(center: Coordinates, range: number, levels?: AirwayLevel): Promise<Airway[]> {
-        return this.backend.getNearbyAirways(center, range, levels);
+    public getNearbyAirways(center: Coordinates, range: number, limit?: number, levels?: AirwayLevel): Promise<Airway[]> {
+        return this.backend.getNearbyAirways(center, range, limit, levels);
     }
 
-    public getNearbyVhfNavaids(center: Coordinates, range: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
-        return this.backend.getNearbyVhfNavaids(center, range, classes, types);
+    public getNearbyVhfNavaids(center: Coordinates, range: number, limit?: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
+        return this.backend.getNearbyVhfNavaids(center, range, limit, classes, types);
     }
 
-    public getNearbyNdbNavaids(center: Coordinates, range: number, classes?: NdbClass): Promise<NdbNavaid[]> {
-        return this.backend.getNearbyNdbNavaids(center, range, classes);
+    public getNearbyNdbNavaids(center: Coordinates, range: number, limit?: number, classes?: NdbClass): Promise<NdbNavaid[]> {
+        return this.backend.getNearbyNdbNavaids(center, range, limit, classes);
     }
 
-    public getWaypointsInRange(center: Coordinates, range: number): Promise<Waypoint[]> {
-        return this.backend.getNearbyWaypoints(center, range);
+    public getWaypointsInRange(center: Coordinates, range: number, limit?: number): Promise<Waypoint[]> {
+        return this.backend.getNearbyWaypoints(center, range, limit);
     }
 
     public getControlledAirspacesInRange(center: Coordinates, range: NauticalMiles): Promise<ControlledAirspace[]> {
