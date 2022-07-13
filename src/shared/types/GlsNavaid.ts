@@ -1,5 +1,6 @@
 import { Degrees, DegreesMagnetic } from 'msfs-geo';
-import { ElevatedCoordinates, Fix, FixType, LsCategory } from './Common';
+import { ElevatedCoordinates, LsCategory } from './Common';
+import { Fix, FixType } from './Fix';
 
 export interface GlsNavaid extends Fix {
     fixType: FixType.GlsNavaid;

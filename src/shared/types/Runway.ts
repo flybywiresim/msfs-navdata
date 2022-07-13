@@ -2,9 +2,11 @@ import { Coordinates, Degrees, DegreesMagnetic, DegreesTrue, Feet, Metres } from
 import {
     LsCategory,
     ElevatedCoordinates,
+} from './Common';
+import {
     Fix,
     FixType,
-} from './Common';
+} from './Fix';
 
 export interface Runway extends Fix {
     fixType: FixType.Runway;

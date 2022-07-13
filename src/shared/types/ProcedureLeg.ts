@@ -1,5 +1,6 @@
 import { Degrees, DegreesMagnetic, Feet, NauticalMiles } from 'msfs-geo';
-import { Fix, Knots, Minutes } from './Common';
+import { Knots, Minutes } from './Common';
+import { Fix } from './Fix';
 
 export interface ProcedureLeg {
     procedureIdent: string,

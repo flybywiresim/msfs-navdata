@@ -49,7 +49,7 @@ type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
 
 const query = (stmt: Statement) => {
-    const rows = [];
+    const rows: any[] = [];
     while (stmt.step()) rows.push(stmt.getAsObject());
     return rows;
 };

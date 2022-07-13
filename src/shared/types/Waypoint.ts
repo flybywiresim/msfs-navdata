@@ -1,5 +1,6 @@
 import { NauticalMiles } from 'msfs-geo';
-import { Area, Fix, FixType } from './Common';
+import { Area } from './Common';
+import { Fix, FixType } from './Fix';
 
 export interface Waypoint extends Fix {
     fixType: FixType.Waypoint;

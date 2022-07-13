@@ -1,6 +1,6 @@
 import { Coordinates, Degrees, Feet, NauticalMiles } from 'msfs-geo';
-import { Fix, FixType } from '..';
 import { Area, MegaHertz } from './Common';
+import { Fix, FixType } from './Fix';
 
 export interface VhfNavaid extends Fix {
     fixType: FixType.VhfNavaid;

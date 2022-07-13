@@ -1,5 +1,6 @@
 import { Feet, NauticalMiles } from 'msfs-geo';
-import { Knots, FlightLevel, ElevatedCoordinates, Fix, FixType } from './Common';
+import { Knots, FlightLevel, ElevatedCoordinates } from './Common';
+import { Fix, FixType } from './Fix';
 import { RunwaySurfaceType } from './Runway';
 
 export interface Airport extends Fix {

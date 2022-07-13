@@ -1,5 +1,6 @@
 import { Coordinates, Degrees, DegreesMagnetic, Feet } from 'msfs-geo';
-import { Fix, FixType, LsCategory, MegaHertz } from './Common';
+import { LsCategory, MegaHertz } from './Common';
+import { Fix, FixType } from './FixType';
 
 export interface IlsNavaid extends Fix {
     fixType: FixType.IlsNavaid;

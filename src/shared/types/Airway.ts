@@ -1,5 +1,5 @@
 import { Feet, NauticalMiles } from 'msfs-geo';
-import { Fix } from './Common';
+import { Fix } from './Fix';
 
 export enum AirwayType {
     Airline,
