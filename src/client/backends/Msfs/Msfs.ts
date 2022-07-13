@@ -190,9 +190,9 @@ export class MsfsBackend implements DataInterface {
     public async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<Waypoint[]> {
         const results = new Map<string, Waypoint>();
 
-        idents.forEach(async (ident) => {
-            (await this.cache.searchByIdent(ident, IcaoSearchFilter.Intersections, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
-        });
+        const promises = idents.map((ident) => this.cache.searchByIdent(ident, IcaoSearchFilter.Intersections, 100));
+
+        (await Promise.all(promises)).flat().forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
 
         return [...results.values()];
     }
@@ -201,9 +201,9 @@ export class MsfsBackend implements DataInterface {
     public async getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<NdbNavaid[]> {
         const results = new Map<string, NdbNavaid>();
 
-        idents.forEach(async (ident) => {
-            (await this.cache.searchByIdent(ident, IcaoSearchFilter.Ndbs, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
-        });
+        const promises = idents.map((ident) => this.cache.searchByIdent(ident, IcaoSearchFilter.Ndbs, 100));
+
+        (await Promise.all(promises)).flat().forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
 
         return [...results.values()];
     }
@@ -212,9 +212,9 @@ export class MsfsBackend implements DataInterface {
     public async getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<VhfNavaid[]> {
         const results = new Map<string, VhfNavaid>();
 
-        idents.forEach(async (ident) => {
-            (await this.cache.searchByIdent(ident, IcaoSearchFilter.Vors, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
-        });
+        const promises = idents.map((ident) => this.cache.searchByIdent(ident, IcaoSearchFilter.Vors, 100));
+
+        (await Promise.all(promises)).flat().forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
 
         return [...results.values()];
     }
