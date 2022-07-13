@@ -230,27 +230,27 @@ export class MsfsBackend implements DataInterface {
     }
 
     /** @inheritdoc */
-    public async getNearbyAirports(center: Coordinates, range: NauticalMiles, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
+    public async getNearbyAirports(center: Coordinates, range: NauticalMiles, limit?: number, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
         return [];
     }
 
     /** @inheritdoc */
-    public async getNearbyAirways(center: Coordinates, range: NauticalMiles, levels?: AirwayLevel): Promise<Airway[]> {
+    public async getNearbyAirways(center: Coordinates, range: NauticalMiles, limit?: number, levels?: AirwayLevel): Promise<Airway[]> {
         return [];
     }
 
     /** @inheritdoc */
-    public async getNearbyVhfNavaids(centre: Coordinates, range: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
+    public async getNearbyVhfNavaids(centre: Coordinates, range: number, limit?: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]> {
         return [];
     }
 
     /** @inheritdoc */
-    public async getNearbyNdbNavaids(center: Coordinates, range: NauticalMiles, classes?: NdbClass): Promise<NdbNavaid[]> {
+    public async getNearbyNdbNavaids(center: Coordinates, range: NauticalMiles, limit?: number, classes?: NdbClass): Promise<NdbNavaid[]> {
         return [];
     }
 
     /** @inheritdoc */
-    public async getNearbyWaypoints(center: Coordinates, range: NauticalMiles): Promise<Waypoint[]> {
+    public async getNearbyWaypoints(center: Coordinates, range: NauticalMiles, limit?: number): Promise<Waypoint[]> {
         return [];
     }
 

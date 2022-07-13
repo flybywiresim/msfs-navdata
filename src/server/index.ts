@@ -55,6 +55,13 @@ function parseRange(range: string): number {
     return parseInt(range);
 }
 
+function parseLimit(limit: string): number {
+    if (!limit.match(/^[0-9]+$/)) {
+        throw new InputError(`Invalid limit "${limit}"`);
+    }
+    return parseInt(limit);
+}
+
 function parseAirportIdent(ident: string): string {
     if (!ident.match(/^[A-Za-z0-9]{4}/)) {
         throw new InputError(`Invalid airport ident "${ident}"`);
@@ -191,7 +198,8 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         try {
             const location = parsePpos(req.params.ppos);
             const range = parseRange(req.params.range);
-            provider.getNearbyAirports(location, range).then((airports: Airport[]) => {
+            const limit = (req.query.limit && typeof req.query.limit === 'string') ? parseLimit(req.query.limit) : undefined;
+            provider.getNearbyAirports(location, range, limit).then((airports: Airport[]) => {
                 res.json(airports);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
@@ -203,8 +211,9 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         try {
             const location = parsePpos(req.params.ppos);
             const range = parseRange(req.params.range);
+            const limit = (req.query.limit && typeof req.query.limit === 'string') ? parseLimit(req.query.limit) : undefined;
             const levels = (req.query.levels && typeof req.query.levels === 'string') ? parseAirwayLevels(req.query.levels) : undefined;
-            provider.getNearbyAirways(location, range, levels).then((airways: Airway[]) => {
+            provider.getNearbyAirways(location, range, limit, levels).then((airways: Airway[]) => {
                 res.json(airways);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
@@ -216,9 +225,10 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         try {
             const location = parsePpos(req.params.ppos);
             const range = parseRange(req.params.range);
+            const limit = (req.query.limit && typeof req.query.limit === 'string') ? parseLimit(req.query.limit) : undefined;
             const types = (req.query.types && typeof req.query.types === 'string') ? parseVhfNavaidTypes(req.query.types) : undefined;
             const classes = (req.query.classes && typeof req.query.classes === 'string') ? parseVorClasses(req.query.classes) : undefined;
-            provider.getNearbyVhfNavaids(location, range, classes, types).then((navaids: VhfNavaid[]) => {
+            provider.getNearbyVhfNavaids(location, range, classes, limit, types).then((navaids: VhfNavaid[]) => {
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
@@ -230,9 +240,10 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         try {
             const location = parsePpos(req.params.ppos);
             const range = parseRange(req.params.range);
+            const limit = (req.query.limit && typeof req.query.limit === 'string') ? parseLimit(req.query.limit) : undefined;
             const classes = (req.query.classes && typeof req.query.classes === 'string') ? parseNdbClasses(req.query.classes) : undefined;
             // TODO area? (terminal or enroute)
-            provider.getNearbyNdbNavaids(location, range, classes).then((navaids: NdbNavaid[]) => {
+            provider.getNearbyNdbNavaids(location, range, limit, classes).then((navaids: NdbNavaid[]) => {
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
@@ -244,8 +255,9 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         try {
             const location = parsePpos(req.params.ppos);
             const range = parseRange(req.params.range);
+            const limit = (req.query.limit && typeof req.query.limit === 'string') ? parseLimit(req.query.limit) : undefined;
             // TODO area? (terminal or enroute)
-            provider.getNearbyWaypoints(location, range).then((waypoints: Waypoint[]) => {
+            provider.getNearbyWaypoints(location, range, limit).then((waypoints: Waypoint[]) => {
                 res.json(waypoints);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
