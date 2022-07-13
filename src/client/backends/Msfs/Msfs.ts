@@ -11,6 +11,7 @@ import {
     ControlledAirspace,
     DatabaseIdent,
     IlsNavaid,
+    iso8601CalendarDate,
     NdbClass,
     NdbNavaid,
     ProcedureLeg,
@@ -50,27 +51,26 @@ export class MsfsBackend implements DataInterface {
         // "APR21MAY18/22"
         const range = SimVar.GetGameVarValue('FLIGHT NAVDATA DATE RANGE', 'string');
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        const fromMonth = months.indexOf(range.substring(0, 3));
+        const fromMonth = months.indexOf(range.substring(0, 3)) + 1;
         const fromDay = parseInt(range.substring(3, 5));
-        const toMonth = months.indexOf(range.substring(5, 8));
+        const toMonth = months.indexOf(range.substring(5, 8)) + 1;
         const toDay = parseInt(range.substring(8, 10));
         const fromYear = parseInt(range.substring(11, 13));
 
-        const toYear = fromMonth === 12 && toMonth < 12 ? fromYear + 1 : fromYear;
+        let toYear = fromYear;
+        if (fromMonth === 12 && toMonth < 12) {
+            toYear++;
+        }
 
-        const fromDate = new Date(Date.UTC(fromYear + 2000, fromMonth, fromDay));
-        const toDate = new Date(Date.UTC(toYear + 2000, toMonth, toDay));
-        // Add one to get the start of the next cycle
-        toDate.setDate(toDate.getDate() + 1);
+        // the to date is supposed to overlap the next cycle
+        const toDate = new Date(Date.UTC(toYear, toMonth - 1, toDay));
+        toDate.setUTCDate(toDay + 1);
 
-        // Subtract 28 days as this is the arinc424 cycle length
-        const previousStart = new Date(fromDate);
-        previousStart.setDate(fromDate.getDate() - 28);
         return {
             provider: 'Msfs', // TODO navi or navblue
             airacCycle: '', // TODO
-            effectiveFromTo: [fromDate, toDate],
-            previousEffectiveFromTo: [previousStart, fromDate],
+            effectiveFrom: iso8601CalendarDate(fromYear, fromMonth, fromDay),
+            effectiveTo: iso8601CalendarDate(toDate.getUTCFullYear(), toDate.getUTCMonth() + 1, toDate.getUTCDate()),
         };
     }
 
