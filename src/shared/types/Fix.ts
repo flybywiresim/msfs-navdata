@@ -32,7 +32,6 @@ export type PopulatedFix = Airport | GlsNavaid | IlsNavaid | NdbNavaid | Runway 
 export type EnrouteFix = NdbNavaid | VhfNavaid | Waypoint;
 export type StandaloneFix = EnrouteFix | Airport;
 export type Navaid = GlsNavaid | IlsNavaid | NdbNavaid | VhfNavaid;
-export type AirportFix = GlsNavaid | IlsNavaid | Runway;
 
 export interface Fix extends DatabaseItem {
     fixType: FixType;
