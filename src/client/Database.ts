@@ -20,8 +20,6 @@ import {
     DataInterface,
     RestrictiveAirspace,
     Fix,
-    FixTypeFlags,
-    PopulatedFix,
 } from '../shared';
 import { AirportCommunication } from '../shared/types/Communication';
 import { ControlledAirspace } from '../shared/types/Airspace';
