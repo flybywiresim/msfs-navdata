@@ -1,10 +1,10 @@
-import { Coordinates, NauticalMiles } from 'msfs-geo';
-import { WaypointArea } from '..';
-import { DatabaseItem, KiloHertz } from './Common';
+import { NauticalMiles } from 'msfs-geo';
+import { Fix, FixType } from '..';
+import { Area, KiloHertz } from './Common';
 
-export interface NdbNavaid extends DatabaseItem {
+export interface NdbNavaid extends Fix {
+    fixType: FixType.NdbNavaid;
     frequency: KiloHertz,
-    location: Coordinates,
     name?: string,
     class: NdbClass,
     /**
@@ -16,7 +16,7 @@ export interface NdbNavaid extends DatabaseItem {
      * Distance from centre location for nearby airport query
      */
     distance?: NauticalMiles,
-    area: WaypointArea,
+    area: Area,
 }
 
 export enum NdbClass {

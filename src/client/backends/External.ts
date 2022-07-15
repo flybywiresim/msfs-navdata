@@ -1,4 +1,5 @@
 import { Coordinates, NauticalMiles } from 'msfs-geo';
+import axios from 'axios';
 import {
     Airport,
     Airway,
@@ -37,8 +38,8 @@ export class ExternalBackend implements DataInterface {
     }
 
     async fetchApi(path: string): Promise<any> {
-        const resp = fetch(`${this.apiBase}/${path}`);
-        return (await resp).json();
+        const resp = axios.get(`${this.apiBase}/${path}`);
+        return (await resp).data;
     }
 
     getDatabaseIdent(): Promise<DatabaseIdent> {
@@ -101,16 +102,16 @@ export class ExternalBackend implements DataInterface {
         return this.fetchApi(`airport/${airportIdentifier}/communications`);
     }
 
-    getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
-        return this.fetchApi(`vhfnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
+    getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<VhfNavaid[]> {
+        return this.fetchApi(`vhfnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airports })}`);
     }
 
-    getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
-        return this.fetchApi(`ndbnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
+    getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<NdbNavaid[]> {
+        return this.fetchApi(`ndbnavaids/${idents.join()}${this.formatQuery({ ppos, icaoCode, airports })}`);
     }
 
-    getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
-        return this.fetchApi(`waypoints/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
+    getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<Waypoint[]> {
+        return this.fetchApi(`waypoints/${idents.join()}${this.formatQuery({ ppos, icaoCode, airports })}`);
     }
 
     getNearbyAirports(center: Coordinates, range: NauticalMiles, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {

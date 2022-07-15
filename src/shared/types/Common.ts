@@ -8,6 +8,11 @@ export type Knots = number;
 export type MegaHertz = number;
 export type Minutes = number;
 
+export enum Area {
+    Terminal = 1 << 0,
+    EnRoute = 1 << 1,
+}
+
 export interface DatabaseItem {
     /**
      * Globally unique ID

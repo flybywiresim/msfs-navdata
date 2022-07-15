@@ -1,15 +1,11 @@
-import { Coordinates, NauticalMiles } from 'msfs-geo';
-import { DatabaseItem } from './Common';
+import { NauticalMiles } from 'msfs-geo';
+import { Area } from './Common';
+import { Fix, FixType } from './Fix';
 
-export enum WaypointArea {
-    Enroute,
-    Terminal,
-}
-
-export interface Waypoint extends DatabaseItem {
-    location: Coordinates,
+export interface Waypoint extends Fix {
+    fixType: FixType.Waypoint;
     name?: string,
-    area: WaypointArea,
+    area: Area,
     // TODO more...
 
     /**

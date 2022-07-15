@@ -53,7 +53,7 @@ type StarRouteType =
 type IAPRouteType =
     /** Approach Transition */
     | 'A'
-    /** Localizer/Back course Approach	 */
+    /** Localizer/Back course Approach */
     | 'B'
     /** VORDME Approach */
     | 'D'
@@ -249,4 +249,5 @@ export type TerminalProcedure = {
     recommandedId: string;
     /** Table reference for the arc centre fix */
     centerId: string;
+    aircraftCategory: string;
 };

@@ -6,17 +6,23 @@
 
 /* eslint-disable no-await-in-loop */
 
-import { Coordinates, distanceTo } from 'msfs-geo';
+import { Coordinates, distanceTo, Latitude, Longitude } from 'msfs-geo';
 import {
     Airport,
     Airway,
     AirwayDirection,
+    AirwayLevel,
     AltitudeDescriptor,
     Approach,
     ApproachType,
+    ApproachWaypointDescriptor,
+    Area,
     Arrival,
     Departure,
+    ElevatedCoordinates,
     FigureOfMerit,
+    Fix,
+    FixType,
     IlsNavaid,
     LegType,
     LsCategory,
@@ -34,10 +40,7 @@ import {
     VhfNavaidType,
     VorClass,
     Waypoint,
-    WaypointArea,
-    AirwayLevel,
-    ApproachWaypointDescriptor,
-    WaypointDescriptor, ElevatedCoordinates,
+    WaypointDescriptor,
 } from '../../../shared';
 import {
     BoundaryPath,
@@ -91,14 +94,14 @@ import { Gate } from '../../../shared/types/Gate';
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
 
-type FixInfo = {
+interface DecodedIdColumn {
     icaoCode: string,
-    airportIdent: string,
+    airportIdent?: string,
     ident: string,
-    area: WaypointArea,
-    prefix: string,
+    area: Area,
+    fixType: FixType,
     suppressIcaoCode: boolean,
-};
+}
 
 export class DFDMappers {
     private queries: NavigraphProvider;
@@ -109,12 +112,13 @@ export class DFDMappers {
 
     public mapIls(ils: NaviIls): IlsNavaid {
         return {
+            fixType: FixType.IlsNavaid,
             icaoCode: ils.icaoCode,
             ident: ils.llzIdentifier,
             databaseId: DFDMappers.ilsNavaidDatabaseId(ils),
             frequency: ils.llzFrequency,
             stationDeclination: 0,
-            locLocation: { lat: ils.llzLatitude, long: ils.llzLongitude },
+            location: { lat: ils.llzLatitude, long: ils.llzLongitude },
             gsLocation: { lat: ils.gsLatitude, long: ils.gsLongitude, alt: ils.gsElevation },
             runwayIdent: ils.runwayIdentifier,
             locBearing: ils.llzBearing,
@@ -153,6 +157,7 @@ export class DFDMappers {
             surfaceCode = RunwaySurfaceType.Unknown;
         }
         return {
+            fixType: FixType.Airport,
             databaseId: DFDMappers.airportDatabaseId(airport),
             ident: airport.airportIdentifier,
             icaoCode: airport.icaoCode,
@@ -194,12 +199,13 @@ export class DFDMappers {
 
     public mapRunway(runway: NaviRunway): Runway {
         return {
+            fixType: FixType.Runway,
             icaoCode: runway.icaoCode,
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
             airportIdent: runway.airportIdentifier,
             startLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
-            thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
+            location: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
             bearing: runway.runwayTrueBearing,
             magneticBearing: runway.runwayMagneticBearing,
             gradient: runway.runwayGradient,
@@ -310,46 +316,18 @@ export class DFDMappers {
     }
 
     public mapLeg(leg: NaviProcedure): ProcedureLeg {
-        const waypoint = DFDMappers.decodeIdColumn(leg.id);
-        const recNavaid = DFDMappers.decodeIdColumn(leg.recommandedId);
-        const arcCentreFix = DFDMappers.decodeIdColumn(leg.centerId);
-
         return {
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
-            waypoint: leg.waypointIdentifier ? {
-                icaoCode: leg.waypointIcaoCode,
-                ident: leg.waypointIdentifier,
-                location: { lat: leg.waypointLatitude, long: leg.waypointLongitude },
-                databaseId: DFDMappers.mapFixDatabaseId(waypoint),
-                name: leg.waypointIdentifier,
-                area: waypoint?.area,
-            } : undefined,
-            recommendedNavaid: leg.recommandedNavaid ? {
-                ident: leg.recommandedNavaid,
-                databaseId: DFDMappers.mapFixDatabaseId(recNavaid),
-                name: '',
-                area: recNavaid?.area,
-                icaoCode: recNavaid?.icaoCode,
-                location: {
-                    lat: leg.recommandedNavaidLatitude,
-                    long: leg.recommandedNavaidLongitude,
-                },
-            } : undefined,
+            fix: leg.waypointIdentifier
+                ? DFDMappers.fixInfoToFix(DFDMappers.decodeIdColumn(leg.id), leg.waypointLatitude, leg.waypointLongitude) : undefined,
+            recommendedNavaid: leg.recommandedNavaid
+                ? DFDMappers.fixInfoToFix(DFDMappers.decodeIdColumn(leg.recommandedId), leg.recommandedNavaidLatitude, leg.recommandedNavaidLongitude) : undefined,
             rho: leg.rho ?? undefined,
             theta: leg.theta ?? undefined,
-            arcCentreFix: leg.centerWaypoint ? {
-                ident: leg.centerWaypoint,
-                databaseId: DFDMappers.mapFixDatabaseId(arcCentreFix),
-                name: '',
-                area: arcCentreFix?.area,
-                icaoCode: arcCentreFix?.icaoCode,
-                location: {
-                    lat: leg.centerWaypointLatitude,
-                    long: leg.centerWaypointLongitude,
-                },
-            } : undefined,
+            arcCentreFix: leg.centerWaypoint
+                ? DFDMappers.fixInfoToFix(DFDMappers.decodeIdColumn(leg.centerId), leg.centerWaypointLatitude, leg.centerWaypointLongitude) : undefined,
             arcRadius: leg.arcRadius ?? undefined,
             length: leg.distanceTime === 'D' ? leg.routeDistanceHoldingDistanceTime : undefined,
             lengthTime: leg.distanceTime === 'T' ? leg.routeDistanceHoldingDistanceTime : undefined,
@@ -370,6 +348,7 @@ export class DFDMappers {
 
     public async mapDepartures(legs: NaviProcedure[], airport: Airport): Promise<Departure[]> {
         const departures: Map<string, Departure> = new Map();
+        const runways = await this.queries.getRunways(legs[0].airportIdentifier);
 
         // legs are sorted in sequence order by the db... phew
         for (const leg of legs) {
@@ -398,19 +377,19 @@ export class DFDMappers {
             case 'F':
             case 'T':
                 if (leg.transitionIdentifier[4] === 'B') {
-                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
-                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
-                    runways.forEach((runway) => {
-                        transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
-                        if (!transition) {
-                            transition = {
-                                ident: runway.ident,
-                                legs: [],
-                            };
-                            departure?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    });
+                    runways
+                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4))
+                        .forEach((runway) => {
+                            transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                };
+                                departure?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
                 } else {
                     transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                     if (!transition) {
@@ -427,7 +406,6 @@ export class DFDMappers {
             case '5':
             case 'M':
                 if (leg.transitionIdentifier === 'ALL') {
-                    const runways = await this.queries.getRunways(leg.airportIdentifier);
                     runways.forEach((runway) => {
                         transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
                         if (!transition) {
@@ -440,19 +418,19 @@ export class DFDMappers {
                         transition.legs.push(apiLeg);
                     });
                 } else if (leg.transitionIdentifier?.[4] === 'B') {
-                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
-                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
-                    runways.forEach((runway) => {
-                        transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
-                        if (!transition) {
-                            transition = {
-                                ident: runway.ident,
-                                legs: [],
-                            };
-                            departure?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    });
+                    runways
+                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4))
+                        .forEach((runway) => {
+                            transition = departure?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                };
+                                departure?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
                 } else if (leg.transitionIdentifier) {
                     transition = departure?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                     if (!transition) {
@@ -480,7 +458,7 @@ export class DFDMappers {
                 transition.legs.push(apiLeg);
                 break;
             default:
-                console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: SID`);
+                throw new Error(`Unknown routeType "${leg.routeType}" found on ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Departure`);
             }
         }
 
@@ -489,6 +467,7 @@ export class DFDMappers {
 
     public async mapArrivals(legs: NaviProcedure[], airport: Airport): Promise<Arrival[]> {
         const arrivals: Map<string, Arrival> = new Map();
+        const runways = await this.queries.getRunways(legs[0].airportIdentifier);
 
         // legs are sorted in sequence order by the db... phew
         for (const leg of legs) {
@@ -525,7 +504,6 @@ export class DFDMappers {
             case '8':
             case 'M':
                 if (leg.transitionIdentifier === 'ALL') {
-                    const runways = await this.queries.getRunways(leg.airportIdentifier);
                     runways.forEach((runway) => {
                         transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
                         if (!transition) {
@@ -538,19 +516,19 @@ export class DFDMappers {
                         transition.legs.push(apiLeg);
                     });
                 } else if (leg.transitionIdentifier?.[4] === 'B') {
-                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
-                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
-                    runways.forEach((runway) => {
-                        transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
-                        if (!transition) {
-                            transition = {
-                                ident: runway.ident,
-                                legs: [],
-                            };
-                            arrival?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    });
+                    runways
+                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4))
+                        .forEach((runway) => {
+                            transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                };
+                                arrival?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
                 } else if (leg.transitionIdentifier) {
                     transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                     if (!transition) {
@@ -568,19 +546,19 @@ export class DFDMappers {
             case '9':
             case 'S':
                 if (leg.transitionIdentifier[4] === 'B') {
-                    const runways = (await this.queries.getRunways(leg.airportIdentifier))
-                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4));
-                    runways.forEach((runway) => {
-                        transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
-                        if (!transition) {
-                            transition = {
-                                ident: runway.ident,
-                                legs: [],
-                            };
-                            arrival?.runwayTransitions.push(transition);
-                        }
-                        transition.legs.push(apiLeg);
-                    });
+                    runways
+                        .filter((runway) => runway.ident.substr(0, 4) === leg.transitionIdentifier.substring(0, 4))
+                        .forEach((runway) => {
+                            transition = arrival?.runwayTransitions.find((t) => t.ident === runway.ident);
+                            if (!transition) {
+                                transition = {
+                                    ident: runway.ident,
+                                    legs: [],
+                                };
+                                arrival?.runwayTransitions.push(transition);
+                            }
+                            transition.legs.push(apiLeg);
+                        });
                 } else {
                     transition = arrival?.runwayTransitions.find((t) => t.ident === leg.transitionIdentifier);
                     if (!transition) {
@@ -594,7 +572,7 @@ export class DFDMappers {
                 }
                 break;
             default:
-                console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: STAR`);
+                throw new Error(`Unknown routeType "${leg.routeType}" found on ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Arrival`);
             }
         }
 
@@ -674,7 +652,7 @@ export class DFDMappers {
             }
 
             const apiLeg = this.mapLeg(leg);
-            const approach = approaches.get(leg.procedureIdentifier);
+            const approach = approaches.get(leg.procedureIdentifier)!;
 
             if (leg.waypointDescriptionCode?.charAt(2) === 'M') {
                 missedApproachStarted = true;
@@ -734,7 +712,7 @@ export class DFDMappers {
                     approach?.missedLegs.push(apiLeg);
                     break;
                 default:
-                    console.error(`Unmappable leg ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
+                    throw new Error(`Unknown routeType "${leg.routeType}" found on ${leg.procedureIdentifier}.${leg.seqno}: ${leg.pathTermination} in ${leg.procedureIdentifier}: Approach`);
                 }
             }
         });
@@ -778,7 +756,7 @@ export class DFDMappers {
                     ident: hold.waypointIdentifier,
                     databaseId: `W${hold.icaoCode ?? '  '}${hold.regionCode}${hold.waypointIdentifier}`,
                     location: { lat: hold.waypointLatitude, long: hold.waypointLongitude },
-                    area: WaypointArea.Terminal,
+                    area: Area.Terminal,
                 },
                 length: hold.legLength,
                 lengthTime: hold.legTime,
@@ -831,13 +809,7 @@ export class DFDMappers {
                     maximumAltitude: fix.maximumAltitude,
                 });
             }
-            airways[airways.length - 1].fixes.push({
-                icaoCode: fix.icaoCode,
-                databaseId: `W${fix.icaoCode}    ${fix.waypointIdentifier}`, // TODO function
-                ident: fix.waypointIdentifier,
-                location: { lat: fix.waypointLatitude, long: fix.waypointLongitude },
-                area: WaypointArea.Enroute, // TODO
-            });
+            airways[airways.length - 1].fixes.push(DFDMappers.fixInfoToFix(DFDMappers.decodeIdColumn(fix.id), fix.waypointLatitude, fix.waypointLongitude));
         });
         return airways;
     }
@@ -1132,18 +1104,20 @@ export class DFDMappers {
 
     public mapWaypoint(waypoint: NaviWaypoint, distanceFrom?: Coordinates): Waypoint {
         return {
+            fixType: FixType.Waypoint,
             databaseId: DFDMappers.waypointDatabaseId(waypoint),
             ident: waypoint.waypointIdentifier,
             icaoCode: waypoint.icaoCode,
             location: DFDMappers.mapCoordinates(waypoint.waypointLatitude, waypoint.waypointLongitude),
             name: waypoint.waypointName,
-            area: DFDMappers.isTerminalWaypoint(waypoint) ? WaypointArea.Terminal : WaypointArea.Enroute,
+            area: DFDMappers.isTerminalWaypoint(waypoint) ? Area.Terminal : Area.EnRoute,
             distance: distanceFrom ? distanceTo(distanceFrom, { lat: waypoint.waypointLatitude, long: waypoint.waypointLongitude }) : undefined,
         };
     }
 
     public mapVhfNavaid(navaid: NaviVhfNavaid, distanceFrom?: Coordinates): VhfNavaid {
         return {
+            fixType: FixType.VhfNavaid,
             databaseId: DFDMappers.vhfNavaidDatabaseId(navaid),
             ident: navaid.vorIdentifier ?? navaid.dmeIdent,
             name: navaid.vorName,
@@ -1158,7 +1132,7 @@ export class DFDMappers {
             class: this.mapVorClass(navaid),
             ilsDmeBias: navaid.ilsdmeBias || undefined,
             distance: distanceFrom ? distanceTo(distanceFrom, { lat: navaid.vorLatitude, long: navaid.vorLongitude }) : undefined,
-            area: DFDMappers.isTerminalVhfNavaid(navaid) ? WaypointArea.Terminal : WaypointArea.Enroute,
+            area: DFDMappers.isTerminalVhfNavaid(navaid) ? Area.Terminal : Area.EnRoute,
         };
     }
 
@@ -1208,6 +1182,7 @@ export class DFDMappers {
 
     public mapNdbNavaid(navaid: NaviNdbNavaid, distanceFrom?: Coordinates): NdbNavaid {
         return {
+            fixType: FixType.NdbNavaid,
             databaseId: DFDMappers.ndbNavaidDatabaseId(navaid),
             ident: navaid.ndbIdentifier,
             icaoCode: navaid.icaoCode,
@@ -1216,7 +1191,7 @@ export class DFDMappers {
             class: this.mapNdbClass(navaid),
             bfoOperation: navaid.navaidClass.charAt(4) === 'B',
             distance: distanceFrom ? distanceTo(distanceFrom, { lat: navaid.ndbLatitude, long: navaid.ndbLongitude }) : undefined,
-            area: DFDMappers.isTerminalNdbNavaid(navaid) ? WaypointArea.Terminal : WaypointArea.Enroute,
+            area: DFDMappers.isTerminalNdbNavaid(navaid) ? Area.Terminal : Area.EnRoute,
         };
     }
 
@@ -1290,46 +1265,69 @@ export class DFDMappers {
         return `V${navaid.icaoCode}${navaid.airportIdentifier ?? '    '}${navaid.llzIdentifier}`;
     }
 
-    public static decodeIdColumn(id: string): FixInfo | undefined {
-        if (!id) {
-            return undefined;
-        }
+    public static fixTypeToDatabaseIdPrefix(type: FixType): string {
+        if (type === FixType.IlsNavaid) return 'V';
+        return type;
+    }
 
-        const [table, mapping] = id.split('|', 2);
-
-        const terminal = table.indexOf('terminal') !== -1 || table === 'tbl_runways' || table === 'tbl_localizers_glideslopes' || table === 'tbl_gls';
-        const area = terminal ? WaypointArea.Terminal : WaypointArea.Enroute;
-        const suppressIcaoCode = table === 'tbl_localizers_glideslopes' || table === 'tbl_gls';
-        const icaoCode = terminal ? mapping.substring(4, 6) : mapping.substring(0, 2);
-        const airportIdent = terminal ? mapping.substring(0, 4) : '    ';
-        const ident = terminal ? mapping.substring(6) : mapping.substring(2);
-
-        let prefix = 'W';
-        if (table.indexOf('vhfnavaid') !== -1 || table === 'tbl_localizers_glideslopes') {
-            prefix = 'V';
-        } else if (table === 'tbl_gls') {
-            prefix = 'J';
-        } else if (table.indexOf('ndbnavaid') !== -1) {
-            prefix = 'N';
-        } else if (table === 'tbl_airports') {
-            prefix = 'A';
-        }
-
+    public static fixInfoToFix(info: DecodedIdColumn, lat: Latitude, long: Longitude): Fix {
         return {
-            icaoCode,
-            airportIdent,
-            ident,
-            area,
-            prefix,
-            suppressIcaoCode,
+            fixType: info.fixType,
+            databaseId: DFDMappers.mapFixDatabaseId(info),
+            location: { lat, long },
+            icaoCode: info.icaoCode,
+            ident: info.ident,
         };
     }
 
-    public static mapFixDatabaseId(fixIdent?: FixInfo): string | undefined {
-        if (!fixIdent) {
-            return undefined;
+    public static decodeIdColumn(id: string): DecodedIdColumn {
+        const [table, mapping] = id.split('|', 2);
+
+        let terminal = table.includes('terminal');
+        let fixType: FixType;
+        if (table.includes('airports')) {
+            fixType = FixType.Airport;
+        } else if (table.includes('gls')) {
+            terminal = true;
+            fixType = FixType.GlsNavaid;
+        } else if (table.includes('localizers_glideslopes')) {
+            terminal = true;
+            fixType = FixType.IlsNavaid;
+        } else if (table.includes('ndbnavaids')) {
+            fixType = FixType.NdbNavaid;
+        } else if (table.includes('runways')) {
+            terminal = true;
+            fixType = FixType.Runway;
+        } else if (table.includes('vhfnavaids')) {
+            fixType = FixType.VhfNavaid;
+        } else if (table.includes('waypoints')) {
+            fixType = FixType.Waypoint;
+        } else {
+            throw new Error(`Unknown table ${table}`);
         }
 
-        return `${fixIdent.prefix}${fixIdent.suppressIcaoCode ? '  ' : fixIdent.icaoCode ?? '  '}${fixIdent.airportIdent ?? '    '}${fixIdent.ident ?? ''}`;
+        const ident = terminal ? mapping.substring(6) : mapping.substring(2);
+        const icaoCode = terminal ? mapping.substring(4, 6) : mapping.substring(0, 2);
+        let airportIdent: string | undefined;
+        if (fixType === FixType.Airport) {
+            airportIdent = ident;
+        } else {
+            airportIdent = terminal ? mapping.substring(0, 4) : undefined;
+        }
+
+        return {
+            fixType,
+            area: terminal ? Area.Terminal : Area.EnRoute,
+            icaoCode,
+            airportIdent,
+            ident,
+            suppressIcaoCode: table === 'tbl_localizers_glideslopes' || table === 'tbl_gls',
+        };
+    }
+
+    public static mapFixDatabaseId(fixIdent: DecodedIdColumn): string {
+        return (DFDMappers.fixTypeToDatabaseIdPrefix(fixIdent.fixType)
+            + (fixIdent.suppressIcaoCode ? '  ' : fixIdent.icaoCode ?? '  ')
+             + (fixIdent.airportIdent ?? '    ') + fixIdent.ident);
     }
 }

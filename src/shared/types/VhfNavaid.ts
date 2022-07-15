@@ -1,8 +1,9 @@
 import { Coordinates, Degrees, Feet, NauticalMiles } from 'msfs-geo';
-import { ElevatedCoordinates, WaypointArea } from '..';
-import { DatabaseItem, MegaHertz } from './Common';
+import { Area, MegaHertz } from './Common';
+import { Fix, FixType } from './Fix';
 
-export interface VhfNavaid extends DatabaseItem {
+export interface VhfNavaid extends Fix {
+    fixType: FixType.VhfNavaid;
     frequency: MegaHertz,
     figureOfMerit: FigureOfMerit,
     range: NauticalMiles,
@@ -22,7 +23,7 @@ export interface VhfNavaid extends DatabaseItem {
      * distance from centre location for nearby query
      */
     distance?: NauticalMiles,
-    area: WaypointArea,
+    area: Area,
 }
 
 // TODO enum

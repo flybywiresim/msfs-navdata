@@ -155,8 +155,10 @@ function parseIcaoCode(icao: string): string {
     return icao.toUpperCase();
 }
 
-function parseMultipleIdents(idents: string, parser: (ident: string) => string, minimum = 1) {
-    const ret = idents.split(',').map((val) => parser(val));
+// Minimum should be zero to allow empty arrays compared to differntiate from undefined arrays
+function parseMultipleIdents(idents: string, parser: (ident: string) => string, minimum = 0) {
+    // .filter((a) => a) gets rid of empty strings
+    const ret = idents.split(',').filter((a) => a).map((val) => parser(val));
     if (ret.length < minimum) {
         throw new InputError(`At least ${minimum} idents required, ${ret.length} given`);
     }
@@ -327,10 +329,10 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         try {
             const idents = parseMultipleIdents(req.params.idents, parseVorNdbIdent);
             const icaoCode = (req.query.icaoCode && typeof req.query.icaoCode === 'string') ? parseIcaoCode(req.query.icaoCode) : undefined;
-            const airport = (req.query.airport && typeof req.query.airport === 'string') ? parseAirportIdent(req.query.airport) : undefined;
+            const airports = (req.query.airports !== undefined && typeof req.query.airports === 'string') ? parseMultipleIdents(req.query.airports, parseAirportIdent) : undefined;
             const ppos = (req.query.ppos && typeof req.query.ppos === 'string') ? parsePpos(req.query.ppos) : undefined;
 
-            provider.getVhfNavaids(idents, ppos, icaoCode, airport).then((navaids: VhfNavaid[]) => {
+            provider.getVhfNavaids(idents, ppos, icaoCode, airports).then((navaids: VhfNavaid[]) => {
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
@@ -342,10 +344,9 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         try {
             const idents = parseMultipleIdents(req.params.idents, parseVorNdbIdent);
             const icaoCode = (req.query.icaoCode && typeof req.query.icaoCode === 'string') ? parseIcaoCode(req.query.icaoCode) : undefined;
-            const airport = (req.query.airport && typeof req.query.airport === 'string') ? parseAirportIdent(req.query.airport) : undefined;
+            const airports = (req.query.airports !== undefined && typeof req.query.airports === 'string') ? parseMultipleIdents(req.query.airports, parseAirportIdent) : undefined;
             const ppos = (req.query.ppos && typeof req.query.ppos === 'string') ? parsePpos(req.query.ppos) : undefined;
-
-            provider.getNdbNavaids(idents, ppos, icaoCode, airport).then((navaids: NdbNavaid[]) => {
+            provider.getNdbNavaids(idents, ppos, icaoCode, airports).then((navaids: NdbNavaid[]) => {
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
@@ -357,10 +358,10 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
         try {
             const idents = parseMultipleIdents(req.params.idents, parseFixIdent);
             const icaoCode = (req.query.icaoCode && typeof req.query.icaoCode === 'string') ? parseIcaoCode(req.query.icaoCode) : undefined;
-            const airport = (req.query.airport && typeof req.query.airport === 'string') ? parseAirportIdent(req.query.airport) : undefined;
+            const airports = (req.query.airports !== undefined && typeof req.query.airports === 'string') ? parseMultipleIdents(req.query.airports, parseAirportIdent) : undefined;
             const ppos = (req.query.ppos && typeof req.query.ppos === 'string') ? parsePpos(req.query.ppos) : undefined;
 
-            provider.getWaypoints(idents, ppos, icaoCode, airport).then((navaids: Waypoint[]) => {
+            provider.getWaypoints(idents, ppos, icaoCode, airports).then((navaids: Waypoint[]) => {
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {

@@ -19,6 +19,7 @@ import {
     DatabaseIdent,
     DataInterface,
     RestrictiveAirspace,
+    Fix,
 } from '../shared';
 import { AirportCommunication } from '../shared/types/Communication';
 import { ControlledAirspace } from '../shared/types/Airspace';
@@ -58,8 +59,8 @@ export class Database {
     public async getArrivals(airportIdentifier: string, approach?: Approach): Promise<Arrival[]> {
         let arrivals = await this.backend.getArrivals(airportIdentifier);
         if (approach) {
-            const runwayIdentifier = Database.approachToRunway(approach.ident);
-            arrivals = arrivals.filter((arrival) => arrival.runwayTransitions.find((trans) => runwayIdentifier === null || trans.ident === runwayIdentifier));
+            const runwayIdentifier = approach.runwayIdent;
+            arrivals = arrivals.filter((arrival) => arrival.runwayTransitions.find((trans) => runwayIdentifier === undefined || trans.ident === runwayIdentifier));
         }
         return arrivals;
     }
@@ -68,7 +69,7 @@ export class Database {
         let approaches = await this.backend.getApproaches(airportIdentifier);
         if (arrival) {
             approaches = approaches.filter((approach) => arrival.runwayTransitions
-                .find((trans) => Database.approachToRunway(approach.ident) === null || trans.ident === Database.approachToRunway(approach.ident)));
+                .find((trans) => approach.runwayIdent === undefined || trans.ident === approach.runwayIdent));
         }
         return approaches;
     }
@@ -78,7 +79,7 @@ export class Database {
     }
 
     public async getHolds(fixIdentifier: string, airportIdentifier: string): Promise<ProcedureLeg[]> {
-        return (await this.backend.getHolds(airportIdentifier)).filter((hold) => hold.ident === fixIdentifier);
+        return (await this.backend.getHolds(airportIdentifier)).filter((hold) => hold.fix?.ident === fixIdentifier);
     }
 
     public getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {
@@ -105,11 +106,11 @@ export class Database {
         return this.backend.getWaypoints(idents);
     }
 
-    public getNavaids(idents: string[]): Promise<VhfNavaid[]> {
+    public getVhfNavaids(idents: string[]): Promise<VhfNavaid[]> {
         return this.backend.getVhfNavaids(idents);
     }
 
-    public getNDBs(idents: string[]): Promise<NdbNavaid[]> {
+    public getNdbNavaids(idents: string[]): Promise<NdbNavaid[]> {
         return this.backend.getNdbNavaids(idents);
     }
 
@@ -117,7 +118,7 @@ export class Database {
         return this.backend.getAirways(idents);
     }
 
-    public async getAirwaysByFix(fix: Waypoint | NdbNavaid | VhfNavaid): Promise<Airway[]> {
+    public async getAirwaysByFix(fix: Fix): Promise<Airway[]> {
         return this.backend.getAirwaysByFix(fix.ident, fix.icaoCode);
     }
 
@@ -147,19 +148,5 @@ export class Database {
 
     public getRestrictiveAirspacesInRange(center: Coordinates, range: NauticalMiles): Promise<RestrictiveAirspace[]> {
         return this.backend.getRestrictiveAirspaceInRange(center, range);
-    }
-
-    // TODO this doesn't belong here (backend/provider specific)
-    /** Returns the identifier of the runway attached to the approach, null if it is not specific to any runway */
-    public static approachToRunway(ident: string): string | null {
-        if (!ident.match(/\d+/g)) return null;
-        switch (ident[3]) {
-        case 'L':
-        case 'C':
-        case 'R':
-            return (`RW${ident.substr(1, 3)}`);
-        default:
-            return (`RW${ident.substr(1, 2)}`);
-        }
     }
 }

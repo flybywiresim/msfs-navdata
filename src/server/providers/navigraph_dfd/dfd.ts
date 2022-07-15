@@ -49,7 +49,7 @@ type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
 
 const query = (stmt: Statement) => {
-    const rows = [];
+    const rows: any[] = [];
     while (stmt.step()) rows.push(stmt.getAsObject());
     return rows;
 };
@@ -73,7 +73,9 @@ export class NavigraphProvider implements DataInterface {
             const headers: NaviHeader[] = NavigraphProvider.toCamel(query(stmt));
             const fromTo = headers[0].effectiveFromto;
             const [fromDay, fromMonth, toDay, toMonth, fromYear] = [fromTo, fromTo, fromTo, fromTo, fromTo].map((fromTo, index) => parseInt(fromTo.substring(2 * index, 2 * index + 2)));
-            let toYear = fromYear;
+
+            // If your using this after the year 2099, i'm sorry,
+            let toYear = fromYear + 2000;
             if (fromMonth === 12 && toMonth < 12) {
                 toYear++;
             }
@@ -81,7 +83,7 @@ export class NavigraphProvider implements DataInterface {
             const result: DatabaseIdent = {
                 provider: 'Navigraph',
                 airacCycle: headers[0].currentAirac,
-                effectiveFrom: iso8601CalendarDate(fromYear, fromMonth, fromDay),
+                effectiveFrom: iso8601CalendarDate(fromYear + 2000, fromMonth, fromDay),
                 effectiveTo: iso8601CalendarDate(toYear, toMonth, toDay),
             };
             return (result);
@@ -90,37 +92,37 @@ export class NavigraphProvider implements DataInterface {
         }
     }
 
-    // TODO support filtering on area (terminal or enroute)
-    async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
-        const params = idents.slice();
+    async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<Waypoint[]> {
+        const terminalParams = idents.slice();
+        const enrouteParams = idents.slice();
 
-        const queries = [`
+        let terminalQuery = `
             SELECT area_code, region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, NULL as waypoint_usage, waypoint_latitude, waypoint_longitude
             FROM tbl_terminal_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
-        `];
+        `;
 
-        if (airportIdent === undefined) {
-            queries.push(`
-                SELECT area_code, NULL as region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, waypoint_usage, waypoint_latitude, waypoint_longitude
-                FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
-            `);
-        } else {
-            queries.forEach((_, i) => {
-                queries[i] += ' AND region_code = ?';
-            });
-            params.push(airportIdent);
+        if (airports) {
+            terminalQuery += ` AND region_code IN (${airports.map(() => '?').join(',')})`;
+
+            terminalParams.push(...airports.slice());
         }
+
+        let enrouteQuery = `
+            SELECT area_code, NULL as region_code, icao_code, waypoint_identifier, waypoint_name, waypoint_type, waypoint_usage, waypoint_latitude, waypoint_longitude
+            FROM tbl_enroute_waypoints WHERE waypoint_identifier IN (${idents.map(() => '?').join(',')})
+        `;
 
         if (icaoCode) {
-            queries.forEach((_, i) => {
-                queries[i] += ' AND icao_code = ?';
-            });
-            params.push(icaoCode);
+            terminalQuery += ' AND icao_code = ?';
+            enrouteQuery += ' AND icao_code = ?';
+
+            terminalParams.push(icaoCode);
+            enrouteParams.push(icaoCode);
         }
 
-        const sql = queries.join(' UNION ALL ');
+        const sql = `${terminalQuery} UNION ALL ${enrouteQuery}`;
 
-        const stmt = this.database.prepare(sql, [].concat(...new Array(queries.length).fill(params)));
+        const stmt = this.database.prepare(sql, [...terminalParams, ...enrouteParams]);
         try {
             const rows = query(stmt);
             const navaids: NaviWaypoint[] = NavigraphProvider.toCamel(rows);
@@ -130,7 +132,6 @@ export class NavigraphProvider implements DataInterface {
         }
     }
 
-    // TODO delete (use getNdbNavaids with airportIdentifier set)
     async getNdbsAtAirport(airportIdentifier: string): Promise<NdbNavaid[]> {
         const sql = 'SELECT * FROM tbl_terminal_ndbnavaids WHERE airport_identifier = $ident';
         const stmt = this.database.prepare(sql, { $ident: airportIdentifier });
@@ -152,7 +153,6 @@ export class NavigraphProvider implements DataInterface {
         return rows.map((marker) => this.mappers.mapLsMarker(marker));
     }
 
-    // TODO delete (use getWaypoints with airportIdentifier set)
     async getWaypointsAtAirport(airportIdentifier: string): Promise<Waypoint[]> {
         const sql = 'SELECT * FROM tbl_terminal_waypoints WHERE region_code = $ident';
         const stmt = this.database.prepare(sql, { $ident: airportIdentifier });
@@ -305,17 +305,25 @@ export class NavigraphProvider implements DataInterface {
     }
 
     // TODO support filtering on type and class
-    async getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
-        let sql = `SELECT * FROM tbl_vhfnavaids WHERE vor_identifier IN (${idents.map(() => '?').join(',')})`; // TODO vor_identifier vs. dme_identifier...?
+    async getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<VhfNavaid[]> {
         const params = idents.slice();
+
+        let sql = `
+            SELECT * FROM tbl_vhfnavaids WHERE vor_identifier IN (${idents.map(() => '?').join(',')})
+        `;
+
+        if (airports) {
+            sql += ` AND (airport_identifier IS NULL OR airport_identifier IN (${airports.map(() => '?').join(',')}))`;
+
+            params.push(...airports.slice());
+        }
+
         if (icaoCode) {
             sql += ' AND icao_code = ?';
+
             params.push(icaoCode);
         }
-        if (airportIdent) {
-            sql += ' AND airport_identifier = ?';
-            params.push(airportIdent);
-        }
+
         const stmt = this.database.prepare(sql, params);
         try {
             const rows = query(stmt);
@@ -327,43 +335,43 @@ export class NavigraphProvider implements DataInterface {
     }
 
     // TODO support filtering on class
-    async getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
-        const results: NdbNavaid[] = [];
-        if (!airportIdent) {
-            let sql = `SELECT * FROM tbl_enroute_ndbnavaids WHERE ndb_identifier IN (${idents.map(() => '?').join(',')})`;
-            const params = idents.slice();
-            if (icaoCode) {
-                sql += ' AND icao_code = ?';
-                params.push(icaoCode);
-            }
-            const stmt = this.database.prepare(sql, params);
-            try {
-                const rows = query(stmt);
-                const navaids: NaviNdbNavaid[] = NavigraphProvider.toCamel(rows);
-                results.push(...navaids.map(((navaid) => this.mappers.mapNdbNavaid(navaid, ppos))));
-            } finally {
-                stmt.free();
-            }
-        }
-        let sql = `SELECT * FROM tbl_terminal_ndbnavaids WHERE ndb_identifier IN (${idents.map(() => '?').join(',')})`;
-        const params = idents.slice();
-        if (airportIdent) {
-            sql += ' AND airport_identifier = ?';
-            params.push(airportIdent);
-        } else if (icaoCode) {
-            sql += ' AND icao_code = ?';
-            params.push(icaoCode);
-        }
-        const stmt = this.database.prepare(sql, params);
-        try {
-            const rows = query(stmt);
-            const navaids: NaviNdbNavaid[] = NavigraphProvider.toCamel(rows);
-            results.push(...navaids.map(((navaid) => this.mappers.mapNdbNavaid(navaid))));
-        } finally {
-            stmt.free();
+    async getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airports?: string[]): Promise<NdbNavaid[]> {
+        const terminalParams = idents.slice();
+        const enrouteParams = idents.slice();
+
+        let terminalQuery = `
+            SELECT * FROM tbl_terminal_ndbnavaids WHERE ndb_identifier IN (${idents.map(() => '?').join(',')})
+        `;
+
+        if (airports) {
+            terminalQuery += ` AND airport_identifier IN (${airports.map(() => '?').join(',')})`;
+
+            terminalParams.push(...airports.slice());
         }
 
-        return results.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+        let enrouteQuery = `
+            SELECT * FROM tbl_enroute_ndbnavaids WHERE ndb_identifier IN (${idents.map(() => '?').join(',')})
+        `;
+
+        if (icaoCode) {
+            terminalQuery += ' AND icao_code = ?';
+            enrouteQuery += ' AND icao_code = ?';
+
+            terminalParams.push(icaoCode);
+            enrouteParams.push(icaoCode);
+        }
+
+        const terminalStmt = this.database.prepare(terminalQuery, terminalParams);
+        const enrouteStmt = this.database.prepare(enrouteQuery, enrouteParams);
+
+        try {
+            const rows = [...query(terminalStmt), ...query(enrouteStmt)];
+            const navaids: NaviNdbNavaid[] = NavigraphProvider.toCamel(rows);
+            return navaids.map(((navaid) => this.mappers.mapNdbNavaid(navaid, ppos))).sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+        } finally {
+            terminalStmt.free();
+            enrouteStmt.free();
+        }
     }
 
     async getNearbyAirways(centre: Coordinates, range: NauticalMiles, levels?: AirwayLevel): Promise<Airway[]> {
