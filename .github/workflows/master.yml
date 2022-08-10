@@ -1,0 +1,25 @@
+name: master
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@v2
+  #     - name: install
+  #       run: npm install --no-optional
+  #     - name: npm run lint
+  #       run: npm run lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v2
+      - name: npm install
+        run: npm install --no-optional
+      - name: npm run test
+        run: npm run test
