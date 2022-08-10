@@ -384,7 +384,7 @@ export class MsfsMapping {
                 }
             }
 
-            const runwayIdent = `${approach.runwayNumber.toString().padStart(2, '0')}${this.mapRunwayDesignator(approach.runwayDesignator)}`;
+            const runwayIdent = `RW${approach.runwayNumber.toString().padStart(2, '0')}${this.mapRunwayDesignator(approach.runwayDesignator)}`;
 
             const levelOfService = this.mapRnavTypeFlags(approach.rnavTypeFlags);
 
