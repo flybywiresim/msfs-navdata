@@ -30,7 +30,7 @@ export interface Airport extends DatabaseItem {
     /**
      * Length of the longest runway (not necessarily the "best" runway)
      */
-    longestRunwayLength: Feet;
+    longestRunwayLength: Metres;
     /**
      * Surface type of the longest runway (not necessarily the "best" runway)
      */
