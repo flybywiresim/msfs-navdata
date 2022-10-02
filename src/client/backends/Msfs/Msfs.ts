@@ -190,7 +190,7 @@ export class MsfsBackend implements DataInterface {
     public async getWaypoints(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Waypoint[]> {
         const results = new Map<string, Waypoint>();
 
-        for (const ident in idents) {
+        for (const ident of idents) {
             (await this.cache.searchByIdent(ident, IcaoSearchFilter.Intersections, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
         }
 
@@ -201,7 +201,7 @@ export class MsfsBackend implements DataInterface {
     public async getNdbNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<NdbNavaid[]> {
         const results = new Map<string, NdbNavaid>();
 
-        for (const ident in idents) {
+        for (const ident of idents) {
             (await this.cache.searchByIdent(ident, IcaoSearchFilter.Ndbs, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
         }
 
@@ -212,7 +212,7 @@ export class MsfsBackend implements DataInterface {
     public async getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]> {
         const results = new Map<string, VhfNavaid>();
 
-        for (const ident in idents) {
+        for (const ident of idents) {
             (await this.cache.searchByIdent(ident, IcaoSearchFilter.Vors, 100)).forEach((v) => results.set(v.icao, this.mapping.mapFacilityToWaypoint(v)));
         }
 
