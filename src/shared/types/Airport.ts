@@ -1,4 +1,4 @@
-import { Feet, NauticalMiles } from 'msfs-geo';
+import { Feet, Metres, NauticalMiles } from 'msfs-geo';
 import { DatabaseItem, Knots, FlightLevel, ElevatedCoordinates } from './Common';
 import { RunwaySurfaceType } from './Runway';
 
