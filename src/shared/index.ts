@@ -2,6 +2,7 @@ export * from './types/Airport';
 export * from './types/Airway';
 export * from './types/Approach';
 export * from './types/Arrival';
+export * from './types/BaseFix';
 export * from './types/Common';
 export * from './types/Communication';
 export * from './types/Airspace';

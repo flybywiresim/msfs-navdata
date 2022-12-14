@@ -27,12 +27,14 @@ type FacilityType<T> =
     T extends LoadType.Vor ? JS_FacilityVOR :
     never;
 
-type SearchedFacilityType<T> =
-    T extends IcaoSearchFilter.Airports ? never :
-    T extends IcaoSearchFilter.Intersections ? JS_FacilityIntersection[] :
-    T extends IcaoSearchFilter.Ndbs ? JS_FacilityNDB[] :
-    T extends IcaoSearchFilter.Vors ? JS_FacilityVOR[] :
-    (JS_FacilityAirport | JS_FacilityIntersection | JS_FacilityNDB | JS_FacilityVOR)[];
+type SearchedFacilityTypeMap = {
+    [IcaoSearchFilter.Airports]: never,
+    [IcaoSearchFilter.Intersections]: JS_FacilityIntersection[],
+    [IcaoSearchFilter.Ndbs]: JS_FacilityNDB[],
+    [IcaoSearchFilter.Vors]: JS_FacilityVOR[],
+    [IcaoSearchFilter.Vors]: JS_FacilityVOR[],
+    [IcaoSearchFilter.None]: (JS_FacilityAirport | JS_FacilityIntersection | JS_FacilityNDB | JS_FacilityVOR)[],
+}
 
 export class FacilityCache {
     private static cacheSize = 1000;
@@ -207,7 +209,7 @@ export class FacilityCache {
         }
     }
 
-    public async searchByIdent<T extends IcaoSearchFilter>(ident: string, type: T, maxItems: number): Promise<SearchedFacilityType<T>> {
+    public async searchByIdent<T extends IcaoSearchFilter>(ident: string, type: T, maxItems: number): Promise<SearchedFacilityTypeMap[T]> {
         if (type === IcaoSearchFilter.Airports) {
             throw new Error('Airport search not supported');
         }
@@ -216,22 +218,28 @@ export class FacilityCache {
         const icaos: string[] = (await Coherent.call('SEARCH_BY_IDENT', ident, type, maxItems)).filter((icao: string) => ident === icao.substring(7).trim() && icao.charAt(0) !== 'A');
 
         if (type === IcaoSearchFilter.Intersections) {
-            return [...(await this.getFacilities(icaos, LoadType.Intersection)).values()];
+            const intersections = (await this.getFacilities(icaos, LoadType.Intersection)).values();
+
+            return [...intersections] as unknown as SearchedFacilityTypeMap[T];
         }
 
         if (type === IcaoSearchFilter.Ndbs) {
-            return [...(await this.getFacilities(icaos, LoadType.Ndb)).values()];
+            const ndbs = (await this.getFacilities(icaos, LoadType.Ndb)).values();
+
+            return [...ndbs] as unknown as SearchedFacilityTypeMap[T];
         }
 
         if (type === IcaoSearchFilter.Vors) {
-            return [...(await this.getFacilities(icaos, LoadType.Vor)).values()];
+            const vors = (await this.getFacilities(icaos, LoadType.Vor)).values();
+
+            return [...vors] as unknown as SearchedFacilityTypeMap[T];
         }
 
-        const vors = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'V'), LoadType.Vor);
+        const ints = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'W'), LoadType.Intersection);
         const ndbs = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'N'), LoadType.Ndb);
-        const wps = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'W'), LoadType.Intersection);
+        const vors = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'V'), LoadType.Vor);
 
-        return [...wps.values(), ...ndbs.values(), ...vors.values()];
+        return [...ints.values(), ...ndbs.values(), ...vors.values()] as unknown as SearchedFacilityTypeMap[T];
     }
 
     private addToAirwayCache(facility: JS_FacilityIntersection): void {

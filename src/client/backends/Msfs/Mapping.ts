@@ -36,35 +36,36 @@ import { Arrival } from '../../../shared/types/Arrival';
 import { Departure } from '../../../shared/types/Departure';
 import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
 import {
-    JS_FacilityAirport,
-    JS_Facility,
-    JS_Runway,
-    RunwaySurface,
-    RunwayDesignatorChar,
-    ApproachType as MSApproachType,
-    JS_Leg,
-    LegType as MsLegType,
     AltitudeDescriptor as MSAltitudeDescriptor,
+    ApproachType as MSApproachType,
     FixTypeFlags,
-    TurnDirection as MSTurnDirection,
-    JS_FacilityNDB,
-    NdbType,
-    JS_FacilityVOR,
-    VorClass as MSVorClass,
-    VorType,
-    JS_EnRouteTransition,
-    JS_RunwayTransition,
-    JS_Procedure,
-    JS_ApproachTransition,
-    JS_Approach,
-    JS_FacilityIntersection,
     FrequencyType,
     IcaoSearchFilter,
-    RouteType,
+    JS_Approach,
+    JS_ApproachTransition,
+    JS_EnRouteTransition,
+    JS_Facility,
+    JS_FacilityAirport,
+    JS_FacilityIntersection,
+    JS_FacilityNDB,
+    JS_FacilityVOR,
+    JS_Leg,
+    JS_Procedure,
+    JS_Runway,
+    JS_RunwayTransition,
+    LegType as MsLegType,
+    NdbType,
     RnavTypeFlags,
+    RouteType,
+    RunwayDesignatorChar,
+    RunwaySurface,
+    TurnDirection as MSTurnDirection,
+    VorClass as MSVorClass,
+    VorType,
 } from './FsTypes';
 import { FacilityCache, LoadType } from './FacilityCache';
 import { Gate } from '../../../shared/types/Gate';
+import { AirportSubsectionCode, EnrouteSubsectionCode, SectionCode } from '../../../shared/types/SectionCode';
 
 type FacilityType<T> =
         T extends JS_FacilityIntersection ? Waypoint
@@ -151,9 +152,12 @@ export class MsfsMapping {
                 const lsFrequencyChannel = lsAppr ? navaids.get(lsAppr.finalLegs[lsAppr.finalLegs.length - 1].originIcao)?.freqMHz ?? 0 : 0;
 
                 runways.push({
+                    sectionCode: SectionCode.Airport,
+                    subSectionCode: AirportSubsectionCode.Runways,
                     databaseId,
                     icaoCode,
                     ident,
+                    location: thresholdLocation,
                     airportIdent,
                     bearing,
                     magneticBearing: this.trueToMagnetic(bearing, magVar),
@@ -209,9 +213,12 @@ export class MsfsMapping {
                 const lsIdent = lsAppr ? FacilityCache.ident(lsAppr.finalLegs[lsAppr.finalLegs.length - 1].originIcao) : '';
 
                 runways.push({
+                    sectionCode: SectionCode.Airport,
+                    subSectionCode: AirportSubsectionCode.Runways,
                     databaseId,
                     icaoCode,
                     ident,
+                    location: thresholdLocation,
                     airportIdent,
                     bearing,
                     magneticBearing: this.trueToMagnetic(bearing, magVar),
@@ -603,6 +610,8 @@ export class MsfsMapping {
         for (const runway of runways) {
             if (runway.ident === runwayIdent) {
                 return {
+                    sectionCode: SectionCode.Enroute,
+                    subSectionCode: EnrouteSubsectionCode.Waypoints,
                     databaseId: icao,
                     icaoCode: icao.substring(1, 3),
                     ident: `${runway.ident}`,

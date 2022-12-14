@@ -1,13 +1,21 @@
-import { Coordinates, NauticalMiles } from 'msfs-geo';
-import { DatabaseItem } from './Common';
+import { NauticalMiles } from 'msfs-geo';
+import { EnrouteSubsectionCode, SectionCode } from './SectionCode';
+import { BaseFix } from './BaseFix';
 
+/**
+ * Waypoint area
+ */
 export enum WaypointArea {
     Enroute,
     Terminal,
 }
 
-export interface Waypoint extends DatabaseItem {
-    location: Coordinates,
+/**
+ * Waypoint fix
+ */
+export interface Waypoint extends BaseFix<SectionCode.Enroute> {
+    subSectionCode: EnrouteSubsectionCode.Waypoints,
+
     name?: string,
     area: WaypointArea,
     // TODO more...
