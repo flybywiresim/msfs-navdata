@@ -3,8 +3,11 @@
 
 import { Coordinates } from 'msfs-geo';
 import { DatabaseItem } from './Common';
+import { SectionCode, AirportSubsectionCode } from './SectionCode';
 
-export interface Gate extends DatabaseItem {
+export interface Gate extends DatabaseItem<SectionCode.Airport> {
+    subSectionCode: AirportSubsectionCode.Gates,
+
     /** The airport this gate belongs to */
     airportIcao: string,
 

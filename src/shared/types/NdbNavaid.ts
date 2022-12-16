@@ -1,8 +1,11 @@
 import { Coordinates, NauticalMiles } from 'msfs-geo';
 import { WaypointArea } from '..';
 import { DatabaseItem, KiloHertz } from './Common';
+import { NavaidSubsectionCode, SectionCode } from './SectionCode';
 
-export interface NdbNavaid extends DatabaseItem {
+export interface NdbNavaid extends DatabaseItem<SectionCode.Navaid> {
+    subSectionCode: NavaidSubsectionCode.NdbNavaid,
+
     frequency: KiloHertz,
     location: Coordinates,
     name?: string,

@@ -63,7 +63,7 @@ import { Holding as NaviHolding } from './types/Holdings';
 import { LocalizerMarker as NaviMarker } from './types/LocalizerMarker';
 import { Gate as NaviGate } from './types/Gates';
 import { Gate } from '../../../shared/types/Gate';
-import { EnrouteSubsectionCode, NavaidSubsectionCode, SectionCode } from '../../../shared/types/SectionCode';
+import { AirportSubsectionCode, EnrouteSubsectionCode, NavaidSubsectionCode, SectionCode } from '../../../shared/types/SectionCode';
 
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
@@ -86,6 +86,8 @@ export class DFDMappers {
 
     public mapIls(ils: NaviIls): IlsNavaid {
         return {
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.LocalizerGlideSlope,
             icaoCode: ils.icaoCode,
             ident: ils.llzIdentifier,
             databaseId: DFDMappers.ilsNavaidDatabaseId(ils),
@@ -102,6 +104,8 @@ export class DFDMappers {
 
     public mapLsMarker(marker: NaviMarker): Marker {
         return {
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.LocalizerMarker,
             icaoCode: marker.icaoCode,
             databaseId: `M${marker.icaoCode}${marker.airportIdentifier}${marker.markerIdentifier}`,
             airportIdentifier: marker.airportIdentifier,
@@ -130,6 +134,8 @@ export class DFDMappers {
             surfaceCode = RunwaySurfaceType.Unknown;
         }
         return {
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.ReferencePoints,
             databaseId: DFDMappers.airportDatabaseId(airport),
             ident: airport.airportIdentifier,
             icaoCode: airport.icaoCode,
@@ -171,12 +177,15 @@ export class DFDMappers {
 
     public mapRunway(runway: NaviRunway): Runway {
         return {
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.Runways,
             icaoCode: runway.icaoCode,
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
             airportIdent: runway.airportIdentifier,
             startLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
             thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
+            location: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
             bearing: runway.runwayTrueBearing,
             magneticBearing: runway.runwayMagneticBearing,
             gradient: runway.runwayGradient,
@@ -295,21 +304,21 @@ export class DFDMappers {
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
-            waypoint: leg.waypointIdentifier ? {
+            waypoint: (leg.waypointIdentifier && waypoint) ? {
                 sectionCode: SectionCode.Enroute,
                 subSectionCode: EnrouteSubsectionCode.Waypoints,
                 icaoCode: leg.waypointIcaoCode,
                 ident: leg.waypointIdentifier,
                 location: { lat: leg.waypointLatitude, long: leg.waypointLongitude },
-                databaseId: DFDMappers.mapFixDatabaseId(waypoint),
+                databaseId: DFDMappers.mapFixDatabaseId(waypoint) ?? '',
                 name: leg.waypointIdentifier,
                 area: waypoint?.area,
             } : undefined,
-            recommendedNavaid: leg.recommandedNavaid ? {
+            recommendedNavaid: (leg.recommandedNavaid && recNavaid) ? {
                 sectionCode: SectionCode.Enroute,
                 subSectionCode: EnrouteSubsectionCode.Waypoints,
                 ident: leg.recommandedNavaid,
-                databaseId: DFDMappers.mapFixDatabaseId(recNavaid),
+                databaseId: DFDMappers.mapFixDatabaseId(recNavaid) ?? '',
                 name: '',
                 area: recNavaid?.area,
                 icaoCode: recNavaid?.icaoCode,
@@ -320,11 +329,11 @@ export class DFDMappers {
             } : undefined,
             rho: leg.rho ?? undefined,
             theta: leg.theta ?? undefined,
-            arcCentreFix: leg.centerWaypoint ? {
+            arcCentreFix: (leg.centerWaypoint && arcCentreFix) ? {
                 sectionCode: SectionCode.Enroute,
                 subSectionCode: EnrouteSubsectionCode.Waypoints,
                 ident: leg.centerWaypoint,
-                databaseId: DFDMappers.mapFixDatabaseId(arcCentreFix),
+                databaseId: DFDMappers.mapFixDatabaseId(arcCentreFix) ?? '',
                 name: '',
                 area: arcCentreFix?.area,
                 icaoCode: arcCentreFix?.icaoCode,
@@ -358,6 +367,8 @@ export class DFDMappers {
         for (const leg of legs) {
             if (!departures.has(leg.procedureIdentifier)) {
                 departures.set(leg.procedureIdentifier, {
+                    sectionCode: SectionCode.Airport,
+                    subSectionCode: AirportSubsectionCode.SIDs,
                     icaoCode: airport.icaoCode,
                     databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
@@ -477,6 +488,8 @@ export class DFDMappers {
         for (const leg of legs) {
             if (!arrivals.has(leg.procedureIdentifier)) {
                 arrivals.set(leg.procedureIdentifier, {
+                    sectionCode: SectionCode.Airport,
+                    subSectionCode: AirportSubsectionCode.STARs,
                     icaoCode: airport.icaoCode,
                     databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
@@ -641,6 +654,8 @@ export class DFDMappers {
                 const runwayIdent = match !== null ? `RW${match[1]}` : undefined;
                 const multipleIndicator = match !== null ? match[3] ?? '' : '';
                 approaches.set(leg.procedureIdentifier, {
+                    sectionCode: SectionCode.Airport,
+                    subSectionCode: AirportSubsectionCode.ApproachProcedures,
                     icaoCode: airport.icaoCode,
                     databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
@@ -665,7 +680,7 @@ export class DFDMappers {
 
             // the AR flag is not available so we do our best guess
             // if there's an RF leg in the final approach it's classed AR
-            if (finalApproachStarted && leg.pathTermination === 'RF') {
+            if (finalApproachStarted && approach && leg.pathTermination === 'RF') {
                 approach.authorisationRequired = true;
             }
 
@@ -727,6 +742,8 @@ export class DFDMappers {
 
     public mapGates(gates: NaviGate[]): Gate[] {
         return gates.map((gate) => ({
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.Gates,
             databaseId: `G${gate.icaoCode}${gate.airportIdentifier}${gate.gateIdentifier}`,
             icaoCode: gate.icaoCode,
             ident: gate.gateIdentifier,
@@ -1199,6 +1216,8 @@ export class DFDMappers {
 
     public mapNdbNavaid(navaid: NaviNdbNavaid, distanceFrom?: Coordinates): NdbNavaid {
         return {
+            sectionCode: SectionCode.Navaid,
+            subSectionCode: NavaidSubsectionCode.NdbNavaid,
             databaseId: DFDMappers.ndbNavaidDatabaseId(navaid),
             ident: navaid.ndbIdentifier,
             icaoCode: navaid.icaoCode,

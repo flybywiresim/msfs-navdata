@@ -8,7 +8,6 @@ export * from './types/Communication';
 export * from './types/Airspace';
 export * from './types/DatabaseIdent';
 export * from './types/Departure';
-export * from './types/GlsNavaid';
 export * from './types/IlsNavaid';
 export * from './types/Marker';
 export * from './types/NdbNavaid';

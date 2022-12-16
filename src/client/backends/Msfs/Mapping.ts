@@ -65,7 +65,7 @@ import {
 } from './FsTypes';
 import { FacilityCache, LoadType } from './FacilityCache';
 import { Gate } from '../../../shared/types/Gate';
-import { AirportSubsectionCode, EnrouteSubsectionCode, SectionCode } from '../../../shared/types/SectionCode';
+import { AirportSubsectionCode, EnrouteSubsectionCode, NavaidSubsectionCode, SectionCode } from '../../../shared/types/SectionCode';
 
 type FacilityType<T> =
         T extends JS_FacilityIntersection ? Waypoint
@@ -102,8 +102,11 @@ export class MsfsMapping {
 
         // MSFS doesn't give the airport elevation... so we take the mean of the runway elevations
         const elevation = elevations.reduce((a, b) => a + b) / elevations.length;
+
         return {
             databaseId: msAirport.icao,
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.ReferencePoints,
             ident: msAirport.icao.substring(7, 11),
             icaoCode: msAirport.icao.substring(1, 3), // TODO
             name: Utils.Translate(msAirport.name),
@@ -302,6 +305,8 @@ export class MsfsMapping {
         return Array.from(ils.values()).filter((ils) => !!ils).map((ils) => {
             const icao = ils.icao.trim();
             return {
+                sectionCode: SectionCode.Airport,
+                subSectionCode: AirportSubsectionCode.LocalizerGlideSlope,
                 databaseId: ils.icao,
                 icaoCode,
                 ident: FacilityCache.ident(ils.icao),
@@ -396,6 +401,8 @@ export class MsfsMapping {
             const levelOfService = this.mapRnavTypeFlags(approach.rnavTypeFlags);
 
             return {
+                sectionCode: SectionCode.Airport,
+                subSectionCode: AirportSubsectionCode.ApproachProcedures,
                 databaseId: `P${icaoCode}${airportIdent}${approach.name}`,
                 icaoCode,
                 ident: approachName,
@@ -418,6 +425,8 @@ export class MsfsMapping {
         const facilities = await this.loadFacilitiesFromProcedures(msAirport.arrivals);
 
         return msAirport.arrivals.map((arrival) => ({
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.STARs,
             databaseId: `P${icaoCode}${airportIdent}${arrival.name}`,
             icaoCode,
             ident: arrival.name,
@@ -434,6 +443,8 @@ export class MsfsMapping {
         const facilities = await this.loadFacilitiesFromProcedures(msAirport.departures);
 
         return msAirport.departures.map((departure) => ({
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.SIDs,
             databaseId: `P${icaoCode}${airportIdent}${departure.name}`,
             icaoCode,
             ident: departure.name,
@@ -469,6 +480,8 @@ export class MsfsMapping {
             };
 
             return {
+                sectionCode: SectionCode.Airport,
+                subSectionCode: AirportSubsectionCode.Gates,
                 databaseId,
                 icaoCode,
                 ident,
@@ -692,14 +705,19 @@ export class MsfsMapping {
             const ndb = facility as any as JS_FacilityNDB;
             return {
                 ...databaseItem,
+                sectionCode: SectionCode.Navaid,
+                subSectionCode: NavaidSubsectionCode.NdbNavaid,
                 frequency: ndb.freqMHz, // actually kHz
                 class: this.mapNdbType(ndb.type),
                 bfoOperation: false, // TODO can we?
-            } as FacilityType<T>;
+            } as unknown as FacilityType<T>;
         case 'V':
             const vor = facility as any as JS_FacilityVOR;
+
             return {
                 ...databaseItem,
+                sectionCode: SectionCode.Navaid,
+                subSectionCode: NavaidSubsectionCode.VhfNavaid,
                 frequency: vor.freqMHz,
                 range: this.mapVorRange(vor),
                 figureOfMerit: this.mapVorFigureOfMerit(vor),
@@ -707,7 +725,7 @@ export class MsfsMapping {
                 dmeLocation: (vor.type & (VorType.DME)) > 0 ? databaseItem.location : undefined,
                 type: this.mapVorType(vor),
                 class: this.mapVorClass(vor),
-            } as FacilityType<T>;
+            } as unknown as FacilityType<T>;
         case 'W':
         default:
             return databaseItem as FacilityType<T>;

@@ -1,14 +1,11 @@
 import { Coordinates } from 'msfs-geo';
 import { DatabaseItem } from './Common';
 import { VhfNavaid } from './VhfNavaid';
-import { SectionCode, SubSectionEnumMap } from './SectionCode';
+import { SectionCode } from './SectionCode';
 import { Waypoint } from './Waypoint';
 import { NdbNavaid } from './NdbNavaid';
 
-export interface BaseFix<T extends SectionCode> extends DatabaseItem {
-    sectionCode: T,
-    subSectionCode: SubSectionEnumMap[T],
-
+export interface BaseFix<T extends SectionCode> extends DatabaseItem<T> {
     location: Coordinates,
 }
 
