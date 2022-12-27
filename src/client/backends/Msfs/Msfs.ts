@@ -10,6 +10,7 @@ import {
     AirwayLevel,
     ControlledAirspace,
     DatabaseIdent,
+    Fix,
     IlsNavaid,
     iso8601CalendarDate,
     NdbClass,
@@ -225,6 +226,15 @@ export class MsfsBackend implements DataInterface {
         return [...results.values()];
     }
 
+    /** @inheritdoc */
+    public async getFixes(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Fix[]> {
+        return [
+            ...(await this.getWaypoints(idents, ppos, icaoCode, airportIdent)),
+            ...(await this.getNdbNavaids(idents, ppos, icaoCode, airportIdent)),
+            ...(await this.getVhfNavaids(idents, ppos, icaoCode, airportIdent)),
+        ];
+    }
+
     /** not supported... maybe */
     public async getAirways(idents: string[]): Promise<Airway[]> {
         return [];
@@ -257,6 +267,11 @@ export class MsfsBackend implements DataInterface {
 
     /** @inheritdoc */
     public async getNearbyWaypoints(center: Coordinates, range: NauticalMiles, limit?: number): Promise<Waypoint[]> {
+        return [];
+    }
+
+    /** @inheritdoc */
+    public async getNearbyFixes(center: Coordinates, range: NauticalMiles, limit?: number): Promise<Fix[]> {
         return [];
     }
 

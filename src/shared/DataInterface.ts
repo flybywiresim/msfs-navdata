@@ -12,7 +12,7 @@ import { Airway, AirwayLevel } from './types/Airway';
 import { VhfNavaid, VhfNavaidType, VorClass } from './types/VhfNavaid';
 import { AirportCommunication } from './types/Communication';
 import { ControlledAirspace, RestrictiveAirspace } from './types/Airspace';
-import { ProcedureLeg } from '.';
+import { Fix, ProcedureLeg } from '.';
 import { Marker } from './types/Marker';
 import { Gate } from './types/Gate';
 
@@ -133,6 +133,14 @@ export interface DataInterface {
      * @param airportIdent provide the 4-letter ICAO airport code if you want to limit the query to a terminal area
      */
     getVhfNavaids(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<VhfNavaid[]>;
+    /**
+     * Retrieve fixes (waypoints, NDB navaids, VHF navaids including ILS/LOC) from the database
+     * @param idents navaid identifier
+     * @param ppos provide ppos if you want the distance from this position to each navaid
+     * @param icaoCode provide the 2-letter ICAO region if you want to limit the query to a region
+     * @param airportIdent provide the 4-letter ICAO airport code if you want to limit the query to a terminal area
+     */
+    getFixes(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Fix[]>;
 
     /**
      * Retrieve arbitrary airway(s) by ident
@@ -154,6 +162,7 @@ export interface DataInterface {
     getNearbyVhfNavaids(centre: Coordinates, range: number, limit?: number, classes?: VorClass, types?: VhfNavaidType): Promise<VhfNavaid[]>;
     getNearbyNdbNavaids(center: Coordinates, range: NauticalMiles, limit?: number, classes?: NdbClass): Promise<NdbNavaid[]>;
     getNearbyWaypoints(center: Coordinates, range: NauticalMiles, limit?: number): Promise<Waypoint[]>;
+    getNearbyFixes(center: Coordinates, range: NauticalMiles, limit?: number): Promise<Fix[]>;
 
     getControlledAirspaceInRange(center: Coordinates, range: NauticalMiles): Promise<ControlledAirspace[]>;
     getRestrictiveAirspaceInRange(center: Coordinates, range: NauticalMiles): Promise<RestrictiveAirspace[]>;

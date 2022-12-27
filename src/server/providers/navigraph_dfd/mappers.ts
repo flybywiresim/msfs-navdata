@@ -182,6 +182,7 @@ export class DFDMappers {
             icaoCode: runway.icaoCode,
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
+            area: WaypointArea.Terminal,
             airportIdent: runway.airportIdentifier,
             startLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
             thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
@@ -304,7 +305,7 @@ export class DFDMappers {
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
-            waypoint: (leg.waypointIdentifier && waypoint) ? {
+            waypoint: (leg.waypointIdentifier) ? {
                 sectionCode: SectionCode.Enroute,
                 subSectionCode: EnrouteSubsectionCode.Waypoints,
                 icaoCode: leg.waypointIcaoCode,
@@ -314,7 +315,7 @@ export class DFDMappers {
                 name: leg.waypointIdentifier,
                 area: waypoint?.area,
             } : undefined,
-            recommendedNavaid: (leg.recommandedNavaid && recNavaid) ? {
+            recommendedNavaid: (leg.recommandedNavaid) ? {
                 sectionCode: SectionCode.Enroute,
                 subSectionCode: EnrouteSubsectionCode.Waypoints,
                 ident: leg.recommandedNavaid,
@@ -329,7 +330,7 @@ export class DFDMappers {
             } : undefined,
             rho: leg.rho ?? undefined,
             theta: leg.theta ?? undefined,
-            arcCentreFix: (leg.centerWaypoint && arcCentreFix) ? {
+            arcCentreFix: (leg.centerWaypoint) ? {
                 sectionCode: SectionCode.Enroute,
                 subSectionCode: EnrouteSubsectionCode.Waypoints,
                 ident: leg.centerWaypoint,

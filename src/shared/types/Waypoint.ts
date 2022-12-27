@@ -17,7 +17,6 @@ export interface Waypoint extends BaseFix<SectionCode.Enroute> {
     subSectionCode: EnrouteSubsectionCode.Waypoints,
 
     name?: string,
-    area: WaypointArea,
     // TODO more...
 
     /**

@@ -19,7 +19,7 @@ import {
     VorClass,
     Waypoint,
     DataInterface,
-    RestrictiveAirspace,
+    RestrictiveAirspace, Fix,
 } from '../../shared';
 import { AirportCommunication } from '../../shared/types/Communication';
 import { ControlledAirspace } from '../../shared/types/Airspace';
@@ -113,6 +113,10 @@ export class ExternalBackend implements DataInterface {
         return this.fetchApi(`waypoints/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
     }
 
+    getFixes(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Fix[]> {
+        return this.fetchApi(`fixes/${idents.join()}${this.formatQuery({ ppos, icaoCode, airport: airportIdent })}`);
+    }
+
     getNearbyAirports(center: Coordinates, range: NauticalMiles, limit?: number, longestRunwaySurfaces?: RunwaySurfaceType): Promise<Airport[]> {
         return this.fetchApi(`nearby/airports/${center.lat},${center.long}/${range}${this.formatQuery({ limit, longestRunwaySurfaces })}`);
     }
@@ -131,6 +135,10 @@ export class ExternalBackend implements DataInterface {
 
     getNearbyWaypoints(center: Coordinates, range?: number, limit?: number): Promise<Waypoint[]> {
         return this.fetchApi(`nearby/waypoints/${center.lat},${center.long}/${range}`);
+    }
+
+    getNearbyFixes(center: Coordinates, range?: number, limit?: number): Promise<Fix[]> {
+        return this.fetchApi(`nearby/fixes/${center.lat},${center.long}/${range}`);
     }
 
     private formatQuery(queries: Record<string, any>): string {

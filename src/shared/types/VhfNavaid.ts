@@ -28,7 +28,6 @@ export interface VhfNavaid extends BaseFix<SectionCode.Navaid> {
      * distance from centre location for nearby query
      */
     distance?: NauticalMiles,
-    area: WaypointArea,
 }
 
 // TODO enum
