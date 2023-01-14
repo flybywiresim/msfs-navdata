@@ -11,6 +11,8 @@ module.exports = {
         "no-undef": "off",
         "import/no-unresolved": "off",
         "no-bitwise": "off",
+        'no-await-in-loop': 'off',
+        'prefer-destructuring': 'off',
         'no-mixed-operators': ['error', {
             groups: [
               // ['+', '-', '*', '/', '%', '**'],

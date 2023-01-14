@@ -29,10 +29,7 @@ import { Departure } from '../../../shared/types/Departure';
 import { Runway, RunwaySurfaceType } from '../../../shared/types/Runway';
 import { DataInterface } from '../../../shared/DataInterface';
 import { Marker } from '../../../shared/types/Marker';
-import {
-    IcaoSearchFilter,
-    JS_FacilityAirport,
-} from './FsTypes';
+import { IcaoSearchFilter, JS_FacilityAirport } from './FsTypes';
 import { FacilityCache, LoadType } from './FacilityCache';
 import { MsfsMapping } from './Mapping';
 import { Gate } from '../../../shared/types/Gate';
