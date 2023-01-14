@@ -1,11 +1,14 @@
 import { Coordinates, Degrees, DegreesMagnetic, DegreesTrue, Feet, Metres } from 'msfs-geo';
 import {
     LsCategory,
-    DatabaseItem,
     ElevatedCoordinates,
 } from './Common';
+import { BaseFix } from './BaseFix';
+import { AirportSubsectionCode, SectionCode } from './SectionCode';
 
-export interface Runway extends DatabaseItem {
+export interface Runway extends BaseFix<SectionCode.Airport> {
+    subSectionCode: AirportSubsectionCode.Runways;
+
     airportIdent: string,
     bearing: DegreesTrue,
     magneticBearing: DegreesMagnetic,

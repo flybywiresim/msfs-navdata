@@ -1,5 +1,6 @@
 import { Coordinates, Feet } from 'msfs-geo';
 import { ProcedureLeg } from './ProcedureLeg';
+import { SectionCode, SubSectionEnumMap } from './SectionCode';
 
 export type FeetPerMinute = number;
 export type FlightLevel = number;
@@ -8,7 +9,10 @@ export type Knots = number;
 export type MegaHertz = number;
 export type Minutes = number;
 
-export interface DatabaseItem {
+export interface DatabaseItem<T extends SectionCode> {
+    sectionCode: T,
+    subSectionCode: SubSectionEnumMap[T],
+
     /**
      * Globally unique ID
      * Should _not_ be used for any purpose other than comparing equality

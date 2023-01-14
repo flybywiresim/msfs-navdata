@@ -11,11 +11,14 @@ import {
     Airport,
     Airway,
     AirwayDirection,
+    AirwayLevel,
     AltitudeDescriptor,
     Approach,
     ApproachType,
+    ApproachWaypointDescriptor,
     Arrival,
     Departure,
+    ElevatedCoordinates,
     FigureOfMerit,
     IlsNavaid,
     LegType,
@@ -35,58 +38,32 @@ import {
     VorClass,
     Waypoint,
     WaypointArea,
-    AirwayLevel,
-    ApproachWaypointDescriptor,
-    WaypointDescriptor, ElevatedCoordinates,
+    WaypointDescriptor,
 } from '../../../shared';
-import {
-    BoundaryPath,
-    ControlledAirspace,
-    ControlledAirspaceType,
-    PathType,
-    RestrictiveAirspace,
-} from '../../../shared/types/Airspace';
-import {
-    AirportCommunication,
-    CommunicationType,
-    EnRouteCommunication,
-    FirUirIndicator,
-    FrequencyUnits,
-} from '../../../shared/types/Communication';
+import { BoundaryPath, ControlledAirspace, ControlledAirspaceType, PathType, RestrictiveAirspace } from '../../../shared/types/Airspace';
+import { AirportCommunication, CommunicationType, EnRouteCommunication, FirUirIndicator, FrequencyUnits } from '../../../shared/types/Communication';
 
 // Navigraph types... all must be imported with "Navi" prefix to avoid any confusion in the code
 import { TerminalProcedure as NaviProcedure } from './types/TerminalProcedures';
 import { EnRouteAirway as NaviAirwayFix } from './types/EnrouteAirways';
 import { Airport as NaviAirport } from './types/Airports';
 import { Runway as NaviRunway } from './types/Runways';
-import {
-    EnrouteNDBNavaid as NaviEnrouteNdbNavaid,
-    TerminalNDBNavaid as NaviTerminalNdbNavaid,
-} from './types/NDBNavaids';
+import { EnrouteNDBNavaid as NaviEnrouteNdbNavaid, TerminalNDBNavaid as NaviTerminalNdbNavaid } from './types/NDBNavaids';
 import { IlsMlsGlsCategory as NaviIlsMlsGlsCategory, LocalizerGlideslope as NaviIls } from './types/LocalizerGlideslopes';
 import { VHFNavaid as NaviVhfNavaid } from './types/VHFNavaids';
 import { NavigraphProvider } from './dfd';
 import { TerminalWaypoint as NaviTerminalWaypoint } from './types/TerminalWaypoints';
 import { EnrouteWaypoint as NaviEnrouteWaypoint } from './types/EnrouteWaypoints';
 import { AirportCommunication as NaviAirportCommunication } from './types/AirportCommunication';
-import {
-    CommunicationType as NaviCommunicationType,
-    FrequencyUnits as NaviFrequencyUnits,
-} from './types/CommonCommunicationTypes';
+import { CommunicationType as NaviCommunicationType, FrequencyUnits as NaviFrequencyUnits } from './types/CommonCommunicationTypes';
 import { EnrouteCommunication as NaviEnRouteCommunication } from './types/EnrouteCommunication';
-import {
-    AirspaceType as NaviAirspaceType,
-    BoundaryVia as NaviBoundaryVia,
-    ControlledAirspace as NaviControlledAirspace,
-} from './types/ControlledAirspace';
-import {
-    RestrictiveAirspace as NaviRestrictiveAirspace,
-    RestrictiveAirspaceType as NaviRestrictiveAirspaceType,
-} from './types/RestrictiveAirspace';
+import { AirspaceType as NaviAirspaceType, BoundaryVia as NaviBoundaryVia, ControlledAirspace as NaviControlledAirspace } from './types/ControlledAirspace';
+import { RestrictiveAirspace as NaviRestrictiveAirspace, RestrictiveAirspaceType as NaviRestrictiveAirspaceType } from './types/RestrictiveAirspace';
 import { Holding as NaviHolding } from './types/Holdings';
 import { LocalizerMarker as NaviMarker } from './types/LocalizerMarker';
 import { Gate as NaviGate } from './types/Gates';
 import { Gate } from '../../../shared/types/Gate';
+import { AirportSubsectionCode, EnrouteSubsectionCode, NavaidSubsectionCode, SectionCode } from '../../../shared/types/SectionCode';
 
 type NaviWaypoint = NaviTerminalWaypoint | NaviEnrouteWaypoint;
 type NaviNdbNavaid = NaviTerminalNdbNavaid | NaviEnrouteNdbNavaid;
@@ -109,6 +86,8 @@ export class DFDMappers {
 
     public mapIls(ils: NaviIls): IlsNavaid {
         return {
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.LocalizerGlideSlope,
             icaoCode: ils.icaoCode,
             ident: ils.llzIdentifier,
             databaseId: DFDMappers.ilsNavaidDatabaseId(ils),
@@ -125,6 +104,8 @@ export class DFDMappers {
 
     public mapLsMarker(marker: NaviMarker): Marker {
         return {
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.LocalizerMarker,
             icaoCode: marker.icaoCode,
             databaseId: `M${marker.icaoCode}${marker.airportIdentifier}${marker.markerIdentifier}`,
             airportIdentifier: marker.airportIdentifier,
@@ -153,6 +134,8 @@ export class DFDMappers {
             surfaceCode = RunwaySurfaceType.Unknown;
         }
         return {
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.ReferencePoints,
             databaseId: DFDMappers.airportDatabaseId(airport),
             ident: airport.airportIdentifier,
             icaoCode: airport.icaoCode,
@@ -194,12 +177,16 @@ export class DFDMappers {
 
     public mapRunway(runway: NaviRunway): Runway {
         return {
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.Runways,
             icaoCode: runway.icaoCode,
             ident: runway.runwayIdentifier,
             databaseId: `R  ${runway.airportIdentifier}${runway.runwayIdentifier}`,
+            area: WaypointArea.Terminal,
             airportIdent: runway.airportIdentifier,
             startLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
             thresholdLocation: { lat: runway.runwayLatitude, long: runway.runwayLongitude, alt: runway.landingThresholdElevation }, // FIXME
+            location: { lat: runway.runwayLatitude, long: runway.runwayLongitude }, // FIXME
             bearing: runway.runwayTrueBearing,
             magneticBearing: runway.runwayMagneticBearing,
             gradient: runway.runwayGradient,
@@ -318,17 +305,21 @@ export class DFDMappers {
             procedureIdent: leg.procedureIdentifier,
             type: leg.pathTermination as LegType,
             overfly: leg.waypointDescriptionCode?.charAt(1) === 'B' || leg.waypointDescriptionCode?.charAt(1) === 'Y',
-            waypoint: leg.waypointIdentifier ? {
+            waypoint: (leg.waypointIdentifier) ? {
+                sectionCode: SectionCode.Enroute,
+                subSectionCode: EnrouteSubsectionCode.Waypoints,
                 icaoCode: leg.waypointIcaoCode,
                 ident: leg.waypointIdentifier,
                 location: { lat: leg.waypointLatitude, long: leg.waypointLongitude },
-                databaseId: DFDMappers.mapFixDatabaseId(waypoint),
+                databaseId: DFDMappers.mapFixDatabaseId(waypoint) ?? '',
                 name: leg.waypointIdentifier,
                 area: waypoint?.area,
             } : undefined,
-            recommendedNavaid: leg.recommandedNavaid ? {
+            recommendedNavaid: (leg.recommandedNavaid) ? {
+                sectionCode: SectionCode.Enroute,
+                subSectionCode: EnrouteSubsectionCode.Waypoints,
                 ident: leg.recommandedNavaid,
-                databaseId: DFDMappers.mapFixDatabaseId(recNavaid),
+                databaseId: DFDMappers.mapFixDatabaseId(recNavaid) ?? '',
                 name: '',
                 area: recNavaid?.area,
                 icaoCode: recNavaid?.icaoCode,
@@ -339,9 +330,11 @@ export class DFDMappers {
             } : undefined,
             rho: leg.rho ?? undefined,
             theta: leg.theta ?? undefined,
-            arcCentreFix: leg.centerWaypoint ? {
+            arcCentreFix: (leg.centerWaypoint) ? {
+                sectionCode: SectionCode.Enroute,
+                subSectionCode: EnrouteSubsectionCode.Waypoints,
                 ident: leg.centerWaypoint,
-                databaseId: DFDMappers.mapFixDatabaseId(arcCentreFix),
+                databaseId: DFDMappers.mapFixDatabaseId(arcCentreFix) ?? '',
                 name: '',
                 area: arcCentreFix?.area,
                 icaoCode: arcCentreFix?.icaoCode,
@@ -375,6 +368,8 @@ export class DFDMappers {
         for (const leg of legs) {
             if (!departures.has(leg.procedureIdentifier)) {
                 departures.set(leg.procedureIdentifier, {
+                    sectionCode: SectionCode.Airport,
+                    subSectionCode: AirportSubsectionCode.SIDs,
                     icaoCode: airport.icaoCode,
                     databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
@@ -494,6 +489,8 @@ export class DFDMappers {
         for (const leg of legs) {
             if (!arrivals.has(leg.procedureIdentifier)) {
                 arrivals.set(leg.procedureIdentifier, {
+                    sectionCode: SectionCode.Airport,
+                    subSectionCode: AirportSubsectionCode.STARs,
                     icaoCode: airport.icaoCode,
                     databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
@@ -658,6 +655,8 @@ export class DFDMappers {
                 const runwayIdent = match !== null ? `RW${match[1]}` : undefined;
                 const multipleIndicator = match !== null ? match[3] ?? '' : '';
                 approaches.set(leg.procedureIdentifier, {
+                    sectionCode: SectionCode.Airport,
+                    subSectionCode: AirportSubsectionCode.ApproachProcedures,
                     icaoCode: airport.icaoCode,
                     databaseId: DFDMappers.procedureDatabaseId(leg, airport.icaoCode),
                     ident: leg.procedureIdentifier,
@@ -682,7 +681,7 @@ export class DFDMappers {
 
             // the AR flag is not available so we do our best guess
             // if there's an RF leg in the final approach it's classed AR
-            if (finalApproachStarted && leg.pathTermination === 'RF') {
+            if (finalApproachStarted && approach && leg.pathTermination === 'RF') {
                 approach.authorisationRequired = true;
             }
 
@@ -744,6 +743,8 @@ export class DFDMappers {
 
     public mapGates(gates: NaviGate[]): Gate[] {
         return gates.map((gate) => ({
+            sectionCode: SectionCode.Airport,
+            subSectionCode: AirportSubsectionCode.Gates,
             databaseId: `G${gate.icaoCode}${gate.airportIdentifier}${gate.gateIdentifier}`,
             icaoCode: gate.icaoCode,
             ident: gate.gateIdentifier,
@@ -774,6 +775,8 @@ export class DFDMappers {
                 type: LegType.HM,
                 overfly: false,
                 waypoint: {
+                    sectionCode: SectionCode.Enroute,
+                    subSectionCode: EnrouteSubsectionCode.Waypoints,
                     icaoCode: 'TODO',
                     ident: hold.waypointIdentifier,
                     databaseId: `W${hold.icaoCode ?? '  '}${hold.regionCode}${hold.waypointIdentifier}`,
@@ -832,6 +835,8 @@ export class DFDMappers {
                 });
             }
             airways[airways.length - 1].fixes.push({
+                sectionCode: SectionCode.Enroute,
+                subSectionCode: EnrouteSubsectionCode.Waypoints,
                 icaoCode: fix.icaoCode,
                 databaseId: `W${fix.icaoCode}    ${fix.waypointIdentifier}`, // TODO function
                 ident: fix.waypointIdentifier,
@@ -1132,6 +1137,8 @@ export class DFDMappers {
 
     public mapWaypoint(waypoint: NaviWaypoint, distanceFrom?: Coordinates): Waypoint {
         return {
+            sectionCode: SectionCode.Enroute,
+            subSectionCode: EnrouteSubsectionCode.Waypoints,
             databaseId: DFDMappers.waypointDatabaseId(waypoint),
             ident: waypoint.waypointIdentifier,
             icaoCode: waypoint.icaoCode,
@@ -1144,6 +1151,8 @@ export class DFDMappers {
 
     public mapVhfNavaid(navaid: NaviVhfNavaid, distanceFrom?: Coordinates): VhfNavaid {
         return {
+            sectionCode: SectionCode.Navaid,
+            subSectionCode: NavaidSubsectionCode.VhfNavaid,
             databaseId: DFDMappers.vhfNavaidDatabaseId(navaid),
             ident: navaid.vorIdentifier ?? navaid.dmeIdent,
             name: navaid.vorName,
@@ -1208,6 +1217,8 @@ export class DFDMappers {
 
     public mapNdbNavaid(navaid: NaviNdbNavaid, distanceFrom?: Coordinates): NdbNavaid {
         return {
+            sectionCode: SectionCode.Navaid,
+            subSectionCode: NavaidSubsectionCode.NdbNavaid,
             databaseId: DFDMappers.ndbNavaidDatabaseId(navaid),
             ident: navaid.ndbIdentifier,
             icaoCode: navaid.icaoCode,

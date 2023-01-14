@@ -3,6 +3,7 @@
 
 import { Coordinates } from 'msfs-geo';
 import { DatabaseItem } from '..';
+import { AirportSubsectionCode, SectionCode } from './SectionCode';
 
 export enum MarkerType {
     IM = 'IM',
@@ -11,7 +12,9 @@ export enum MarkerType {
     BM = 'BM',
 }
 
-export interface Marker extends DatabaseItem {
+export interface Marker extends DatabaseItem<SectionCode.Airport> {
+    subSectionCode: AirportSubsectionCode.LocalizerMarker,
+
     airportIdentifier: string,
     runwayIdentifier: string,
     lsIdentifier: string,

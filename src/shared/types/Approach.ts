@@ -1,5 +1,6 @@
 import { DatabaseItem, ProcedureTransition } from './Common';
 import { ProcedureLeg } from './ProcedureLeg';
+import { AirportSubsectionCode, SectionCode } from './SectionCode';
 
 export enum ApproachType {
     Unknown,
@@ -32,7 +33,9 @@ export enum LevelOfService {
     LnavVnav = 1 << 4,
 }
 
-export interface Approach extends DatabaseItem {
+export interface Approach extends DatabaseItem<SectionCode.Airport> {
+    subSectionCode: AirportSubsectionCode.ApproachProcedures,
+
     /**
      * Runway this approach is to, or not if multiple runways
      */

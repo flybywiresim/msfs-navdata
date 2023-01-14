@@ -12,7 +12,7 @@ import {
     ControlledAirspace,
     DatabaseIdent,
     DataInterface,
-    Departure,
+    Departure, Fix,
     IlsNavaid,
     iso8601CalendarDate,
     Marker,
@@ -368,6 +368,14 @@ export class NavigraphProvider implements DataInterface {
         return results.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
     }
 
+    async getFixes(idents: string[], ppos?: Coordinates, icaoCode?: string, airportIdent?: string): Promise<Fix[]> {
+        return [
+            ...(await this.getWaypoints(idents, ppos, icaoCode, airportIdent)),
+            ...(await this.getVhfNavaids(idents, ppos, icaoCode, airportIdent)),
+            ...(await this.getNdbNavaids(idents, ppos, icaoCode, airportIdent)),
+        ];
+    }
+
     async getNearbyAirways(centre: Coordinates, range: NauticalMiles, limit?: number, levels?: AirwayLevel): Promise<Airway[]> {
         const [sqlWhere, sqlParams] = NavigraphProvider.nearbyBoundingBoxQuery(centre, range, 'waypoint_');
         // TODO: This currently loads all Airways with a route_identifier which is the same as an in range airway.
@@ -451,6 +459,14 @@ export class NavigraphProvider implements DataInterface {
         }).filter((ap) => (ap.distance ?? 0) <= range)
             .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0))
             .slice(0, limit);
+    }
+
+    async getNearbyFixes(centre: Coordinates, range: number, limit?: number): Promise<Fix[]> {
+        return [
+            ...(await this.getNearbyNdbNavaids(centre, range, limit)),
+            ...(await this.getNearbyVhfNavaids(centre, range, limit)),
+            ...(await this.getNearbyWaypoints(centre, range, limit)),
+        ];
     }
 
     async getControlledAirspaceInRange(centre: Coordinates, range: NauticalMiles): Promise<ControlledAirspace[]> {

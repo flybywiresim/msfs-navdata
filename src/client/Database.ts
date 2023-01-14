@@ -78,7 +78,7 @@ export class Database {
     }
 
     public async getHolds(fixIdentifier: string, airportIdentifier: string): Promise<ProcedureLeg[]> {
-        return (await this.backend.getHolds(airportIdentifier)).filter((hold) => hold.ident === fixIdentifier);
+        return (await this.backend.getHolds(airportIdentifier)).filter((hold) => hold.waypoint?.ident === fixIdentifier);
     }
 
     public getIlsAtAirport(airportIdentifier: string): Promise<IlsNavaid[]> {
