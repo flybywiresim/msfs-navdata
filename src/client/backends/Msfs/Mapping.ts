@@ -161,6 +161,7 @@ export class MsfsMapping {
                     icaoCode,
                     ident,
                     location: thresholdLocation,
+                    area: WaypointArea.Terminal,
                     airportIdent,
                     bearing,
                     magneticBearing: this.trueToMagnetic(bearing, magVar),
@@ -222,6 +223,7 @@ export class MsfsMapping {
                     icaoCode,
                     ident,
                     location: thresholdLocation,
+                    area: WaypointArea.Terminal,
                     airportIdent,
                     bearing,
                     magneticBearing: this.trueToMagnetic(bearing, magVar),
@@ -971,15 +973,76 @@ export class MsfsMapping {
             databaseId: `E${icaoCode}    ${route.name}${fixIdent}`,
             ident: route.name,
             level: this.mapAirwayLevel(route.type),
-            fixes: [fix],
+            fixes: [],
             direction: AirwayDirection.Either,
-        }));
+        } as Airway));
 
-        for (let i = 0; i < 100; i++) {
-            const forwardIcaos = routes.map((route) => route.nextIcao);
-            const backwardIcaos = routes.map((route) => route.prevIcao);
+        for (let i = 0; i < airways.length; i++) {
+            const airway = airways[i];
 
-            // TODO -_-
+            const cachedAirwayFixes = this.cache.getCachedAirwayFixes(airway.databaseId);
+
+            if (cachedAirwayFixes) {
+                airway.fixes = cachedAirwayFixes;
+            }
+        }
+
+        for (const route of routes) {
+            const id = `E${icaoCode}    ${route.name}${fixIdent}`;
+
+            const airwayObject = airways.find((it) => it.databaseId === id);
+
+            if (!airwayObject) {
+                throw new Error(`(getAirways) Airway object not found databaseID=${id}`);
+            }
+
+            if (airwayObject.fixes.length > 0) {
+                // Fixes were already cached
+                continue;
+            }
+
+            const previousFacs: JS_FacilityIntersection[] = [];
+            const nextFacs: JS_FacilityIntersection[] = [];
+
+            let previousIcao: string | undefined = route.prevIcao;
+            // eslint-disable-next-line prefer-destructuring
+            let nextIcao: string | undefined = route.nextIcao;
+
+            while (previousIcao?.trim() || nextIcao?.trim()) {
+                if (previousIcao?.trim()) {
+                    const fac: JS_FacilityIntersection | undefined = await this.cache.getFacility(previousIcao, LoadType.Intersection);
+
+                    if (!fac) {
+                        throw new Error(`(getAirways) Facility not loaded while looking back into route: ${previousIcao}`);
+                    }
+
+                    previousFacs.unshift(fac);
+
+                    previousIcao = fac.routes.find((it) => it.name === route.name)?.prevIcao;
+                }
+
+                if (nextIcao?.trim()) {
+                    const fac: JS_FacilityIntersection | undefined = await this.cache.getFacility(nextIcao, LoadType.Intersection);
+
+                    if (!fac) {
+                        throw new Error(`(getAirways) Facility not loaded while looking back into route: ${nextIcao}`);
+                    }
+
+                    nextFacs.push(fac);
+
+                    nextIcao = fac.routes.find((it) => it.name === route.name)?.nextIcao;
+                }
+            }
+
+            const allFixes = [
+                ...(previousFacs.map((it) => this.mapFacilityToWaypoint(it))),
+                fix,
+                ...(nextFacs.map((it) => this.mapFacilityToWaypoint(it))),
+            ];
+
+            airwayObject.fixes = allFixes;
+
+            this.cache.setCachedAirwayFixes(id, allFixes);
         }
 
         return airways;

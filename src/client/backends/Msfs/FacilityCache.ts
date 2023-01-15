@@ -5,6 +5,7 @@
 /* eslint-disable no-underscore-dangle */
 
 import { IcaoSearchFilter, JS_Facility, JS_FacilityAirport, JS_FacilityIntersection, JS_FacilityNDB, JS_FacilityVOR } from './FsTypes';
+import { Waypoint } from '../../../shared';
 
 export enum LoadType {
     Airport = 'A',
@@ -44,6 +45,8 @@ export class FacilityCache {
     private facilityCache = new Map<string, JS_Facility>();
 
     private airwayIcaoCache = new Map<string, Set<string>>();
+
+    private airwayFixCache = new Map<string, Waypoint[]>();
 
     constructor() {
         this.listener = RegisterViewListener('JS_LISTENER_FACILITY');
@@ -240,6 +243,14 @@ export class FacilityCache {
         const vors = await this.getFacilities(icaos.filter((icao) => icao.charAt(0) === 'V'), LoadType.Vor);
 
         return [...ints.values(), ...ndbs.values(), ...vors.values()] as unknown as SearchedFacilityTypeMap[T];
+    }
+
+    public getCachedAirwayFixes(databaseID: string): Waypoint[] | undefined {
+        return this.airwayFixCache.get(databaseID);
+    }
+
+    public setCachedAirwayFixes(databaseID: string, fixes: Waypoint[]): void {
+        this.airwayFixCache.set(databaseID, fixes);
     }
 
     private addToAirwayCache(facility: JS_FacilityIntersection): void {
