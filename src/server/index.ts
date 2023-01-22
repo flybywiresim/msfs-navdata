@@ -272,12 +272,8 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
             const limit = (req.query.limit && typeof req.query.limit === 'string') ? parseLimit(req.query.limit) : undefined;
             // TODO area? (terminal or enroute)
 
-            Promise.all([
-                provider.getNearbyVhfNavaids(location, range, limit),
-                provider.getNearbyNdbNavaids(location, range, limit),
-                provider.getNearbyWaypoints(location, range, limit),
-            ]).then((results) => {
-                res.json([...results[0], ...results[1], ...results[2]]);
+            provider.getNearbyFixes(location, range, limit).then((results) => {
+                res.json(results);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
             errorResponse(error, res);
@@ -402,16 +398,12 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
     router.get('/fixes/:idents', (req, res) => {
         try {
             const idents = parseMultipleIdents(req.params.idents, parseFixIdent);
+            const ppos = (req.query.ppos && typeof req.query.ppos === 'string') ? parsePpos(req.query.ppos) : undefined;
             const icaoCode = (req.query.icaoCode && typeof req.query.icaoCode === 'string') ? parseIcaoCode(req.query.icaoCode) : undefined;
             const airport = (req.query.airport && typeof req.query.airport === 'string') ? parseAirportIdent(req.query.airport) : undefined;
-            const ppos = (req.query.ppos && typeof req.query.ppos === 'string') ? parsePpos(req.query.ppos) : undefined;
 
-            Promise.all([
-                provider.getVhfNavaids(idents, ppos, icaoCode, airport),
-                provider.getNdbNavaids(idents, ppos, icaoCode, airport),
-                provider.getWaypoints(idents, ppos, icaoCode, airport),
-            ]).then((results) => {
-                res.json([...results[0], ...results[1], ...results[2]]);
+            provider.getFixes(idents, ppos, icaoCode, airport).then((results) => {
+                res.json(results);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
             errorResponse(error, res);

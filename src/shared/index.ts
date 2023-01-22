@@ -13,6 +13,7 @@ export * from './types/Marker';
 export * from './types/NdbNavaid';
 export * from './types/ProcedureLeg';
 export * from './types/Runway';
+export * from './types/SectionCode';
 export * from './types/VhfNavaid';
 export * from './types/Waypoint';
 export * from './DataInterface';
