@@ -228,7 +228,7 @@ export function msfsNavdataRouter(provider: NavigraphProvider, development: bool
             const limit = (req.query.limit && typeof req.query.limit === 'string') ? parseLimit(req.query.limit) : undefined;
             const types = (req.query.types && typeof req.query.types === 'string') ? parseVhfNavaidTypes(req.query.types) : undefined;
             const classes = (req.query.classes && typeof req.query.classes === 'string') ? parseVorClasses(req.query.classes) : undefined;
-            provider.getNearbyVhfNavaids(location, range, classes, limit, types).then((navaids: VhfNavaid[]) => {
+            provider.getNearbyVhfNavaids(location, range, limit, classes, types).then((navaids: VhfNavaid[]) => {
                 res.json(navaids);
             }).catch((error) => errorResponse(error, res));
         } catch (error) {
