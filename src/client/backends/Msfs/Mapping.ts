@@ -614,7 +614,8 @@ export class MsfsMapping {
             turnDirection: this.mapMsTurnDirection(leg.turnDirection),
             magneticCourse: leg.course, // TODO check magnetic/true
             waypointDescriptor: WaypointDescriptor.Essential, // TODO
-            // TODO for approach verticalAngle and approachWaypointDescriptor
+            // TODO for approachWaypointDescriptor
+            verticalAngle: Math.abs(leg.verticalAngle) > Number.EPSILON ? leg.verticalAngle - 360 : undefined,
         };
     }
 
