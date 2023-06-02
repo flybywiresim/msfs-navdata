@@ -384,19 +384,9 @@ export class MsfsMapping {
         return msAirport.approaches.map((approach) => {
             const approachName = this.mapApproachName(approach);
 
-            // the AR flag is not available so we do our best guess
-            // if there's an RF leg in the final approach it's classed AR
-            let authorisationRequired = false;
-            for (let i = approach.finalLegs.length - 1; i >= 0; i--) {
-                const leg = approach.finalLegs[i];
-                if (leg.fixTypeFlags & FixTypeFlags.FAF) {
-                    break;
-                }
-                if (leg.type === MsLegType.RF) {
-                    authorisationRequired = true;
-                    break;
-                }
-            }
+            // the AR flag is not available so we use this heuristic based on analysing the MSFS data
+            const authorisationRequired = approach.runwayNumber !== 0 && approach.rnavTypeFlags === 0;
+            const rnp = authorisationRequired ? 0.3 : undefined;
 
             const runwayIdent = `RW${approach.runwayNumber.toString().padStart(2, '0')}${this.mapRunwayDesignator(approach.runwayDesignator)}`;
 
@@ -414,7 +404,7 @@ export class MsfsMapping {
                 authorisationRequired,
                 levelOfService,
                 transitions: approach.transitions.map((trans) => this.mapApproachTransition(trans, facilities, msAirport, approachName, icaoCode)),
-                legs: approach.finalLegs.map((leg) => this.mapLeg(leg, facilities, msAirport, approachName, icaoCode, approach.approachType)),
+                legs: approach.finalLegs.map((leg) => this.mapLeg(leg, facilities, msAirport, approachName, icaoCode, approach.approachType, rnp)),
                 missedLegs: approach.missedLegs.map((leg) => this.mapLeg(leg, facilities, msAirport, approachName, icaoCode)),
             };
         });
@@ -444,18 +434,24 @@ export class MsfsMapping {
 
         const facilities = await this.loadFacilitiesFromProcedures(msAirport.departures);
 
-        return msAirport.departures.map((departure) => ({
-            sectionCode: SectionCode.Airport,
-            subSectionCode: AirportSubsectionCode.SIDs,
-            databaseId: `P${icaoCode}${airportIdent}${departure.name}`,
-            icaoCode,
-            ident: departure.name,
-            authorisationRequired: false, // flag unavailable
-            commonLegs: departure.commonLegs.map((leg) => this.mapLeg(leg, facilities, msAirport, departure.name, icaoCode)),
-            engineOutLegs: [],
-            enrouteTransitions: departure.enRouteTransitions.map((trans) => this.mapEnrouteTransition(trans, facilities, msAirport, departure.name, icaoCode)),
-            runwayTransitions: departure.runwayTransitions.map((trans) => this.mapRunwayTransition(trans, facilities, msAirport, departure.name, icaoCode)),
-        }));
+        return msAirport.departures.map((departure) => {
+            const commonLegsAreAr = this.isAnyRfLegPresent(departure.commonLegs);
+            const commonLegsRnp = commonLegsAreAr ? 0.3 : undefined;
+            const authorisationRequired = commonLegsAreAr || this.isAnyRfLegPresent(departure.runwayTransitions) || this.isAnyRfLegPresent(departure.enRouteTransitions);
+
+            return {
+                sectionCode: SectionCode.Airport,
+                subSectionCode: AirportSubsectionCode.SIDs,
+                databaseId: `P${icaoCode}${airportIdent}${departure.name}`,
+                icaoCode,
+                ident: departure.name,
+                authorisationRequired,
+                commonLegs: departure.commonLegs.map((leg) => this.mapLeg(leg, facilities, msAirport, departure.name, icaoCode, undefined, commonLegsRnp)),
+                engineOutLegs: [],
+                enrouteTransitions: departure.enRouteTransitions.map((trans) => this.mapEnrouteTransition(trans, facilities, msAirport, departure.name, icaoCode)),
+                runwayTransitions: departure.runwayTransitions.map((trans) => this.mapRunwayTransition(trans, facilities, msAirport, departure.name, icaoCode)),
+            };
+        });
     }
 
     public async mapGates(msAirport: JS_FacilityAirport): Promise<Gate[]> {
@@ -552,16 +548,18 @@ export class MsfsMapping {
         procedureIdent: string,
         icaoCode: string,
     ): ProcedureTransition {
+        const rnp = this.isAnyRfLegPresent(trans.legs) ? 0.3 : undefined;
         return {
             ident: trans.name,
-            legs: trans.legs.map((leg) => this.mapLeg(leg, facilities, airport, procedureIdent, icaoCode)),
+            legs: trans.legs.map((leg) => this.mapLeg(leg, facilities, airport, procedureIdent, icaoCode, undefined, rnp)),
         };
     }
 
     private mapRunwayTransition(trans: JS_RunwayTransition, facilities: Map<string, JS_Facility>, airport: JS_FacilityAirport, procedureIdent: string, icaoCode: string): ProcedureTransition {
+        const rnp = this.isAnyRfLegPresent(trans.legs) ? 0.3 : undefined;
         return {
             ident: `RW${trans.runwayNumber.toFixed(0).padStart(2, '0')}${this.mapRunwayDesignator(trans.runwayDesignation)}`,
-            legs: trans.legs.map((leg) => this.mapLeg(leg, facilities, airport, procedureIdent, icaoCode)),
+            legs: trans.legs.map((leg) => this.mapLeg(leg, facilities, airport, procedureIdent, icaoCode, undefined, rnp)),
         };
     }
 
@@ -572,6 +570,7 @@ export class MsfsMapping {
         procedureIdent: string,
         icaoCode: string,
         approachType?: MSApproachType,
+        rnp?: number,
     ): ProcedureLeg {
         const arcCentreFixFacility = FacilityCache.validFacilityIcao(leg.arcCenterFixIcao) ? facilities.get(leg.arcCenterFixIcao) : undefined;
         const arcCentreFix = arcCentreFixFacility ? this.mapFacilityToWaypoint(arcCentreFixFacility) : undefined;
@@ -614,7 +613,9 @@ export class MsfsMapping {
             turnDirection: this.mapMsTurnDirection(leg.turnDirection),
             magneticCourse: leg.course, // TODO check magnetic/true
             waypointDescriptor: WaypointDescriptor.Essential, // TODO
-            // TODO for approach verticalAngle and approachWaypointDescriptor
+            // TODO for approachWaypointDescriptor
+            verticalAngle: Math.abs(leg.verticalAngle) > Number.EPSILON ? leg.verticalAngle - 360 : undefined,
+            rnp,
         };
     }
 
@@ -1076,6 +1077,26 @@ export class MsfsMapping {
             levels |= LevelOfService.Lpv;
         }
         return levels;
+    }
+
+    /**
+     * Checks if any leg in the array or within the array of transitions contains an RF leg.
+     * Useful to determine AR/SAAR procedures since MSFS does not have such flags.
+     * @param legsOrTransitions legs or transitions to check
+     * @returns true if any RF leg is found
+     */
+    private isAnyRfLegPresent(legsOrTransitions: JS_Leg[] | JS_RunwayTransition[] | JS_EnRouteTransition[]): boolean {
+        if (legsOrTransitions.length < 1) {
+            return false;
+        }
+
+        if ('legs' in legsOrTransitions[0]) {
+            const transitions = legsOrTransitions as JS_RunwayTransition[] | JS_EnRouteTransition[];
+            return transitions.some((transition) => this.isAnyRfLegPresent(transition.legs));
+        }
+
+        const legs = legsOrTransitions as JS_Leg[];
+        return legs.some((leg) => leg.type === MsLegType.RF);
     }
 
     /** @todo move to msfs-geo */

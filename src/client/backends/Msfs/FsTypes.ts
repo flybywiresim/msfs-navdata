@@ -237,6 +237,8 @@ export interface JS_Leg {
     turnDirection: TurnDirection,
     /** ARINC 424 leg type */
     type: LegType,
+    /** Vertical angle for the leg in degrees + 360 */
+    verticalAngle: number,
 }
 
 export interface JS_Route {
