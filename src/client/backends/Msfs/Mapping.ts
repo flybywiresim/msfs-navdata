@@ -613,7 +613,7 @@ export class MsfsMapping {
             speedDescriptor: leg.speedRestriction > 0 ? SpeedDescriptor.Maximum : undefined,
             turnDirection: this.mapMsTurnDirection(leg.turnDirection),
             magneticCourse: leg.course, // TODO check magnetic/true
-            waypointDescriptor: this.mapMsIcaoToWaypointDescriptor(leg.fixIcao), // TODO
+            waypointDescriptor: this.mapMsIcaoToWaypointDescriptor(leg.fixIcao),
             approachWaypointDescriptor: approachType !== undefined ? this.mapMsLegToApproachWaypointDescriptor(leg) : undefined,
             verticalAngle: Math.abs(leg.verticalAngle) > Number.EPSILON ? leg.verticalAngle - 360 : undefined,
             rnp,
