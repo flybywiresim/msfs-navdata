@@ -1,12 +1,11 @@
-name: Release NPM
+name: Pre-Release NPM
 
 on:
   push:
     tags:
-      - 'v*'
-      - '!v*-rc*'
-      - '!v*-alpha*'
-      - '!v*-beta*'
+      - 'v*-rc*'
+      - 'v*-alpha*'
+      - 'v*-beta*'
 
 jobs:
   build:
@@ -21,7 +20,7 @@ jobs:
       - run: npm run test
       - run: npm run build
       # Publish to npm
-      - run: npm publish --access public
+      - run: npm publish  --access public --tag beta
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Create Release
@@ -33,4 +32,4 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
           draft: false
-          prerelease: false
+          prerelease: true
