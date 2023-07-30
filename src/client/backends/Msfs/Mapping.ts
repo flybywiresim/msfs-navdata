@@ -207,7 +207,7 @@ export class MsfsMapping {
                 const thresholdDistance = primary ? msRunway.primaryThresholdLength : msRunway.secondaryThresholdLength;
                 const startLocation = placeBearingDistance({ lat: msRunway.latitude, long: msRunway.longitude }, this.oppositeBearing(bearing), startDistance / 1852);
                 const thresholdLocation = {
-                    ...(thresholdDistance > 0 ? placeBearingDistance(startLocation, this.oppositeBearing(bearing), thresholdDistance / 1852) : startLocation),
+                    ...(thresholdDistance > 0 ? placeBearingDistance(startLocation, bearing, thresholdDistance / 1852) : startLocation),
                     alt: (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) * 3.28084,
                 };
                 // TODO we could get this from approach data...
