@@ -10,6 +10,7 @@ import {
     AirwayLevel,
     AltitudeDescriptor,
     ApproachType,
+    ApproachWaypointDescriptor,
     CommunicationType,
     FigureOfMerit,
     FrequencyUnits,
@@ -612,8 +613,8 @@ export class MsfsMapping {
             speedDescriptor: leg.speedRestriction > 0 ? SpeedDescriptor.Maximum : undefined,
             turnDirection: this.mapMsTurnDirection(leg.turnDirection),
             magneticCourse: leg.course, // TODO check magnetic/true
-            waypointDescriptor: WaypointDescriptor.Essential, // TODO
-            // TODO for approachWaypointDescriptor
+            waypointDescriptor: this.mapMsIcaoToWaypointDescriptor(leg.fixIcao),
+            approachWaypointDescriptor: approachType !== undefined ? this.mapMsLegToApproachWaypointDescriptor(leg) : undefined,
             verticalAngle: Math.abs(leg.verticalAngle) > Number.EPSILON ? leg.verticalAngle - 360 : undefined,
             rnp,
         };
@@ -852,6 +853,44 @@ export class MsfsMapping {
         default:
             return TurnDirection.Either;
         }
+    }
+
+    private mapMsIcaoToWaypointDescriptor(icao: string): WaypointDescriptor {
+        const type = icao.charAt(0);
+
+        switch (type) {
+        case 'A':
+            return WaypointDescriptor.Airport;
+        case 'N':
+            return WaypointDescriptor.NdbNavaid;
+        case 'R':
+            return WaypointDescriptor.Runway;
+        case 'V':
+            return WaypointDescriptor.VhfNavaid;
+        case ' ':
+        case '':
+            return 0;
+        case 'W':
+        default:
+            return WaypointDescriptor.Essential; // we don't have any info to decide anything more granular
+        }
+    }
+
+    private mapMsLegToApproachWaypointDescriptor(leg: JS_Leg): ApproachWaypointDescriptor {
+        if ((leg.fixTypeFlags & FixTypeFlags.FAF) > 0) {
+            return ApproachWaypointDescriptor.FinalApproachFix;
+        }
+
+        if ((leg.fixTypeFlags & FixTypeFlags.IAF) > 0) {
+            return ApproachWaypointDescriptor.InitialApproachFix;
+            // FIXME consider IAF with Hold/FACF types
+        }
+
+        if ((leg.fixTypeFlags & FixTypeFlags.MAP) > 0) {
+            return ApproachWaypointDescriptor.MissedApproachPoint;
+        }
+
+        return 0;
     }
 
     private mapNdbType(type: NdbType): NdbClass {
