@@ -98,7 +98,7 @@ export class MsfsMapping {
             if (runway.length > longestRunway[0]) {
                 longestRunway = [runway.length, runway];
             }
-            elevations.push(runway.elevation);
+            elevations.push(runway.elevation * 3.28084);
         });
 
         // MSFS doesn't give the airport elevation... so we take the mean of the runway elevations
