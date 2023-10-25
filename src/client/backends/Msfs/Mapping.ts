@@ -98,7 +98,7 @@ export class MsfsMapping {
             if (runway.length > longestRunway[0]) {
                 longestRunway = [runway.length, runway];
             }
-            elevations.push(runway.elevation * 3.28084);
+            elevations.push(runway.elevation / 0.3048);
         });
 
         // MSFS doesn't give the airport elevation... so we take the mean of the runway elevations
@@ -145,10 +145,10 @@ export class MsfsMapping {
                 const startLocation = placeBearingDistance({ lat: msRunway.latitude, long: msRunway.longitude }, this.oppositeBearing(bearing), startDistance / 1852);
                 const thresholdLocation = {
                     ...(thresholdDistance > 0 ? placeBearingDistance(startLocation, bearing, thresholdDistance / 1852) : startLocation),
-                    alt: (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) * 3.28084,
+                    alt: (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) / 0.3048,
                 };
                 // TODO we could get this from approach data...
-                const thresholdCrossingHeight = 50 + (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) * 3.28084;
+                const thresholdCrossingHeight = 50 + (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) / 0.3048;
                 const lsAppr = msAirport.approaches.find(
                     (appr) => appr.runwayNumber === runwayNumber && appr.runwayDesignator === runwayDesignator && appr.approachType === MSApproachType.Ils,
                 );
@@ -208,10 +208,10 @@ export class MsfsMapping {
                 const startLocation = placeBearingDistance({ lat: msRunway.latitude, long: msRunway.longitude }, this.oppositeBearing(bearing), startDistance / 1852);
                 const thresholdLocation = {
                     ...(thresholdDistance > 0 ? placeBearingDistance(startLocation, bearing, thresholdDistance / 1852) : startLocation),
-                    alt: (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) * 3.28084,
+                    alt: (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) / 0.3048,
                 };
                 // TODO we could get this from approach data...
-                const thresholdCrossingHeight = 50 + (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) * 3.28084;
+                const thresholdCrossingHeight = 50 + (primary ? msRunway.primaryElevation : msRunway.secondaryElevation) / 0.3048;
                 const lsAppr = msAirport.approaches.find(
                     (appr) => appr.runwayNumber === runwayNumber && appr.runwayDesignator === runwayDesignator && appr.approachType === MSApproachType.Ils,
                 );
